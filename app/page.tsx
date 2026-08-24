@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Announce, AsciiArt, Button } from "@/components/nessa-ui";
+import { Button } from "@/components/nessa-ui";
+import { Announce } from "@/components/site/announce";
+import { AsciiArt } from "@/components/site/ascii-art";
 
 export default function HomePage() {
   return (
@@ -22,15 +24,15 @@ export default function HomePage() {
         </div>
 
         <h1 className="animate-fade-up mt-8 text-4xl font-semibold leading-[1.1] tracking-tight text-fg sm:text-6xl">
-          Wherever life happens,
+          Research for systems
           <br />
-          our AI is there.
+          that think.
         </h1>
 
         <p className="animate-fade-up mx-auto mt-6 max-w-xl text-base leading-7 text-muted">
           Nessa Labs is an applied AI lab. We build research, agents, and the
-          interface layer in between — starting with nessa-ui, the component
-          system everything we ship is made of.
+          interface layer in between — including nessa-ui, the component system
+          everything we ship is made of.
         </p>
 
         <div className="animate-fade-up mt-10 flex flex-wrap items-center justify-center gap-3">

@@ -29,20 +29,21 @@ export default async function ComponentPage({
   const doc = getComponent(slug);
   if (!doc) notFound();
 
+  // Composites need the full column width to read properly.
+  const wide = doc.group === "Composites";
+
   const index = registry.findIndex((c) => c.slug === slug);
   const prev = registry[index - 1];
   const next = registry[index + 1];
 
   return (
-    <div className="max-w-3xl">
+    <div className={wide ? "max-w-5xl" : "max-w-3xl"}>
       <div className="mb-2 text-sm font-medium text-dim">{doc.group}</div>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-semibold tracking-tight text-fg">
           {doc.name}
         </h1>
-        <Badge tone={doc.status === "stable" ? "neutral" : "warn"}>
-          {doc.status}
-        </Badge>
+        {doc.status === "beta" ? <Badge tone="warn">beta</Badge> : null}
       </div>
       <p className="mt-4 text-base leading-7 text-muted">{doc.description}</p>
 

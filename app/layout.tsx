@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { themeScript } from "@/components/nessa-ui";
 import { SiteNav } from "@/components/site/site-nav";
-import { SiteFooter } from "@/components/site/site-footer";
 import "./globals.css";
 
 const jetbrains = JetBrains_Mono({
@@ -43,14 +43,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${jetbrains.variable} ${inter.variable}`}
     >
-      <head>
-        {/* Applies the stored theme before first paint. */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body className="min-h-screen antialiased">
+        {/* Applies the stored theme before first paint. */}
+        <Script
+          id="nessa-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
         <SiteNav />
         <main>{children}</main>
-        <SiteFooter />
       </body>
     </html>
   );

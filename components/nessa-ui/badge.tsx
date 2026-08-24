@@ -10,7 +10,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 const tones: Record<Tone, string> = {
   neutral: "bg-raised text-muted border-line",
   solid: "bg-fg text-ink border-fg",
-  warn: "bg-amber-400/10 text-amber-300 border-amber-400/25",
+  warn: "bg-warn/10 text-warn border-warn/25",
   outline: "bg-transparent text-dim border-line",
 };
 

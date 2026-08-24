@@ -2,7 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Button, NavBar, ThemeToggle } from "@/components/nessa-ui";
+import { Button, ThemeToggle } from "@/components/nessa-ui";
+import { NavBar } from "./nav-bar";
 import { Brand } from "./brand";
 
 const links = [

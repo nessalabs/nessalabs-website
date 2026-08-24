@@ -3,10 +3,15 @@
 The Nessa Labs website — homepage plus the **nessa-ui** component documentation
 at `/ui/components`.
 
-The site is built from nessa-ui itself: the nav, hero, buttons, and footer are
-the same components the docs document. The homepage is a single hero over an
-ASCII-art background with a route into the component docs — the ASCII treatment
-is background texture only, not the UI language.
+nessa-ui is a general-purpose React component system: primitives (button, input,
+select, switch, badge, avatar, tooltip…) plus the composites that usually cost a
+week — an application shell, a sortable/searchable data table, a drag-and-drop
+board, a month calendar, and a pan-and-zoom node canvas.
+
+The website is a consumer of the library, not the subject of it. Anything that
+exists only for this site — the hero ASCII field, the announcement pill, the
+marketing nav — lives in `components/site` and is deliberately not in the
+registry.
 
 ## Stack
 
@@ -38,7 +43,7 @@ app/
   research/, agents/            placeholders for the next surfaces
 components/
   nessa-ui/                     the component library (the published source)
-  site/                         site-only composition of those components
+  site/                         site-only pieces: nav, brand, hero art, docs shell
 registry/
   index.ts                      docs metadata: usage, props, examples
   previews.tsx                  live preview node for each slug and example id
@@ -84,3 +89,11 @@ chosen, and once under `[data-theme="dark"]` so an explicit choice wins.
 `ThemeToggle` writes that choice to `localStorage`, and `themeScript` (rendered
 into `<head>` in `app/layout.tsx`) reapplies it before first paint so there is
 no flash of the wrong palette.
+
+## Syntax highlighting
+
+`CodeBlock` highlights with `lib/highlight.ts` — a small regex tokenizer for the
+languages the docs actually use (TS/TSX and shell). Token colors are theme
+variables (`--color-code-keyword`, `--color-code-string`, …), so highlighting
+follows light and dark like everything else. There is no grammar engine in the
+client bundle.
