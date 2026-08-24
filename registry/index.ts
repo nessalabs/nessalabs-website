@@ -97,11 +97,11 @@ export const registry: ComponentDoc[] = [
     group: "Display",
     usage: `import { Badge } from "@/components/nessa-ui"
 
-<Badge tone="accent">stable</Badge>`,
+<Badge tone="solid">Stable</Badge>`,
     props: [
       {
         name: "tone",
-        type: '"neutral" | "accent" | "warn" | "outline"',
+        type: '"neutral" | "solid" | "warn" | "outline"',
         default: '"neutral"',
       },
     ],
@@ -194,6 +194,29 @@ export const registry: ComponentDoc[] = [
         name: "defaultValue",
         type: "string",
         description: "Falls back to the first item.",
+      },
+    ],
+  },
+  {
+    slug: "theme-toggle",
+    name: "ThemeToggle",
+    description:
+      "Switches the page between light and dark and remembers the choice. Ships with a boot script that applies the stored theme before first paint.",
+    status: "stable",
+    group: "Primitives",
+    usage: `import { ThemeToggle, themeScript } from "@/components/nessa-ui"
+
+// in <head>, so there is no flash of the wrong palette
+<script dangerouslySetInnerHTML={{ __html: themeScript }} />
+
+// anywhere in the UI
+<ThemeToggle />`,
+    props: [
+      {
+        name: "…",
+        type: "ButtonHTMLAttributes",
+        description:
+          "Takes any button prop. The icon and behaviour are built in.",
       },
     ],
   },

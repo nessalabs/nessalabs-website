@@ -14,6 +14,7 @@ import {
   Section,
   Tabs,
   Terminal,
+  ThemeToggle,
 } from "@/components/nessa-ui";
 
 /**
@@ -42,11 +43,13 @@ export const previews: Record<string, React.ReactNode> = {
   badge: (
     <div className="flex flex-wrap items-center gap-3">
       <Badge>Neutral</Badge>
-      <Badge tone="accent">Stable</Badge>
+      <Badge tone="solid">Solid</Badge>
       <Badge tone="warn">Beta</Badge>
       <Badge tone="outline">Outline</Badge>
     </div>
   ),
+
+  "theme-toggle": <ThemeToggle />,
 
   input: (
     <Input
@@ -92,12 +95,12 @@ export const previews: Record<string, React.ReactNode> = {
         {
           value: "preview",
           label: "Preview",
-          content: <Badge tone="accent">Rendered</Badge>,
+          content: <Badge tone="neutral">Rendered</Badge>,
         },
         {
           value: "code",
           label: "Code",
-          content: <CodeBlock code={`<Badge tone="accent">Rendered</Badge>`} />,
+          content: <CodeBlock code={`<Badge tone="neutral">Rendered</Badge>`} />,
         },
       ]}
     />

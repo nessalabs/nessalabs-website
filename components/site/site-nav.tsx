@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Button, NavBar } from "@/components/nessa-ui";
+import { Button, NavBar, ThemeToggle } from "@/components/nessa-ui";
 import { Brand } from "./brand";
 
 const links = [
@@ -20,11 +20,14 @@ export function SiteNav() {
       links={links}
       activeHref={pathname}
       action={
-        <Link href="/ui/components">
-          <Button size="sm" variant="secondary">
-            Get started
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link href="/ui/components">
+            <Button size="sm" variant="secondary">
+              Get started
+            </Button>
+          </Link>
+        </div>
       }
     />
   );

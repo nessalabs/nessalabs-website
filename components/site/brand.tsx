@@ -8,7 +8,7 @@ export function Brand({ href = "/" }: { href?: string }) {
     >
       <span
         aria-hidden
-        className="text-accent transition-colors group-hover:text-fg"
+        className="text-dim transition-colors group-hover:text-fg"
       >
         ◼
       </span>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ComponentsOverviewPage() {
   return (
     <div className="max-w-3xl">
-      <div className="mb-2 text-sm font-medium text-accent">nessa-ui</div>
+      <div className="mb-2 text-sm font-medium text-dim">nessa-ui</div>
       <h1 className="text-3xl font-semibold tracking-tight text-fg">
         Components
       </h1>
@@ -58,7 +58,7 @@ export default function Page() {
                       <div className="flex items-center justify-between gap-3">
                         <span className="font-medium text-fg">{item.name}</span>
                         <Badge
-                          tone={item.status === "stable" ? "accent" : "warn"}
+                          tone={item.status === "stable" ? "neutral" : "warn"}
                         >
                           {item.status}
                         </Badge>

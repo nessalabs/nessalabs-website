@@ -39,7 +39,7 @@ export function PropTable({ rows, className, ...props }: PropTableProps) {
                 ) : null}
               </td>
               <td className="px-4 py-3 align-top">
-                <code className="text-xs whitespace-pre-wrap text-accent">
+                <code className="text-xs whitespace-pre-wrap text-muted">
                   {row.type}
                 </code>
               </td>

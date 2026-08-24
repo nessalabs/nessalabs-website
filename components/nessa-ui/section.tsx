@@ -25,7 +25,7 @@ export function Section({
           <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-2xl">
               {eyebrow ? (
-                <div className="mb-2 text-sm font-medium text-accent">
+                <div className="mb-2 text-sm font-medium text-dim">
                   {eyebrow}
                 </div>
               ) : null}

@@ -58,7 +58,7 @@ export function Terminal({
       </div>
       <pre className="overflow-x-auto whitespace-pre p-4 leading-6 text-muted">
         {shown}
-        <span className="animate-blink text-accent">█</span>
+        <span className="animate-blink text-fg">█</span>
       </pre>
     </div>
   );

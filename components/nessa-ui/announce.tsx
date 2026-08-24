@@ -17,7 +17,7 @@ export function Announce({ label, className, children, ...props }: AnnounceProps
       )}
       {...props}
     >
-      <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
+      <span className="rounded-full bg-raised px-2.5 py-0.5 text-xs font-medium text-fg">
         {label}
       </span>
       <span className="truncate">{children}</span>

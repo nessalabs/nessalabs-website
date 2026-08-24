@@ -12,7 +12,9 @@ is background texture only, not the UI language.
 
 - Next.js (App Router) + React 19
 - TypeScript
-- Tailwind CSS v4 (tokens defined in `app/globals.css` under `@theme`)
+- Tailwind CSS v4 — semantic tokens in `app/globals.css`; light is the `@theme`
+  default and dark swaps the same variables via `prefers-color-scheme` or
+  `data-theme` on `<html>`
 - JetBrains Mono / Inter via `next/font`
 - Deployed on Vercel
 
@@ -56,7 +58,9 @@ there is nothing else to wire up.
 
 ## Design rules
 
-- Dark, quiet, and legible: sans for interface text, mono only for code.
+- Quiet and legible: sans for interface text, mono only for code.
+- Neutral by default — no accent hue. Emphasis comes from contrast.
+- Light and dark are equal citizens; never hard-code a color outside the tokens.
 - ASCII art is decoration, never chrome.
 - No animation without a `prefers-reduced-motion` path.
 - The source is the package: components are copied into consuming apps, not
@@ -69,3 +73,14 @@ Push to `main` and Vercel builds it. Locally:
 ```bash
 npm run build
 ```
+
+## Theming
+
+Colors are semantic CSS variables (`--color-ink`, `--color-fg`, `--color-line`,
+…). Light values live in the `@theme` block; dark redefines the same variables
+twice — once under `prefers-color-scheme: dark` for visitors who have not
+chosen, and once under `[data-theme="dark"]` so an explicit choice wins.
+
+`ThemeToggle` writes that choice to `localStorage`, and `themeScript` (rendered
+into `<head>` in `app/layout.tsx`) reapplies it before first paint so there is
+no flash of the wrong palette.

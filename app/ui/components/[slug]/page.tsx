@@ -35,12 +35,12 @@ export default async function ComponentPage({
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-2 text-sm font-medium text-accent">{doc.group}</div>
+      <div className="mb-2 text-sm font-medium text-dim">{doc.group}</div>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-semibold tracking-tight text-fg">
           {doc.name}
         </h1>
-        <Badge tone={doc.status === "stable" ? "accent" : "warn"}>
+        <Badge tone={doc.status === "stable" ? "neutral" : "warn"}>
           {doc.status}
         </Badge>
       </div>
