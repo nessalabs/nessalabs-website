@@ -7,8 +7,9 @@ nessa-ui is a behaviour-first React component system: primitives (button, input,
 select, switch, badge, avatar, tooltip…) plus the composites that usually cost a
 week each — a resizable application shell, split panes, a sortable/searchable
 data table, a pointer-driven board, a day/week/month/year calendar, a
-pan-and-zoom node canvas, and the AI chat surface (streaming thread, tool and
-skill calls, attachments, queue steering).
+pan-and-zoom node canvas, a Gantt chart, and the agent surfaces (streaming
+chat, composer with queue steering, tool calls, permission prompts, JSON trees,
+diff summaries, model picker).
 
 What ships is the interaction model. Styling is the consumer's: every component
 takes `className`, the interactive ones take `classNames` for their parts and a

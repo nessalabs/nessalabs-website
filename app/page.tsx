@@ -29,9 +29,8 @@ export default function HomePage() {
           that think.
         </h1>
 
-        <p className="animate-fade-up mx-auto mt-6 max-w-xl text-base leading-7 text-muted">
-          An applied AI lab building research, agents, and the interface layer
-          in between.
+        <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-base text-muted">
+          Research, agents, and the interfaces between them.
         </p>
 
         <div className="animate-fade-up mt-10 flex flex-wrap items-center justify-center gap-3">

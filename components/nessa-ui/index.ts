@@ -10,6 +10,13 @@ export * from "./textarea";
 export * from "./theme-toggle";
 export * from "./tooltip";
 
+// agent surfaces
+export * from "./file-diff-list";
+export * from "./json-tree";
+export * from "./model-picker";
+export * from "./tool-approval";
+export * from "./tool-call";
+
 // display & feedback
 export * from "./alert";
 export * from "./card";
@@ -36,4 +43,5 @@ export * from "./split-pane";
 export * from "./calendar";
 export * from "./canvas";
 export * from "./data-table";
+export * from "./gantt-chart";
 export * from "./kanban";

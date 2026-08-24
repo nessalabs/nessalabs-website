@@ -33,7 +33,15 @@ import {
   Chat,
   Composer,
   SplitPane,
+  FileDiffList,
+  GanttChart,
+  JsonTree,
+  ModelPicker,
+  ToolApproval,
+  ToolCall,
   type ChatMessage,
+  type GanttTask,
+  type ToolApprovalResolution,
   type KanbanColumn,
   type CanvasNode,
 } from "@/components/nessa-ui";
@@ -138,6 +146,48 @@ const PIPELINE_NODES: CanvasNode[] = [
   { id: "index", x: 264, y: 176, title: "Index", subtitle: "vector store" },
   { id: "serve", x: 496, y: 112, title: "Serve", subtitle: "retrieval api" },
 ];
+
+const GANTT_TASKS: GanttTask[] = [
+  { id: "plan", name: "Retrieval v2", start: "2026-08-20", end: "2026-09-04" },
+  { id: "spec", name: "Spec", start: "2026-08-20", end: "2026-08-22", parentId: "plan", progress: 1, tone: "success" },
+  { id: "index", name: "Rebuild index", start: "2026-08-24", end: "2026-08-28", parentId: "plan", progress: 0.6, dependsOn: ["spec"] },
+  { id: "eval", name: "Eval sweep", start: "2026-08-27", end: "2026-09-01", parentId: "plan", progress: 0.2, tone: "warn", dependsOn: ["index"] },
+  { id: "review", name: "Review", start: "2026-09-01", end: "2026-09-03", parentId: "plan", progress: 0 },
+  { id: "ship", name: "Ship v2", start: "2026-09-04", end: "2026-09-04", tone: "accent", dependsOn: ["review"] },
+];
+
+const DIFF_FILES = [
+  { path: "packages/react/src/retrieval/index.ts", additions: 84, deletions: 12, status: "modified" as const },
+  { path: "packages/react/src/retrieval/encoder.ts", additions: 31, deletions: 0, status: "added" as const },
+  { path: "packages/react/src/retrieval/legacy.ts", additions: 0, deletions: 96, status: "deleted" as const },
+  { path: "apps/api/routes/search.ts", additions: 12, deletions: 4, status: "modified" as const },
+  { path: "docs/retrieval.md", additions: 27, deletions: 3, status: "modified" as const },
+];
+
+const MODEL_GROUPS = [
+  {
+    label: "Nessa",
+    models: [
+      { id: "large", name: "nessa-1-large", meta: "200k", description: "Best for reasoning and long context" },
+      { id: "base", name: "nessa-1-base", meta: "128k", description: "Balanced cost and quality" },
+      { id: "mini", name: "nessa-1-mini", meta: "64k", description: "Fastest, for classification" },
+    ],
+  },
+  {
+    label: "Embedding",
+    models: [
+      { id: "embed", name: "nessa-embed-1", meta: "8k", description: "Retrieval and clustering" },
+      { id: "rerank", name: "nessa-rerank-1", meta: "8k", description: "Cross-encoder reranking", disabled: true },
+    ],
+  },
+];
+
+const TOOL_PAYLOAD = {
+  suite: "retrieval",
+  filters: { status: ["failed", "queued"], since: "2026-08-22" },
+  limit: 12,
+  options: { includeTraces: true, sample: null },
+};
 
 const SKILLS = [
   { id: "eval", name: "Eval suite", description: "Run the scoring harness" },
@@ -600,6 +650,68 @@ export async function run(suite: string) {
   ),
 
   "app-shell-inspector": <AppShellInspectorDemo />,
+
+  // agent surfaces
+  "tool-call": (
+    <div className="w-full max-w-xl">
+      <ToolCall
+        name="search_runs"
+        defaultOpen
+        summary="suite=retrieval · 12 matches"
+        input={<JsonTree value={TOOL_PAYLOAD} className="border-0 bg-transparent p-0" />}
+        output={`4189  failed   72.9\n4190  passed   91.4\n4186  passed   97.8`}
+        files={["runs/4189.json", "runs/4190.json"]}
+      />
+    </div>
+  ),
+  "tool-call-states": (
+    <div className="w-full max-w-xl space-y-2">
+      <ToolCall name="read_file" status="pending" summary="queued" />
+      <ToolCall name="eval-suite" status="running" summary="re-running 3 cases" />
+      <ToolCall name="search_runs" status="complete" summary="12 matches" output="4189 · 4190 · 4186" />
+      <ToolCall name="write_file" status="error" summary="permission denied" output="EACCES: /etc/hosts" />
+    </div>
+  ),
+
+  "tool-approval": <ToolApprovalDemo />,
+
+  "json-tree": <JsonTree className="w-full max-w-xl" value={TOOL_PAYLOAD} />,
+  "json-tree-collapsible": (
+    <JsonTree
+      className="w-full max-w-xl"
+      value={TOOL_PAYLOAD}
+      collapsible
+      defaultExpandedDepth={1}
+    />
+  ),
+
+  "file-diff-list": (
+    <FileDiffList className="w-full max-w-xl" files={DIFF_FILES} />
+  ),
+
+  "model-picker": (
+    <ModelPicker groups={MODEL_GROUPS} defaultValue="large" />
+  ),
+
+  // gantt
+  "gantt-chart": <GanttDemo />,
+  "gantt-scales": (
+    <GanttChart
+      className="w-full"
+      defaultScale="month"
+      today="2026-08-23"
+      tasks={GANTT_TASKS}
+    />
+  ),
+  "gantt-readonly": (
+    <GanttChart
+      className="w-full"
+      editable={false}
+      shortcuts={false}
+      today="2026-08-23"
+      tasks={GANTT_TASKS}
+    />
+  ),
 };
 
 /* ── demos ─────────────────────────────────────────────────────────────── */
@@ -952,5 +1064,51 @@ function AppShellInspectorDemo() {
         </div>
       </SplitPane>
     </AppShell>
+  );
+}
+
+function ToolApprovalDemo() {
+  const [resolution, setResolution] =
+    React.useState<ToolApprovalResolution | null>(null);
+
+  return (
+    <div className="w-full max-w-xl space-y-3">
+      <ToolApproval
+        title="Run a shell command"
+        description="The agent wants to run the eval harness against run 4192."
+        command="npx nessa eval --suite retrieval --run 4192"
+        resolution={resolution}
+        onResolve={setResolution}
+      />
+      {resolution ? (
+        <button
+          type="button"
+          onClick={() => setResolution(null)}
+          className="text-sm text-dim underline-offset-4 hover:text-fg hover:underline"
+        >
+          Reset
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function GanttDemo() {
+  const [tasks, setTasks] = React.useState<GanttTask[]>(GANTT_TASKS);
+
+  return (
+    <div className="w-full space-y-3">
+      <p className="text-sm text-muted">
+        Drag a bar to reschedule it, or its edges to resize. Collapse{" "}
+        <span className="text-fg">Retrieval v2</span> to roll its children up,
+        and note that <span className="text-fg">Ship v2</span> is a milestone.
+      </p>
+      <GanttChart
+        className="w-full"
+        today="2026-08-23"
+        tasks={tasks}
+        onTasksChange={setTasks}
+      />
+    </div>
   );
 }

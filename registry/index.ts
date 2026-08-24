@@ -6,6 +6,7 @@ export const groups = [
   "Data display",
   "Navigation",
   "Overlays",
+  "Agent surfaces",
   "Composites",
 ] as const;
 
@@ -492,6 +493,184 @@ export const registry: ComponentDoc[] = [
   },
 
   // ── Composites ────────────────────────────────────────────────────────────
+  {
+    slug: "tool-call",
+    name: "ToolCall",
+    description:
+      "One tool invocation in an agent transcript: a disclosure row naming the tool, with input and output panes and the files it touched. Status is exposed as data-status for host styling.",
+    status: "stable",
+    group: "Agent surfaces",
+    usage: `import { ToolCall } from "@/components/nessa-ui"
+
+<ToolCall
+  name="search_runs"
+  status="complete"
+  summary="suite=retrieval"
+  input={<JsonTree value={{ suite: "retrieval" }} />}
+  output="12 matches"
+/>`,
+    props: [
+      { name: "name", type: "string", description: "Required." },
+      { name: "status", type: '"pending" | "running" | "complete" | "error"', default: '"complete"' },
+      { name: "summary", type: "ReactNode", description: "Shown on the trigger row." },
+      { name: "icon", type: "ReactNode" },
+      { name: "input / output", type: "ReactNode", description: "Rendered as tabs when both are present." },
+      { name: "files", type: "string[]", description: "Chips for the files the call touched." },
+      { name: "open / defaultOpen / onOpenChange", type: "boolean · (open) => void", description: "Controlled or uncontrolled expansion." },
+    ],
+    examples: [
+      {
+        id: "tool-call-states",
+        title: "Lifecycle states",
+        code: `<ToolCall name="read_file" status="pending" summary="queued" />
+<ToolCall name="eval-suite" status="running" summary="3 cases" />
+<ToolCall name="search_runs" status="complete" output="12 matches" />
+<ToolCall name="write_file" status="error" summary="permission denied" />`,
+      },
+    ],
+  },
+  {
+    slug: "tool-approval",
+    name: "ToolApproval",
+    description:
+      "A tool-permission request: the agent wants to run something and the person decides. Once resolved the card goes inert and states the decision, so a settled request never looks live.",
+    status: "stable",
+    group: "Agent surfaces",
+    usage: `import { ToolApproval } from "@/components/nessa-ui"
+
+<ToolApproval
+  title="Run a shell command"
+  description="The agent wants to run the eval harness."
+  command="npx nessa eval --suite retrieval"
+  resolution={resolution}
+  onResolve={setResolution}
+/>`,
+    props: [
+      { name: "title", type: "string", description: "Required." },
+      { name: "description", type: "ReactNode" },
+      { name: "command", type: "ReactNode", description: "The payload being approved." },
+      { name: "variant", type: '"docked" | "floating"', default: '"docked"' },
+      { name: "resolution", type: '"allow" | "allow-always" | "deny" | null', default: "null" },
+      { name: "onResolve", type: "(resolution) => void" },
+    ],
+  },
+  {
+    slug: "json-tree",
+    name: "JsonTree",
+    description:
+      "A structured JSON renderer: keys tint muted so values carry emphasis, containers indent with real punctuation, and the text stays selectable. Circular references render as [Circular] instead of recursing.",
+    status: "stable",
+    group: "Agent surfaces",
+    usage: `import { JsonTree } from "@/components/nessa-ui"
+
+<JsonTree value={payload} collapsible defaultExpandedDepth={1} />`,
+    props: [
+      { name: "value", type: "unknown", description: "Required. Already parsed — a string renders as a string leaf." },
+      { name: "collapsible", type: "boolean", default: "false", description: "Adds a disclosure toggle to every container." },
+      { name: "defaultExpandedDepth", type: "number", description: "Containers at this depth or deeper start folded." },
+    ],
+    examples: [
+      {
+        id: "json-tree-collapsible",
+        title: "Collapsible, folded below the top level",
+        code: `<JsonTree value={payload} collapsible defaultExpandedDepth={1} />`,
+      },
+    ],
+  },
+  {
+    slug: "file-diff-list",
+    name: "FileDiffList",
+    description:
+      "The change summary an agent produces: files touched with per-file add and delete counts, folded to the first few until expanded.",
+    status: "stable",
+    group: "Agent surfaces",
+    usage: `import { FileDiffList } from "@/components/nessa-ui"
+
+<FileDiffList
+  files={[
+    { path: "src/index.ts", additions: 24, deletions: 3, status: "modified" },
+  ]}
+/>`,
+    props: [
+      { name: "files", type: "FileDiff[]", description: "Required. path, additions, deletions, optional status." },
+      { name: "title", type: "ReactNode", default: '"Changes"' },
+      { name: "collapsedCount", type: "number", default: "3" },
+      { name: "expanded / defaultExpanded / onExpandedChange", type: "boolean · (expanded) => void" },
+      { name: "onFileClick", type: "(file: FileDiff) => void" },
+    ],
+  },
+  {
+    slug: "model-picker",
+    name: "ModelPicker",
+    description:
+      "A grouped, searchable model list in a popover. Type to filter, ↑/↓ to move, Enter to choose, Escape to dismiss — filtering and selecting are the same gesture.",
+    status: "stable",
+    group: "Agent surfaces",
+    usage: `import { ModelPicker } from "@/components/nessa-ui"
+
+<ModelPicker
+  groups={[
+    {
+      label: "Nessa",
+      models: [
+        { id: "large", name: "nessa-1-large", meta: "200k", description: "Best for reasoning" },
+      ],
+    },
+  ]}
+  defaultValue="large"
+/>`,
+    props: [
+      { name: "groups", type: "ModelGroup[]", description: "Required. label and models." },
+      { name: "value / defaultValue / onValueChange", type: "string · (value) => void" },
+      { name: "open / defaultOpen / onOpenChange", type: "boolean · (open) => void" },
+      { name: "placeholder / searchPlaceholder / emptyMessage", type: "string" },
+      { name: "disabled", type: "boolean" },
+    ],
+  },
+  {
+    slug: "gantt-chart",
+    name: "GanttChart",
+    description:
+      "A plan on a timeline. Summaries roll their span and progress up from their children, a task whose start equals its end renders as a milestone diamond, and dependencies draw as finish-to-start arrows. Bars drag to reschedule and their edges drag to resize — nothing reschedules itself behind your back.",
+    status: "beta",
+    group: "Composites",
+    usage: `import { GanttChart } from "@/components/nessa-ui"
+
+<GanttChart
+  today="2026-08-23"
+  defaultScale="week"
+  tasks={[
+    { id: "plan", name: "Retrieval v2" },
+    { id: "index", name: "Rebuild index", start: "2026-08-24", end: "2026-08-28", parentId: "plan", progress: 0.6 },
+    { id: "ship", name: "Ship", start: "2026-09-02", end: "2026-09-02", dependsOn: ["index"] },
+  ]}
+  onTasksChange={setTasks}
+/>`,
+    props: [
+      { name: "tasks", type: "GanttTask[]", description: "Required. id, name, start, end, optional progress, tone, dependsOn, parentId." },
+      { name: "onTasksChange", type: "(tasks: GanttTask[]) => void", description: "Makes the chart controlled; fires after a drag commits." },
+      { name: "scale / defaultScale / onScaleChange", type: '"day" | "week" | "month"', default: '"week"' },
+      { name: "today", type: "string", description: "Fixed current date for the marker and Today button." },
+      { name: "selectedTaskId / onSelectTask", type: "string | null · (id) => void" },
+      { name: "editable", type: "boolean", default: "true", description: "Drag bars to reschedule, edges to resize." },
+      { name: "rowHeight / taskListWidth", type: "number", default: "36 / 208" },
+      { name: "shortcuts", type: "boolean", default: "true", description: "H/L scroll, T today, D/W/M scale." },
+      { name: "renderTask", type: "(task, span) => ReactNode", description: "Own the bar interior." },
+      { name: "classNames", type: "{ root, row, bar, list }" },
+    ],
+    examples: [
+      {
+        id: "gantt-scales",
+        title: "Month scale — the whole plan at a glance",
+        code: `<GanttChart defaultScale="month" today="2026-08-23" tasks={tasks} />`,
+      },
+      {
+        id: "gantt-readonly",
+        title: "Read-only",
+        code: `<GanttChart editable={false} shortcuts={false} tasks={tasks} />`,
+      },
+    ],
+  },
   {
     slug: "app-shell",
     name: "AppShell",
