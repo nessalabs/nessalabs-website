@@ -210,6 +210,7 @@ export function Kanban({
     id: string,
     fromColumn: string
   ) {
+    e.preventDefault();
     const el = e.currentTarget as HTMLElement;
     const rect = el.getBoundingClientRect();
     pending.current = {

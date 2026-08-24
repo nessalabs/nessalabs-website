@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "preview-source": "node scripts/extract-preview-source.mjs",
+    "prebuild": "node scripts/extract-preview-source.mjs",
+    "predev": "node scripts/extract-preview-source.mjs"
   },
   "dependencies": {
     "next": "^16.3.2",

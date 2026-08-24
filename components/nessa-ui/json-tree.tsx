@@ -39,7 +39,7 @@ export function JsonTree({
         depth={0}
         collapsible={collapsible}
         defaultExpandedDepth={defaultExpandedDepth}
-        seen={new WeakSet()}
+        ancestors={[]}
       />
     </div>
   );
@@ -51,7 +51,7 @@ function Node({
   depth,
   collapsible,
   defaultExpandedDepth,
-  seen,
+  ancestors,
   trailingComma,
 }: {
   name?: string;
@@ -59,7 +59,8 @@ function Node({
   depth: number;
   collapsible: boolean;
   defaultExpandedDepth?: number;
-  seen: WeakSet<object>;
+  /** The chain from the root to this node — a cycle is a value that repeats. */
+  ancestors: object[];
   trailingComma?: boolean;
 }) {
   const isObject = value !== null && typeof value === "object";
@@ -88,7 +89,7 @@ function Node({
     );
   }
 
-  if (seen.has(value as object)) {
+  if (ancestors.includes(value as object)) {
     return (
       <div className="whitespace-nowrap">
         {key}
@@ -96,7 +97,7 @@ function Node({
       </div>
     );
   }
-  seen.add(value as object);
+  const nextAncestors = [...ancestors, value as object];
 
   const isArray = Array.isArray(value);
   const entries = isArray
@@ -161,7 +162,7 @@ function Node({
                 depth={depth + 1}
                 collapsible={collapsible}
                 defaultExpandedDepth={defaultExpandedDepth}
-                seen={seen}
+                ancestors={nextAncestors}
                 trailingComma={i < entries.length - 1}
               />
             ))}

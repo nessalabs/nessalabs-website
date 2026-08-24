@@ -39,6 +39,7 @@ export * from "./dropdown-menu";
 export * from "./app-shell";
 export * from "./chat";
 export * from "./composer";
+export * from "./composer-editor";
 export * from "./split-pane";
 export * from "./calendar";
 export * from "./canvas";

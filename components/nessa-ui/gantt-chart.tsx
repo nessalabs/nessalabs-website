@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/cn";
+import { useSystemToday } from "@/lib/use-system-today";
 import {
   addDays,
   MONTHS,
@@ -38,12 +39,21 @@ export interface GanttChartProps
   scale?: GanttScale;
   defaultScale?: GanttScale;
   onScaleChange?: (scale: GanttScale) => void;
-  /** Fixed "today" so rendering stays pure. */
+  /**
+   * The date the marker and Today button use. Defaults to the viewer's current
+   * date; pass it to pin the chart for a test or a fixed reporting period.
+   */
   today?: ISODate;
   selectedTaskId?: string | null;
   onSelectTask?: (id: string | null) => void;
   /** Drag bars to reschedule, and edges to resize. */
   editable?: boolean;
+  /**
+   * When a move or resize shifts a task's finish, shift every task that
+   * transitively depends on it by the same number of days — finish-to-start
+   * scheduling in its simplest push-and-pull form, in both directions.
+   */
+  cascadeDependents?: boolean;
   rowHeight?: number;
   taskListWidth?: number;
   /** h/l scroll, t today, d/w/m scale. */
@@ -80,10 +90,11 @@ export function GanttChart({
   scale,
   defaultScale = "week",
   onScaleChange,
-  today = "2026-08-23",
+  today: todayProp,
   selectedTaskId,
   onSelectTask,
   editable = true,
+  cascadeDependents = true,
   rowHeight = 36,
   taskListWidth = 208,
   shortcuts = true,
@@ -92,6 +103,9 @@ export function GanttChart({
   className,
   ...props
 }: GanttChartProps) {
+  const systemToday = useSystemToday();
+  const today = todayProp ?? systemToday ?? "1970-01-01";
+
   const [internalTasks, setInternalTasks] = React.useState(tasks);
   const rows = onTasksChange ? tasks : internalTasks;
 
@@ -112,6 +126,8 @@ export function GanttChart({
         startX: number;
         from: ISODate;
         to: ISODate;
+        /** Tasks as they were when the drag began. */
+        baseline: GanttTask[];
       }
     | null
   >(null);
@@ -130,6 +146,24 @@ export function GanttChart({
     if (selectedTaskId === undefined) setSelectedState(id);
     onSelectTask?.(id);
   }
+
+  /** Every task that transitively depends on `id`. */
+  const dependentsOf = React.useCallback(
+    (id: string, all: GanttTask[]) => {
+      const out = new Set<string>();
+      const walk = (current: string) => {
+        for (const task of all) {
+          if (!task.dependsOn?.includes(current)) continue;
+          if (out.has(task.id)) continue;
+          out.add(task.id);
+          walk(task.id);
+        }
+      };
+      walk(id);
+      return out;
+    },
+    []
+  );
 
   const children = React.useMemo(() => {
     const map = new Map<string, GanttTask[]>();
@@ -196,22 +230,37 @@ export function GanttChart({
       const state = drag.current;
       if (!state) return;
       const delta = Math.round((e.clientX - state.startX) / dayWidth);
-      if (!delta) return;
+
+      // Does this gesture shift the task's finish? Only then do dependents move.
+      const finishShift = state.mode === "start" ? 0 : delta;
+      const pushed =
+        cascadeDependents && finishShift
+          ? dependentsOf(state.id, state.baseline)
+          : new Set<string>();
+
       commit(
-        rows.map((task) => {
-          if (task.id !== state.id) return task;
-          if (state.mode === "move")
-            return {
-              ...task,
-              start: addDays(state.from, delta),
-              end: addDays(state.to, delta),
-            };
-          if (state.mode === "start") {
-            const next = addDays(state.from, delta);
-            return { ...task, start: next > task.end ? task.end : next };
+        state.baseline.map((task) => {
+          if (task.id === state.id) {
+            if (state.mode === "move")
+              return {
+                ...task,
+                start: addDays(state.from, delta),
+                end: addDays(state.to, delta),
+              };
+            if (state.mode === "start") {
+              const next = addDays(state.from, delta);
+              return { ...task, start: next > task.end ? task.end : next };
+            }
+            const next = addDays(state.to, delta);
+            return { ...task, end: next < task.start ? task.start : next };
           }
-          const next = addDays(state.to, delta);
-          return { ...task, end: next < task.start ? task.start : next };
+
+          if (!pushed.has(task.id)) return task;
+          return {
+            ...task,
+            start: addDays(task.start, finishShift),
+            end: addDays(task.end, finishShift),
+          };
         })
       );
     }
@@ -268,7 +317,7 @@ export function GanttChart({
       tabIndex={shortcuts ? 0 : undefined}
       onKeyDown={onKeyDown}
       className={cn(
-        "overflow-hidden rounded-xl border border-line bg-surface outline-none focus-visible:ring-2 focus-visible:ring-fg/20",
+        "select-none overflow-hidden rounded-xl border border-line bg-surface outline-none focus-visible:ring-2 focus-visible:ring-fg/20",
         classNames?.root,
         className
       )}
@@ -454,6 +503,7 @@ export function GanttChart({
                       <div
                         onPointerDown={(e) => {
                           if (!editable || isSummary) return;
+                          e.preventDefault();
                           select(task.id);
                           document.body.style.cursor = "grabbing";
                           document.body.style.userSelect = "none";
@@ -463,6 +513,7 @@ export function GanttChart({
                             startX: e.clientX,
                             from: task.start,
                             to: task.end,
+                            baseline: rows,
                           };
                         }}
                         onClick={() => select(task.id)}
@@ -509,12 +560,15 @@ export function GanttChart({
                             <span
                               onPointerDown={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
+                                document.body.style.userSelect = "none";
                                 drag.current = {
                                   id: task.id,
                                   mode: "start",
                                   startX: e.clientX,
                                   from: task.start,
                                   to: task.end,
+                                  baseline: rows,
                                 };
                               }}
                               className="absolute inset-y-0 left-0 z-20 w-1.5 cursor-ew-resize"
@@ -522,12 +576,15 @@ export function GanttChart({
                             <span
                               onPointerDown={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
+                                document.body.style.userSelect = "none";
                                 drag.current = {
                                   id: task.id,
                                   mode: "end",
                                   startX: e.clientX,
                                   from: task.start,
                                   to: task.end,
+                                  baseline: rows,
                                 };
                               }}
                               className="absolute inset-y-0 right-0 z-20 w-1.5 cursor-ew-resize"
@@ -579,7 +636,10 @@ export function GanttChart({
           <Kbd>W</Kbd>
           <Kbd>M</Kbd>
           <span>scale</span>
-          <span className="ml-auto">Drag a bar to reschedule, its edges to resize</span>
+          <span className="ml-auto">
+            Drag a bar to reschedule, its edges to resize
+            {cascadeDependents ? " — dependents follow" : ""}
+          </span>
         </div>
       ) : null}
     </div>

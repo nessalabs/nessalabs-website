@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/cn";
+import { useSystemToday } from "@/lib/use-system-today";
 import {
   addDays,
   addMonths,
@@ -42,10 +43,21 @@ export interface CalendarProps
   defaultDate?: ISODate;
   onDateChange?: (date: ISODate) => void;
   events?: CalendarEvent[];
-  /** Highlighted as today. Passed in so rendering stays pure. */
+  /**
+   * The date highlighted as today. Defaults to the viewer's current date; pass
+   * it to pin the calendar for a test, a story, or a fixed reporting period.
+   */
   today?: ISODate;
   onSelect?: (date: ISODate) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  /**
+   * Drag events to reschedule them: across days in month view, and across
+   * days and time slots in week and day views. Fires onEventsChange.
+   */
+  editable?: boolean;
+  onEventsChange?: (events: CalendarEvent[]) => void;
+  /** Minutes a dragged event snaps to on the time grid. */
+  snapMinutes?: number;
   /** Keyboard navigation while the calendar has focus. */
   shortcuts?: boolean;
 }
@@ -64,6 +76,9 @@ const toneClass = {
   danger: "bg-danger/15 text-danger",
 };
 
+/** Used only until the client reports the real date on first render. */
+const FALLBACK_DATE = "1970-01-01";
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_START = 6 * 60;
 const DAY_END = 22 * 60;
@@ -77,21 +92,145 @@ export function Calendar({
   defaultDate,
   onDateChange,
   events = [],
-  today = "2026-08-23",
+  today: todayProp,
   onSelect,
   onEventClick,
+  editable = false,
+  onEventsChange,
+  snapMinutes = 15,
   shortcuts = true,
   className,
   ...props
 }: CalendarProps) {
+  const systemToday = useSystemToday();
+  const today = todayProp ?? systemToday ?? FALLBACK_DATE;
+
   const [viewState, setViewState] = React.useState<CalendarView>(defaultView);
-  const [dateState, setDateState] = React.useState<ISODate>(
-    defaultDate ?? today
+  const [dateState, setDateState] = React.useState<ISODate | null>(
+    defaultDate ?? null
   );
   const [selected, setSelected] = React.useState<ISODate | null>(null);
+  const [internalEvents, setInternalEvents] = React.useState(events);
+  const items = onEventsChange ? events : internalEvents;
+
+  React.useEffect(() => {
+    if (!onEventsChange) setInternalEvents(events);
+  }, [events, onEventsChange]);
+
+  const [drag, setDrag] = React.useState<{
+    id: string;
+    /** Minutes between the event start and the grabbed point. */
+    grabOffset: number;
+    duration: number;
+    timed: boolean;
+  } | null>(null);
+  const [preview, setPreview] = React.useState<CalendarEvent | null>(null);
+  // The pointer handlers read through refs so the listeners never close over
+  // a stale event list, and so the drop can commit outside a state updater.
+  const previewRef = React.useRef<CalendarEvent | null>(null);
+  const itemsRef = React.useRef(items);
+  itemsRef.current = items;
+
+  function setPreviewEvent(next: CalendarEvent | null) {
+    previewRef.current = next;
+    setPreview(next);
+  }
+
+  const commitEvents = React.useCallback(
+    (next: CalendarEvent[]) => {
+      if (onEventsChange) onEventsChange(next);
+      else setInternalEvents(next);
+    },
+    [onEventsChange]
+  );
+
+  /** Resolve the day (and minute, on a time grid) under the pointer. */
+  function pointTarget(clientX: number, clientY: number) {
+    const el = document
+      .elementsFromPoint(clientX, clientY)
+      .find((node) => (node as HTMLElement).dataset?.day) as
+      | HTMLElement
+      | undefined;
+    if (!el) return null;
+    const date = el.dataset.day as ISODate;
+    if (el.dataset.timeColumn === undefined) return { date, minutes: null };
+    const rect = el.getBoundingClientRect();
+    const minutes =
+      DAY_START + Math.round((clientY - rect.top) / PX_PER_MIN);
+    return { date, minutes };
+  }
+
+  React.useEffect(() => {
+    if (!drag) return;
+    const active = drag;
+
+    function onMove(e: PointerEvent) {
+      const target = pointTarget(e.clientX, e.clientY);
+      if (!target) return;
+      const source =
+        previewRef.current ??
+        itemsRef.current.find((item) => eventKey(item) === active.id);
+      if (!source) return;
+
+      if (target.minutes === null || !active.timed) {
+        setPreviewEvent({ ...source, date: target.date });
+        return;
+      }
+      const raw = target.minutes - active.grabOffset;
+      const snapped = Math.round(raw / snapMinutes) * snapMinutes;
+      const start = clamp(snapped, 0, 24 * 60 - active.duration);
+      setPreviewEvent({
+        ...source,
+        date: target.date,
+        start: formatMinutes(start),
+        end: formatMinutes(start + active.duration),
+      });
+    }
+
+    function onUp() {
+      const next = previewRef.current;
+      if (next) {
+        commitEvents(
+          itemsRef.current.map((item) =>
+            eventKey(item) === active.id ? next : item
+          )
+        );
+      }
+      setPreviewEvent(null);
+      setDrag(null);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    }
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+    };
+  }, [drag, snapMinutes, commitEvents]);
+
+  function startDrag(
+    e: React.PointerEvent,
+    event: CalendarEvent,
+    grabOffset: number
+  ) {
+    if (!editable) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const timed = Boolean(event.start);
+    const duration =
+      timed && event.end
+        ? minutes(event.end) - minutes(event.start!)
+        : 60;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    setDrag({ id: eventKey(event), grabOffset, duration, timed });
+    setPreviewEvent(event);
+  }
 
   const activeView = view ?? viewState;
-  const anchor = date ?? dateState;
+  const anchor = date ?? dateState ?? today;
 
   function setView(next: CalendarView) {
     if (view === undefined) setViewState(next);
@@ -129,7 +268,10 @@ export function Calendar({
 
   const byDate = React.useMemo(() => {
     const map = new Map<ISODate, CalendarEvent[]>();
-    for (const event of events) {
+    const source = preview
+      ? items.map((item) => (eventKey(item) === drag?.id ? preview : item))
+      : items;
+    for (const event of source) {
       const list = map.get(event.date) ?? [];
       list.push(event);
       map.set(event.date, list);
@@ -140,7 +282,7 @@ export function Calendar({
       );
     }
     return map;
-  }, [events]);
+  }, [items, preview, drag]);
 
   function select(day: ISODate) {
     setSelected(day);
@@ -163,6 +305,7 @@ export function Calendar({
       onKeyDown={onKeyDown}
       className={cn(
         "rounded-xl border border-line bg-surface outline-none focus-visible:ring-2 focus-visible:ring-fg/20",
+        editable && "select-none",
         className
       )}
       {...props}
@@ -215,6 +358,9 @@ export function Calendar({
           byDate={byDate}
           onSelect={select}
           onEventClick={onEventClick}
+          editable={editable}
+          draggingId={drag?.id ?? null}
+          onEventPointerDown={startDrag}
         />
       ) : null}
       {activeView === "week" ? (
@@ -224,6 +370,9 @@ export function Calendar({
           byDate={byDate}
           onSelect={select}
           onEventClick={onEventClick}
+          editable={editable}
+          draggingId={drag?.id ?? null}
+          onEventPointerDown={startDrag}
         />
       ) : null}
       {activeView === "day" ? (
@@ -233,6 +382,9 @@ export function Calendar({
           byDate={byDate}
           onSelect={select}
           onEventClick={onEventClick}
+          editable={editable}
+          draggingId={drag?.id ?? null}
+          onEventPointerDown={startDrag}
         />
       ) : null}
       {activeView === "year" ? (
@@ -249,6 +401,11 @@ export function Calendar({
 
       {shortcuts ? (
         <div className="flex flex-wrap items-center gap-3 border-t border-line px-4 py-2 text-xs text-dim">
+          {editable ? (
+            <span className="mr-auto order-last">
+              Drag an event to reschedule it
+            </span>
+          ) : null}
           <Kbd>←</Kbd>
           <Kbd>→</Kbd>
           <span>move</span>
@@ -283,6 +440,9 @@ function MonthView({
   byDate,
   onSelect,
   onEventClick,
+  editable,
+  draggingId,
+  onEventPointerDown,
 }: {
   anchor: ISODate;
   today: ISODate;
@@ -290,6 +450,13 @@ function MonthView({
   byDate: Map<ISODate, CalendarEvent[]>;
   onSelect: (date: ISODate) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  editable: boolean;
+  draggingId: string | null;
+  onEventPointerDown: (
+    e: React.PointerEvent,
+    event: CalendarEvent,
+    grabOffset: number
+  ) => void;
 }) {
   const first = startOfMonth(anchor);
   const d = parseISO(first);
@@ -319,12 +486,17 @@ function MonthView({
               className="min-h-24 border-b border-r border-line bg-ink/20"
             />
           ) : (
-            <button
+            <div
               key={day}
-              type="button"
+              data-day={day}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelect(day)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onSelect(day);
+              }}
               className={cn(
-                "min-h-24 border-b border-r border-line p-1.5 text-left align-top transition-colors hover:bg-raised",
+                "min-h-24 cursor-default border-b border-r border-line p-1.5 text-left align-top transition-colors hover:bg-raised",
                 selected === day && "bg-raised"
               )}
             >
@@ -340,13 +512,16 @@ function MonthView({
                 {(byDate.get(day) ?? []).slice(0, 2).map((event, j) => (
                   <span
                     key={event.id ?? j}
+                    onPointerDown={(e) => onEventPointerDown(e, event, 0)}
                     onClick={(e) => {
                       e.stopPropagation();
                       onEventClick?.(event);
                     }}
                     className={cn(
                       "truncate rounded px-1 py-0.5 text-[11px]",
-                      toneClass[event.tone ?? "neutral"]
+                      toneClass[event.tone ?? "neutral"],
+                      editable && "cursor-grab active:cursor-grabbing",
+                      draggingId === eventKey(event) && "opacity-60 ring-1 ring-fg"
                     )}
                   >
                     {event.start ? `${event.start} ` : ""}
@@ -359,7 +534,7 @@ function MonthView({
                   </span>
                 ) : null}
               </span>
-            </button>
+            </div>
           )
         )}
       </div>
@@ -373,12 +548,22 @@ function TimeGrid({
   byDate,
   onSelect,
   onEventClick,
+  editable,
+  draggingId,
+  onEventPointerDown,
 }: {
   days: ISODate[];
   today: ISODate;
   byDate: Map<ISODate, CalendarEvent[]>;
   onSelect: (date: ISODate) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  editable: boolean;
+  draggingId: string | null;
+  onEventPointerDown: (
+    e: React.PointerEvent,
+    event: CalendarEvent,
+    grabOffset: number
+  ) => void;
 }) {
   const visibleHours = HOURS.filter(
     (h) => h * 60 >= DAY_START && h * 60 <= DAY_END
@@ -394,11 +579,11 @@ function TimeGrid({
         >
           <div className="px-2 py-2 text-right text-xs text-dim">all-day</div>
           {days.map((day) => (
-            <button
+            <div
               key={day}
-              type="button"
+              data-day={day}
               onClick={() => onSelect(day)}
-              className="border-l border-line p-1.5 text-left transition-colors hover:bg-raised"
+              className="cursor-default border-l border-line p-1.5 text-left transition-colors hover:bg-raised"
             >
               <div className="mb-1 flex items-center gap-1.5">
                 <span className="text-xs text-dim">
@@ -419,16 +604,20 @@ function TimeGrid({
                   .map((event, j) => (
                     <span
                       key={event.id ?? j}
+                      onPointerDown={(e) => onEventPointerDown(e, event, 0)}
                       className={cn(
                         "truncate rounded px-1 py-0.5 text-[11px]",
-                        toneClass[event.tone ?? "neutral"]
+                        toneClass[event.tone ?? "neutral"],
+                        editable && "cursor-grab active:cursor-grabbing",
+                        draggingId === eventKey(event) &&
+                          "opacity-60 ring-1 ring-fg"
                       )}
                     >
                       {event.title}
                     </span>
                   ))}
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
@@ -450,7 +639,12 @@ function TimeGrid({
           </div>
 
           {days.map((day) => (
-            <div key={day} className="relative border-l border-line">
+            <div
+              key={day}
+              data-day={day}
+              data-time-column=""
+              className="relative border-l border-line"
+            >
               {visibleHours.map((h) => (
                 <div
                   key={h}
@@ -466,14 +660,28 @@ function TimeGrid({
                   const top = (from - DAY_START) * PX_PER_MIN;
                   const height = Math.max(20, (to - from) * PX_PER_MIN);
                   return (
-                    <button
+                    <div
                       key={event.id ?? j}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
+                      onPointerDown={(e) => {
+                        const rect = (
+                          e.currentTarget as HTMLElement
+                        ).getBoundingClientRect();
+                        onEventPointerDown(
+                          e,
+                          event,
+                          Math.round((e.clientY - rect.top) / PX_PER_MIN)
+                        );
+                      }}
                       onClick={() => onEventClick?.(event)}
                       style={{ top, height }}
                       className={cn(
                         "absolute inset-x-1 overflow-hidden rounded-md border border-line px-1.5 py-1 text-left text-[11px] leading-4",
-                        toneClass[event.tone ?? "neutral"]
+                        toneClass[event.tone ?? "neutral"],
+                        editable && "cursor-grab active:cursor-grabbing",
+                        draggingId === eventKey(event) &&
+                          "opacity-80 ring-1 ring-fg"
                       )}
                     >
                       <span className="block truncate font-medium">
@@ -483,7 +691,7 @@ function TimeGrid({
                         {event.start}
                         {event.end ? `–${event.end}` : ""}
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
             </div>
@@ -555,6 +763,20 @@ function YearView({
       })}
     </div>
   );
+}
+
+/** Stable identity for an event, falling back to its content. */
+function eventKey(event: CalendarEvent) {
+  return event.id ?? `${event.date}-${event.title}-${event.start ?? "all-day"}`;
+}
+
+function formatMinutes(total: number) {
+  const clamped = clamp(total, 0, 24 * 60 - 1);
+  return `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function NavButton({

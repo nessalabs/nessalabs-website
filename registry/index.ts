@@ -20,8 +20,12 @@ export interface ComponentDoc {
   group: Group;
   usage: string;
   props: PropRow[];
-  /** Worked examples; each id maps to a preview in registry/previews. */
-  examples?: { id: string; title: string; code: string }[];
+  /**
+   * Worked examples. `id` maps to a preview in registry/previews, and the code
+   * shown is extracted from that preview — `code` is only a fallback for an id
+   * with no preview.
+   */
+  examples?: { id: string; title: string; code?: string }[];
 }
 
 export const registry: ComponentDoc[] = [
@@ -637,7 +641,6 @@ export const registry: ComponentDoc[] = [
     usage: `import { GanttChart } from "@/components/nessa-ui"
 
 <GanttChart
-  today="2026-08-23"
   defaultScale="week"
   tasks={[
     { id: "plan", name: "Retrieval v2" },
@@ -650,9 +653,10 @@ export const registry: ComponentDoc[] = [
       { name: "tasks", type: "GanttTask[]", description: "Required. id, name, start, end, optional progress, tone, dependsOn, parentId." },
       { name: "onTasksChange", type: "(tasks: GanttTask[]) => void", description: "Makes the chart controlled; fires after a drag commits." },
       { name: "scale / defaultScale / onScaleChange", type: '"day" | "week" | "month"', default: '"week"' },
-      { name: "today", type: "string", description: "Fixed current date for the marker and Today button." },
+      { name: "today", type: "string", description: "Defaults to the viewer's current date; pass it to pin the chart." },
       { name: "selectedTaskId / onSelectTask", type: "string | null · (id) => void" },
       { name: "editable", type: "boolean", default: "true", description: "Drag bars to reschedule, edges to resize." },
+      { name: "cascadeDependents", type: "boolean", default: "true", description: "Moving a task's finish shifts everything that transitively depends on it." },
       { name: "rowHeight / taskListWidth", type: "number", default: "36 / 208" },
       { name: "shortcuts", type: "boolean", default: "true", description: "H/L scroll, T today, D/W/M scale." },
       { name: "renderTask", type: "(task, span) => ReactNode", description: "Own the bar interior." },
@@ -662,7 +666,14 @@ export const registry: ComponentDoc[] = [
       {
         id: "gantt-scales",
         title: "Month scale — the whole plan at a glance",
-        code: `<GanttChart defaultScale="month" today="2026-08-23" tasks={tasks} />`,
+        code: `<GanttChart defaultScale="month" tasks={tasks} />`,
+      },
+      {
+        id: "gantt-cascade",
+        title: "Dependents follow — push and pull through the graph",
+        code: `// Drag "Rebuild index" and everything downstream of it moves with it.
+// Turn it off to move one task in isolation.
+<GanttChart cascadeDependents tasks={tasks} onTasksChange={setTasks} />`,
       },
       {
         id: "gantt-readonly",
@@ -815,14 +826,13 @@ export const registry: ComponentDoc[] = [
     slug: "calendar",
     name: "Calendar",
     description:
-      "Day, week, month and year views over one event set, with a time grid, all-day row, Today jump, and keyboard navigation. Dates are ISO strings and today is passed in, so rendering stays pure.",
+      "One event set across day, week, month and year views. Events drag to reschedule — between days in month view, and across days and time slots on the time grid, snapping to a configurable minute grid. Dates are ISO strings and today is passed in, so rendering stays pure.",
     status: "stable",
     group: "Composites",
     usage: `import { Calendar } from "@/components/nessa-ui"
 
 <Calendar
   defaultView="month"
-  today="2026-08-23"
   events={[
     { date: "2026-08-24", title: "Eval sweep", start: "09:30", end: "11:00" },
     { date: "2026-08-24", title: "Checkpoint", tone: "success" },
@@ -837,34 +847,25 @@ export const registry: ComponentDoc[] = [
       { name: "defaultDate", type: "string", description: "Falls back to today." },
       { name: "onDateChange", type: "(date: string) => void" },
       { name: "events", type: "CalendarEvent[]", description: "date, title, optional start/end (HH:MM) and tone." },
-      { name: "today", type: "string", description: "Highlighted date; keeps rendering pure." },
+      { name: "today", type: "string", description: "Defaults to the viewer's current date; pass it to pin the calendar." },
       { name: "onSelect", type: "(date: string) => void" },
       { name: "onEventClick", type: "(event: CalendarEvent) => void" },
+      { name: "editable", type: "boolean", default: "false", description: "Drag events to reschedule them." },
+      { name: "onEventsChange", type: "(events: CalendarEvent[]) => void", description: "Makes the event list controlled." },
+      { name: "snapMinutes", type: "number", default: "15", description: "Grid a dragged event snaps to." },
       { name: "shortcuts", type: "boolean", default: "true", description: "← → move, T today, D/W/M/Y switch view." },
     ],
     examples: [
       {
-        id: "calendar-week",
-        title: "Week view — time grid and all-day row",
+        id: "calendar-reschedule",
+        title: "Drag to reschedule — across days, and across time slots",
         code: `<Calendar
+  editable
   defaultView="week"
-  today="2026-08-23"
-  events={[
-    { date: "2026-08-24", title: "Eval sweep", start: "09:30", end: "11:00" },
-    { date: "2026-08-25", title: "Training run", start: "13:00", end: "16:30", tone: "warn" },
-    { date: "2026-08-26", title: "Offsite", tone: "success" },
-  ]}
+  snapMinutes={15}
+  events={events}
+  onEventsChange={setEvents}
 />`,
-      },
-      {
-        id: "calendar-day",
-        title: "Day view",
-        code: `<Calendar defaultView="day" defaultDate="2026-08-24" today="2026-08-23" events={events} />`,
-      },
-      {
-        id: "calendar-year",
-        title: "Year view — density at a glance, click a month to drill in",
-        code: `<Calendar defaultView="year" today="2026-08-23" events={events} />`,
       },
       {
         id: "calendar-shortcuts",
@@ -873,7 +874,7 @@ export const registry: ComponentDoc[] = [
 //   ← →   previous / next (day, week, month or year depending on the view)
 //   T     jump to today
 //   D W M Y   switch view
-<Calendar shortcuts today="2026-08-23" events={events} />`,
+<Calendar shortcuts events={events} />`,
       },
     ],
   },
@@ -1006,7 +1007,7 @@ export const registry: ComponentDoc[] = [
     slug: "composer",
     name: "Composer",
     description:
-      "The AI input surface: autosizing textarea, attachments, a skill picker, model selection, and queue steering — follow-ups typed while a turn is running are queued, and can be edited, reordered, promoted or dropped before they reach the model.",
+      "The AI input surface. Typing \"/\" opens skills and commands, \"@\" opens mentions, and either inserts a real inline chip that flows with the text. Plus attachments, model selection, and queue steering — follow-ups typed while a turn is running are queued, and can be edited, reordered, promoted or dropped before they reach the model.",
     status: "stable",
     group: "Composites",
     usage: `import { Composer } from "@/components/nessa-ui"
@@ -1028,6 +1029,8 @@ export const registry: ComponentDoc[] = [
       { name: "queue", type: "string[]", description: "Controlled queue for steering mid-turn." },
       { name: "onQueueChange", type: "(queue: string[]) => void" },
       { name: "models", type: "{ value, label }[]", description: "Shows the model selector." },
+      { name: "commands", type: "ComposerSuggestion[]", description: 'Offered after "/". Defaults to `skills`.' },
+      { name: "mentions", type: "ComposerSuggestion[]", description: 'Offered after "@" — files, runs, people.' },
       { name: "maxRows", type: "number", default: "8" },
     ],
     examples: [
@@ -1039,6 +1042,21 @@ export const registry: ComponentDoc[] = [
   queue={queue}
   onQueueChange={setQueue}
   onStop={stop}
+/>`,
+      },
+      {
+        id: "composer-inline",
+        title: 'Inline chips — type "/" for skills, "@" to mention',
+        code: `<Composer
+  commands={[
+    { id: "eval", label: "Eval suite", description: "Run the harness" },
+    { id: "trace", label: "Trace reader", description: "Inspect a run" },
+  ]}
+  mentions={[
+    { id: "run-4192", label: "run-4192", description: "retrieval · passed" },
+    { id: "ada", label: "Ada Lovelace", description: "owner" },
+  ]}
+  onSend={({ text, chips }) => send(text, chips)}
 />`,
       },
       {

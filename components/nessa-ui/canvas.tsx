@@ -77,6 +77,7 @@ export function Canvas({
   const [view, setView] = React.useState({ x: 0, y: 0, scale: 1 });
   const [selected, setSelected] = React.useState<string | null>(null);
   const [draggingId, setDraggingId] = React.useState<string | null>(null);
+  const [interacting, setInteracting] = React.useState(false);
 
   const drag = React.useRef<
     | { type: "pan"; startX: number; startY: number; originX: number; originY: number }
@@ -84,39 +85,78 @@ export function Canvas({
     | null
   >(null);
 
-  function update(next: CanvasNode[]) {
-    if (onNodesChange) onNodesChange(next);
-    else setInternal(next);
+  const applyPointer = React.useCallback(
+    (clientX: number, clientY: number) => {
+      const state = drag.current;
+      if (!state) return;
+      const dx = clientX - state.startX;
+      const dy = clientY - state.startY;
+
+      if (state.type === "pan") {
+        setView((v) => ({ ...v, x: state.originX + dx, y: state.originY + dy }));
+        return;
+      }
+
+      const raw = {
+        x: state.originX + dx / view.scale,
+        y: state.originY + dy / view.scale,
+      };
+      const pos = snap
+        ? {
+            x: Math.round(raw.x / snap) * snap,
+            y: Math.round(raw.y / snap) * snap,
+          }
+        : raw;
+
+      const next = current.map((node) =>
+        node.id === state.id ? { ...node, ...pos } : node
+      );
+      if (onNodesChange) onNodesChange(next);
+      else setInternal(next);
+    },
+    [current, onNodesChange, snap, view.scale]
+  );
+
+  function beginDrag() {
+    // Without this a drag across labels selects their text.
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    setInteracting(true);
   }
 
-  function onPointerMove(e: React.PointerEvent) {
-    const state = drag.current;
-    if (!state) return;
-    const dx = e.clientX - state.startX;
-    const dy = e.clientY - state.startY;
-
-    if (state.type === "pan") {
-      setView((v) => ({ ...v, x: state.originX + dx, y: state.originY + dy }));
-      return;
-    }
-
-    const raw = {
-      x: state.originX + dx / view.scale,
-      y: state.originY + dy / view.scale,
-    };
-    const pos = snap
-      ? { x: Math.round(raw.x / snap) * snap, y: Math.round(raw.y / snap) * snap }
-      : raw;
-
-    update(
-      current.map((node) => (node.id === state.id ? { ...node, ...pos } : node))
-    );
-  }
-
-  function endDrag() {
+  const endDrag = React.useCallback(() => {
     drag.current = null;
     setDraggingId(null);
-  }
+    setInteracting(false);
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+  }, []);
+
+  // Track the pointer on the document so a drag survives leaving the canvas,
+  // and always release — a pointerup outside would otherwise leave the page
+  // unselectable with a grabbing cursor.
+  React.useEffect(() => {
+    if (!interacting) return;
+    function onMove(e: PointerEvent) {
+      applyPointer(e.clientX, e.clientY);
+    }
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", endDrag);
+      document.removeEventListener("pointercancel", endDrag);
+    };
+  }, [interacting, applyPointer, endDrag]);
+
+  React.useEffect(
+    () => () => {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    },
+    []
+  );
 
   function select(id: string | null) {
     setSelected(id);
@@ -139,13 +179,15 @@ export function Canvas({
   return (
     <div
       className={cn(
-        "relative h-96 touch-none overflow-hidden rounded-xl border border-line bg-surface",
+        "relative h-96 touch-none select-none overflow-hidden rounded-xl border border-line bg-surface",
         classNames?.root,
         className
       )}
       onPointerDown={(e) => {
         if (e.target !== e.currentTarget) return;
+        e.preventDefault();
         select(null);
+        beginDrag();
         drag.current = {
           type: "pan",
           startX: e.clientX,
@@ -154,9 +196,6 @@ export function Canvas({
           originY: view.y,
         };
       }}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerLeave={endDrag}
       onWheel={(e) => zoomTo(view.scale - e.deltaY * 0.002)}
       {...props}
     >
@@ -228,9 +267,11 @@ export function Canvas({
               key={node.id}
               onPointerDown={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
                 select(node.id);
                 setDraggingId(node.id);
+                beginDrag();
                 drag.current = {
                   type: "node",
                   id: node.id,
@@ -240,8 +281,6 @@ export function Canvas({
                   originY: node.y,
                 };
               }}
-              onPointerMove={onPointerMove}
-              onPointerUp={endDrag}
               style={{
                 left: node.x,
                 top: node.y,
@@ -249,7 +288,7 @@ export function Canvas({
                 minHeight: node.height ?? DEFAULT_H,
               }}
               className={cn(
-                "absolute cursor-grab active:cursor-grabbing",
+                "absolute select-none cursor-grab active:cursor-grabbing",
                 classNames?.node
               )}
             >

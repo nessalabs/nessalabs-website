@@ -3,6 +3,13 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 import { AttachmentChip, type ChatAttachment } from "./chat";
+import {
+  ComposerEditor,
+  type ComposerChip,
+  type ComposerContent,
+  type ComposerEditorHandle,
+  type ComposerSuggestion,
+} from "./composer-editor";
 
 export interface ComposerSkill {
   id: string;
@@ -14,6 +21,8 @@ export interface ComposerSubmit {
   text: string;
   attachments: ChatAttachment[];
   skills: string[];
+  /** Inline chips in document order: files, mentions, skills, commands. */
+  chips: ComposerChip[];
 }
 
 export interface ComposerProps
@@ -43,6 +52,11 @@ export interface ComposerProps
   model?: string;
   onModelChange?: (model: string) => void;
 
+  /** Suggestions offered after "/" in the editor. Defaults to `skills`. */
+  commands?: ComposerSuggestion[];
+  /** Suggestions offered after "@" — files, runs, people. */
+  mentions?: ComposerSuggestion[];
+
   maxRows?: number;
 }
 
@@ -61,11 +75,16 @@ export function Composer({
   models,
   model,
   onModelChange,
+  commands,
+  mentions = [],
   maxRows = 8,
   className,
   ...props
 }: ComposerProps) {
-  const [text, setText] = React.useState("");
+  const [content, setContent] = React.useState<ComposerContent>({
+    text: "",
+    chips: [],
+  });
   const [internalAttachments, setInternalAttachments] = React.useState<
     ChatAttachment[]
   >([]);
@@ -78,7 +97,7 @@ export function Composer({
   const chosenSkills = activeSkills ?? internalSkills;
   const pending = queue ?? internalQueue;
 
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const editorRef = React.useRef<ComposerEditorHandle>(null);
   const fileRef = React.useRef<HTMLInputElement>(null);
 
   function setFiles(next: ChatAttachment[]) {
@@ -96,26 +115,23 @@ export function Composer({
     else setInternalQueue(next);
   }
 
-  function autosize() {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    const lineHeight = 22;
-    el.style.height = `${Math.min(el.scrollHeight, maxRows * lineHeight)}px`;
-  }
-
   function submit() {
-    const value = text.trim();
+    const value = content.text.trim();
     if (!value) return;
 
     if (running) {
       setQueue([...pending, value]);
     } else {
-      onSend?.({ text: value, attachments: files, skills: chosenSkills });
+      onSend?.({
+        text: value,
+        attachments: files,
+        skills: chosenSkills,
+        chips: content.chips,
+      });
       setFiles([]);
     }
-    setText("");
-    window.requestAnimationFrame(autosize);
+    editorRef.current?.clear();
+    setContent({ text: "", chips: [] });
   }
 
   return (
@@ -181,7 +197,12 @@ export function Composer({
                 label="Send now"
                 onClick={() => {
                   onStop?.();
-                  onSend?.({ text: item, attachments: [], skills: chosenSkills });
+                  onSend?.({
+                    text: item,
+                    attachments: [],
+                    skills: chosenSkills,
+                    chips: [],
+                  });
                   setQueue(pending.filter((_, j) => j !== i));
                 }}
               >
@@ -232,25 +253,28 @@ export function Composer({
         </div>
       ) : null}
 
-      <textarea
-        ref={textareaRef}
-        rows={1}
-        value={text}
+      <ComposerEditor
+        ref={editorRef}
         placeholder={running ? "Queue a follow-up…" : placeholder}
-        onChange={(e) => {
-          setText(e.target.value);
-          autosize();
-        }}
+        maxHeight={maxRows * 24}
+        commands={
+          commands ??
+          skills.map((skill) => ({
+            id: skill.id,
+            label: skill.name,
+            description: skill.description,
+            kind: "skill" as const,
+          }))
+        }
+        mentions={mentions}
+        onContentChange={setContent}
+        onSubmit={submit}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            submit();
-          } else if (e.key === "Escape" && running) {
+          if (e.key === "Escape" && running) {
             e.preventDefault();
             onStop?.();
           }
         }}
-        className="max-h-56 w-full resize-none bg-transparent px-3.5 py-3 text-sm leading-6 text-fg outline-none placeholder:text-dim"
       />
 
       <div className="flex items-center justify-between gap-2 px-2 pb-2">
@@ -354,7 +378,7 @@ export function Composer({
 
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-dim sm:inline">
-            {running ? "Esc to stop" : "⏎ to send"}
+            {running ? "Esc to stop" : "/ for skills · @ to mention · ⏎ to send"}
           </span>
           {running ? (
             <button
@@ -368,7 +392,7 @@ export function Composer({
           ) : (
             <button
               type="submit"
-              disabled={!text.trim()}
+              disabled={!content.text.trim()}
               className="inline-flex h-8 items-center rounded-lg bg-fg px-3 text-sm font-medium text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               Send

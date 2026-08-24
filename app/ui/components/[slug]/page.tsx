@@ -67,7 +67,7 @@ export default async function ComponentPage({
                 <div className="mb-3 text-sm font-medium text-dim">
                   {ex.title}
                 </div>
-                <ComponentPreview previewId={ex.id} code={ex.code} />
+                <ComponentPreview previewId={ex.id} code={ex.code ?? doc.usage} />
               </div>
             ))}
           </div>

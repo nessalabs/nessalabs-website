@@ -57,6 +57,15 @@ registry/
   previews.tsx                  live preview node for each slug and example id
 ```
 
+## Docs code blocks are generated
+
+Each component page shows the code that actually renders the preview above it.
+`scripts/extract-preview-source.mjs` reads `registry/previews.tsx`, pulls out
+each preview's JSX plus every helper it references, and writes
+`registry/preview-source.generated.ts`. It runs on `predev` and `prebuild`, so
+the snippet and the running preview can never drift — never hand-write a code
+sample in the registry.
+
 ## Adding a component
 
 1. Write it in `components/nessa-ui/<name>.tsx` and export it from
@@ -64,7 +73,7 @@ registry/
 2. Add an entry to `registry/index.ts` — slug, group, description, usage code,
    props, and any extra examples.
 3. Add the live preview node to `registry/previews.tsx`, keyed by the slug (and
-   by each example id).
+   by each example id). The code tab is generated from it.
 
 The docs page, the sidebar, and the static params all come from the registry, so
 there is nothing else to wire up.

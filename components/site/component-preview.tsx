@@ -2,15 +2,20 @@
 
 import { CodeBlock, Tabs } from "@/components/nessa-ui";
 import { previews } from "@/registry/previews";
+import { previewSource } from "@/registry/preview-source.generated";
 
 export function ComponentPreview({
   previewId,
   code,
 }: {
   previewId: string;
+  /** Fallback when a preview has no generated source. */
   code: string;
 }) {
   const preview = previews[previewId];
+  // The code tab shows what actually renders above it, extracted from
+  // registry/previews.tsx at build time.
+  const source = previewSource[previewId] ?? code;
 
   return (
     <Tabs
@@ -31,7 +36,7 @@ export function ComponentPreview({
         {
           value: "code",
           label: "Code",
-          content: <CodeBlock code={code} showLineNumbers />,
+          content: <CodeBlock code={source} showLineNumbers />,
         },
       ]}
     />

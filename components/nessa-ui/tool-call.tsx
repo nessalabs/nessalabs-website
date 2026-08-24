@@ -3,6 +3,84 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+
+function subscribeToReducedMotion(callback: () => void) {
+  const query = window.matchMedia(reducedMotionQuery);
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+}
+
+/** Live, server-safe reduced-motion preference. */
+function useReducedMotion() {
+  return React.useSyncExternalStore(
+    subscribeToReducedMotion,
+    () => window.matchMedia(reducedMotionQuery).matches,
+    () => false
+  );
+}
+
+/**
+ * The moving highlight is painted with theme tokens — muted body, foreground
+ * crest — so it reads in both schemes without any dark: variants.
+ */
+const shimmerGradient =
+  "linear-gradient(90deg, var(--color-muted) 0%, var(--color-muted) 38%, var(--color-fg) 50%, var(--color-muted) 62%, var(--color-muted) 100%)";
+
+/**
+ * Sweeps a highlight across the label while the call is running. The gradient
+ * is clipped to the glyphs, so the label stays real, selectable text; with
+ * reduced motion it renders as plain muted text.
+ */
+function ToolCallShimmer({
+  active,
+  className,
+  children,
+}: {
+  active: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const reducedMotion = useReducedMotion();
+  const shimmering = active && !reducedMotion;
+  const ref = React.useRef<HTMLSpanElement>(null);
+
+  React.useEffect(() => {
+    const node = ref.current;
+    if (!node || !shimmering) return;
+    // The crest sits at the centre of a double-width background, so sliding
+    // from 150% to -50% carries it once across the text per cycle.
+    const animation = node.animate(
+      [{ backgroundPosition: "150% 0" }, { backgroundPosition: "-50% 0" }],
+      { duration: 2400, easing: "linear", iterations: Infinity }
+    );
+    return () => animation.cancel();
+  }, [shimmering]);
+
+  return (
+    <span
+      ref={ref}
+      data-slot="tool-call-shimmer"
+      data-shimmer={shimmering ? "true" : undefined}
+      className={cn("min-w-0 truncate text-left", className)}
+      style={
+        shimmering
+          ? {
+              backgroundImage: shimmerGradient,
+              backgroundSize: "200% 100%",
+              backgroundPosition: "150% 0",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+            }
+          : undefined
+      }
+    >
+      {children}
+    </span>
+  );
+}
+
 export type ToolCallStatus = "pending" | "running" | "complete" | "error";
 
 export interface ToolCallProps
@@ -57,6 +135,7 @@ export function ToolCall({
 
   return (
     <div
+      data-slot="tool-call"
       data-status={status}
       aria-busy={status === "running"}
       className={cn("rounded-lg border border-line bg-ink", className)}
@@ -73,17 +152,22 @@ export function ToolCall({
       >
         <StatusDot status={status} />
         {icon ? <span className="text-dim">{icon}</span> : null}
-        <code
+        <ToolCallShimmer
+          active={status === "running"}
           className={cn(
-            "text-fg",
-            status === "error" && "text-danger",
-            status === "running" && "animate-pulse"
+            "shrink-0 font-mono",
+            status === "error" ? "text-danger" : "text-fg"
           )}
         >
           {name}
-        </code>
+        </ToolCallShimmer>
         {summary ? (
-          <span className="min-w-0 flex-1 truncate text-dim">{summary}</span>
+          <ToolCallShimmer
+            active={status === "running"}
+            className="min-w-0 flex-1 text-dim"
+          >
+            {summary}
+          </ToolCallShimmer>
         ) : (
           <span className="flex-1" />
         )}

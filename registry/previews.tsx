@@ -39,6 +39,7 @@ import {
   ModelPicker,
   ToolApproval,
   ToolCall,
+  type CalendarEvent,
   type ChatMessage,
   type GanttTask,
   type ToolApprovalResolution,
@@ -129,7 +130,7 @@ function DotIcon() {
 
 /* ── demo data ─────────────────────────────────────────────────────────── */
 
-const CALENDAR_EVENTS = [
+const CALENDAR_EVENTS: CalendarEvent[] = [
   { id: "c1", date: "2026-08-24", title: "Eval sweep", start: "09:30", end: "11:00" },
   { id: "c2", date: "2026-08-24", title: "Checkpoint", tone: "success" as const },
   { id: "c3", date: "2026-08-24", title: "Review", start: "15:00", end: "16:00" },
@@ -152,7 +153,7 @@ const GANTT_TASKS: GanttTask[] = [
   { id: "spec", name: "Spec", start: "2026-08-20", end: "2026-08-22", parentId: "plan", progress: 1, tone: "success" },
   { id: "index", name: "Rebuild index", start: "2026-08-24", end: "2026-08-28", parentId: "plan", progress: 0.6, dependsOn: ["spec"] },
   { id: "eval", name: "Eval sweep", start: "2026-08-27", end: "2026-09-01", parentId: "plan", progress: 0.2, tone: "warn", dependsOn: ["index"] },
-  { id: "review", name: "Review", start: "2026-09-01", end: "2026-09-03", parentId: "plan", progress: 0 },
+  { id: "review", name: "Review", start: "2026-09-01", end: "2026-09-03", parentId: "plan", progress: 0, dependsOn: ["eval"] },
   { id: "ship", name: "Ship v2", start: "2026-09-04", end: "2026-09-04", tone: "accent", dependsOn: ["review"] },
 ];
 
@@ -521,42 +522,16 @@ export async function run(suite: string) {
   ),
 
 
-  calendar: (
-    <Calendar className="w-full" today="2026-08-23" events={CALENDAR_EVENTS} />
-  ),
-  "calendar-week": (
-    <Calendar
-      className="w-full"
-      defaultView="week"
-      today="2026-08-23"
-      events={CALENDAR_EVENTS}
-    />
-  ),
-  "calendar-day": (
-    <Calendar
-      className="w-full"
-      defaultView="day"
-      defaultDate="2026-08-24"
-      today="2026-08-23"
-      events={CALENDAR_EVENTS}
-    />
-  ),
-  "calendar-year": (
-    <Calendar
-      className="w-full"
-      defaultView="year"
-      today="2026-08-23"
-      events={CALENDAR_EVENTS}
-    />
-  ),
+  calendar: <CalendarDemo />,
+  "calendar-reschedule": <CalendarDemo defaultView="week" />,
   "calendar-shortcuts": (
     <div className="w-full space-y-3">
       <p className="text-sm text-muted">
-        Click the calendar, then press{" "}
-        <Kbd>←</Kbd> <Kbd>→</Kbd> to move, <Kbd>T</Kbd> for today, and{" "}
-        <Kbd>D</Kbd> <Kbd>W</Kbd> <Kbd>M</Kbd> <Kbd>Y</Kbd> to switch views.
+        Click the calendar, then press <Kbd>←</Kbd> <Kbd>→</Kbd> to move,{" "}
+        <Kbd>T</Kbd> for today, and <Kbd>D</Kbd> <Kbd>W</Kbd> <Kbd>M</Kbd>{" "}
+        <Kbd>Y</Kbd> to switch views.
       </p>
-      <Calendar className="w-full" today="2026-08-23" events={CALENDAR_EVENTS} />
+      <Calendar className="w-full" events={CALENDAR_EVENTS} />
     </div>
   ),
 
@@ -634,6 +609,7 @@ export async function run(suite: string) {
 
   composer: <ComposerDemo />,
   "composer-queue": <ComposerQueueDemo />,
+  "composer-inline": <ComposerInlineDemo />,
   "composer-skills": (
     <Composer
       className="w-full"
@@ -699,16 +675,17 @@ export async function run(suite: string) {
     <GanttChart
       className="w-full"
       defaultScale="month"
-      today="2026-08-23"
+     
       tasks={GANTT_TASKS}
     />
   ),
+  "gantt-cascade": <GanttCascadeDemo />,
   "gantt-readonly": (
     <GanttChart
       className="w-full"
       editable={false}
       shortcuts={false}
-      today="2026-08-23"
+     
       tasks={GANTT_TASKS}
     />
   ),
@@ -1105,10 +1082,119 @@ function GanttDemo() {
       </p>
       <GanttChart
         className="w-full"
-        today="2026-08-23"
+       
         tasks={tasks}
         onTasksChange={setTasks}
       />
+    </div>
+  );
+}
+
+function CalendarDemo({
+  defaultView = "month",
+}: {
+  defaultView?: "day" | "week" | "month" | "year";
+}) {
+  const [events, setEvents] = React.useState(CALENDAR_EVENTS);
+
+  return (
+    <div className="w-full space-y-3">
+      <p className="text-sm text-muted">
+        Drag an event to reschedule it — to another day in month view, or across
+        days and time slots on the grid, snapping to 15 minutes.
+      </p>
+      <Calendar
+        className="w-full"
+        editable
+        defaultView={defaultView}
+       
+        events={events}
+        onEventsChange={setEvents}
+      />
+    </div>
+  );
+}
+
+function GanttCascadeDemo() {
+  const [tasks, setTasks] = React.useState<GanttTask[]>(GANTT_TASKS);
+  const [cascade, setCascade] = React.useState(true);
+
+  return (
+    <div className="w-full space-y-3">
+      <Switch
+        label="Dependents follow the task you move"
+        checked={cascade}
+        onCheckedChange={setCascade}
+      />
+      <GanttChart
+        className="w-full"
+       
+        tasks={tasks}
+        onTasksChange={setTasks}
+        cascadeDependents={cascade}
+      />
+      <button
+        type="button"
+        onClick={() => setTasks(GANTT_TASKS)}
+        className="text-sm text-dim underline-offset-4 hover:text-fg hover:underline"
+      >
+        Reset plan
+      </button>
+    </div>
+  );
+}
+
+const COMMANDS = [
+  { id: "eval", label: "Eval suite", description: "Run the scoring harness" },
+  { id: "trace", label: "Trace reader", description: "Inspect a run's steps" },
+  { id: "sql", label: "Warehouse SQL", description: "Query run metrics" },
+  { id: "diff", label: "Diff", description: "Compare two checkpoints" },
+];
+
+const MENTIONS = [
+  { id: "run-4192", label: "run-4192", description: "retrieval · passed" },
+  { id: "run-4189", label: "run-4189", description: "retrieval · failed" },
+  { id: "encoder", label: "encoder.ts", description: "packages/react/src", kind: "file" as const },
+  { id: "ada", label: "Ada Lovelace", description: "owner" },
+];
+
+function ComposerInlineDemo() {
+  const [sent, setSent] = React.useState<{
+    text: string;
+    chips: { id: string; label: string; kind: string }[];
+  } | null>(null);
+
+  return (
+    <div className="w-full space-y-3">
+      <p className="text-sm text-muted">
+        Type <Kbd>/</Kbd> for skills and commands or <Kbd>@</Kbd> to mention a
+        run, file or person. <Kbd>↑</Kbd> <Kbd>↓</Kbd> to move, <Kbd>⏎</Kbd> to
+        insert — each becomes an inline chip that deletes with one backspace.
+      </p>
+      <Composer
+        className="w-full"
+        commands={COMMANDS}
+        mentions={MENTIONS}
+        models={MODELS}
+        model="large"
+        placeholder="Try typing / or @"
+        onSend={({ text, chips }) => setSent({ text, chips })}
+      />
+      {sent ? (
+        <div className="rounded-lg border border-line bg-surface p-3 text-sm">
+          <div className="text-dim">Submitted</div>
+          <div className="mt-1 text-fg">{sent.text}</div>
+          {sent.chips.length ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {sent.chips.map((chip) => (
+                <Badge key={chip.id} tone="outline">
+                  {chip.kind}: {chip.label}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
