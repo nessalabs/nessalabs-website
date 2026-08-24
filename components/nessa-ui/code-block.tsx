@@ -35,11 +35,11 @@ export function CodeBlock({
 
   return (
     <div
-      className={cn("group relative border border-line bg-surface", className)}
+      className={cn("group relative rounded-xl border border-line bg-surface", className)}
       {...props}
     >
       {(filename || lang) && (
-        <div className="flex items-center justify-between border-b border-line px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-dim">
+        <div className="flex items-center justify-between border-b border-line px-4 py-2 text-xs text-dim">
           <span>{filename ?? lang}</span>
         </div>
       )}
@@ -49,14 +49,14 @@ export function CodeBlock({
           type="button"
           onClick={copy}
           aria-label="Copy code"
-          className="absolute right-2 top-2 z-10 border border-line bg-raised px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dim opacity-0 transition hover:text-fg focus-visible:opacity-100 group-hover:opacity-100"
+          className="absolute right-2 top-2 z-10 rounded-md border border-line bg-raised px-2 py-1 text-xs text-dim opacity-0 transition hover:text-fg focus-visible:opacity-100 group-hover:opacity-100"
           style={filename || lang ? { top: "2.25rem" } : undefined}
         >
-          {copied ? "copied" : "copy"}
+          {copied ? "Copied" : "Copy"}
         </button>
       )}
 
-      <pre className="overflow-x-auto p-4 font-mono text-xs leading-6 text-muted">
+      <pre className="overflow-x-auto p-4 text-xs leading-6 text-muted">
         <code>
           {lines.map((line, i) => (
             <span key={i} className="block">

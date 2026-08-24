@@ -19,9 +19,9 @@ export function ComponentPreview({
           value: "preview",
           label: "Preview",
           content: (
-            <div className="grid-lines flex min-h-48 items-center justify-center border border-line p-8">
+            <div className="grid-lines flex min-h-52 items-center justify-center rounded-xl border border-line p-8">
               {preview ?? (
-                <span className="font-mono text-xs text-dim">
+                <span className="text-sm text-dim">
                   no preview registered
                 </span>
               )}

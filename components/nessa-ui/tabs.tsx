@@ -14,19 +14,12 @@ export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultValue?: string;
 }
 
-export function Tabs({
-  items,
-  defaultValue,
-  className,
-  ...props
-}: TabsProps) {
-  const [active, setActive] = React.useState(
-    defaultValue ?? items[0]?.value
-  );
+export function Tabs({ items, defaultValue, className, ...props }: TabsProps) {
+  const [active, setActive] = React.useState(defaultValue ?? items[0]?.value);
 
   return (
     <div className={cn("w-full", className)} {...props}>
-      <div role="tablist" className="flex border-b border-line">
+      <div role="tablist" className="flex gap-1 border-b border-line">
         {items.map((item) => {
           const selected = item.value === active;
           return (
@@ -36,9 +29,9 @@ export function Tabs({
               aria-selected={selected}
               onClick={() => setActive(item.value)}
               className={cn(
-                "-mb-px border-b px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] transition-colors",
+                "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
                 selected
-                  ? "border-accent text-fg"
+                  ? "border-fg text-fg"
                   : "border-transparent text-dim hover:text-muted"
               )}
             >

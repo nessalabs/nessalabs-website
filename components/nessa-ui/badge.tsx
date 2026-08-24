@@ -9,8 +9,8 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 const tones: Record<Tone, string> = {
   neutral: "bg-raised text-muted border-line",
-  accent: "bg-accent/10 text-accent border-accent-dim",
-  warn: "bg-amber-400/10 text-amber-300 border-amber-400/30",
+  accent: "bg-accent/10 text-accent border-accent/25",
+  warn: "bg-amber-400/10 text-amber-300 border-amber-400/25",
   outline: "bg-transparent text-dim border-line",
 };
 
@@ -18,7 +18,7 @@ export function Badge({ className, tone = "neutral", ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em]",
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
         tones[tone],
         className
       )}

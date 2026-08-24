@@ -13,7 +13,7 @@ export interface NavBarProps extends React.HTMLAttributes<HTMLElement> {
   brand: React.ReactNode;
   links?: NavLink[];
   action?: React.ReactNode;
-  /** Highlight the link whose href matches this path. */
+  /** Highlight the link whose href prefixes this path. */
   activeHref?: string;
 }
 
@@ -35,7 +35,7 @@ export function NavBar({
       )}
       {...props}
     >
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-6 sm:px-10">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-6 sm:px-8">
         <div className="flex items-center gap-8">
           {brand}
           <nav className="hidden items-center gap-6 md:flex">
@@ -46,7 +46,7 @@ export function NavBar({
                 target={link.external ? "_blank" : undefined}
                 rel={link.external ? "noreferrer" : undefined}
                 className={cn(
-                  "font-mono text-[11px] uppercase tracking-[0.18em] transition-colors",
+                  "text-sm transition-colors",
                   activeHref && activeHref.startsWith(link.href)
                     ? "text-fg"
                     : "text-dim hover:text-fg"
@@ -65,9 +65,9 @@ export function NavBar({
             aria-label="Toggle menu"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="font-mono text-xs text-dim hover:text-fg md:hidden"
+            className="text-sm text-dim hover:text-fg md:hidden"
           >
-            {open ? "[ close ]" : "[ menu ]"}
+            {open ? "Close" : "Menu"}
           </button>
         </div>
       </div>
@@ -79,7 +79,7 @@ export function NavBar({
               <a
                 key={link.href}
                 href={link.href}
-                className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted hover:text-fg"
+                className="text-sm text-muted hover:text-fg"
               >
                 {link.label}
               </a>

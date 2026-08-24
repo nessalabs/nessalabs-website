@@ -12,4 +12,3 @@ export * from "./prop-table";
 export * from "./section";
 export * from "./tabs";
 export * from "./terminal";
-export * from "./ticker";

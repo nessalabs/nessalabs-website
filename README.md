@@ -3,10 +3,10 @@
 The Nessa Labs website — homepage plus the **nessa-ui** component documentation
 at `/ui/components`.
 
-The site is built from nessa-ui itself. Every section on the homepage — the nav,
-the hero field, the marquee, the cell grids, the footer — is a component that is
-also documented in the registry. If a primitive is missing from the docs, it
-should not be on the page.
+The site is built from nessa-ui itself: the nav, hero, buttons, and footer are
+the same components the docs document. The homepage is a single hero over an
+ASCII-art background with a route into the component docs — the ASCII treatment
+is background texture only, not the UI language.
 
 ## Stack
 
@@ -29,7 +29,7 @@ Open http://localhost:3000.
 
 ```
 app/
-  page.tsx                      homepage
+  page.tsx                      homepage (hero only)
   ui/components/                nessa-ui docs
     page.tsx                    overview + install
     [slug]/page.tsx             generated per registry entry
@@ -56,8 +56,8 @@ there is nothing else to wire up.
 
 ## Design rules
 
-- Everything sits on a monospace grid.
-- Frames are box-drawing characters, not shadows.
+- Dark, quiet, and legible: sans for interface text, mono only for code.
+- ASCII art is decoration, never chrome.
 - No animation without a `prefers-reduced-motion` path.
 - The source is the package: components are copied into consuming apps, not
   installed as a runtime dependency.

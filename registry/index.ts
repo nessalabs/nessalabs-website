@@ -52,43 +52,40 @@ export const registry: ComponentDoc[] = [
     slug: "button",
     name: "Button",
     description:
-      "The terminal button. Four variants, three sizes, and an optional bracket affordance.",
+      "The default action. Four variants and three sizes, with a visible focus ring.",
     status: "stable",
     group: "Primitives",
     usage: `import { Button } from "@/components/nessa-ui"
 
-<Button variant="accent" brackets>
-  sync with us
-</Button>`,
+<Button>Get started</Button>`,
     props: [
       {
         name: "variant",
-        type: '"solid" | "outline" | "ghost" | "accent"',
-        default: '"outline"',
+        type: '"primary" | "secondary" | "outline" | "ghost"',
+        default: '"primary"',
       },
       { name: "size", type: '"sm" | "md" | "lg"', default: '"md"' },
-      {
-        name: "brackets",
-        type: "boolean",
-        default: "false",
-        description: "Wraps the label in square brackets.",
-      },
     ],
     examples: [
       {
         id: "button-variants",
         title: "Variants",
-        code: `<Button variant="solid">solid</Button>
-<Button variant="outline">outline</Button>
-<Button variant="ghost">ghost</Button>
-<Button variant="accent">accent</Button>`,
+        code: `<Button variant="primary">Primary</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="ghost">Ghost</Button>`,
       },
       {
         id: "button-sizes",
         title: "Sizes",
-        code: `<Button size="sm">sm</Button>
-<Button size="md">md</Button>
-<Button size="lg">lg</Button>`,
+        code: `<Button size="sm">Small</Button>
+<Button size="md">Medium</Button>
+<Button size="lg">Large</Button>`,
+      },
+      {
+        id: "button-disabled",
+        title: "Disabled",
+        code: `<Button disabled>Unavailable</Button>`,
       },
     ],
   },
@@ -160,21 +157,6 @@ export const registry: ComponentDoc[] = [
     ],
   },
   {
-    slug: "ticker",
-    name: "Ticker",
-    description:
-      "An infinite marquee rail. Contents are duplicated for a seamless loop and pause on hover.",
-    status: "stable",
-    group: "Display",
-    usage: `import { Ticker } from "@/components/nessa-ui"
-
-<Ticker items={["research", "agents", "infrastructure"]} />`,
-    props: [
-      { name: "items", type: "string[]", description: "Required." },
-      { name: "separator", type: "string", default: '"◆"' },
-    ],
-  },
-  {
     slug: "code-block",
     name: "CodeBlock",
     description:
@@ -218,21 +200,31 @@ export const registry: ComponentDoc[] = [
   {
     slug: "input",
     name: "Input",
-    description: "A single-line field with an optional prompt glyph.",
+    description: "A single-line text field with an optional leading icon slot.",
     status: "stable",
     group: "Primitives",
     usage: `import { Input } from "@/components/nessa-ui"
 
-<Input prompt="$" placeholder="your@email.com" />`,
+<Input placeholder="you@example.com" />`,
     props: [
-      { name: "prompt", type: "string", description: 'Leading glyph, e.g. "$".' },
+      {
+        name: "icon",
+        type: "ReactNode",
+        description: "Rendered inside the field, before the text.",
+      },
+    ],
+    examples: [
+      {
+        id: "input-icon",
+        title: "With icon",
+        code: `<Input icon={<span>@</span>} placeholder="username" />`,
+      },
     ],
   },
   {
     slug: "cell-grid",
     name: "CellGrid",
-    description:
-      "A hairline grid whose cells share single-pixel dividers. Pairs with Cell.",
+    description: "A responsive grid of equal cards. Pairs with Cell.",
     status: "stable",
     group: "Layout",
     usage: `import { CellGrid, Cell } from "@/components/nessa-ui"
@@ -252,8 +244,8 @@ export const registry: ComponentDoc[] = [
     group: "Display",
     usage: `import { Announce } from "@/components/nessa-ui"
 
-<Announce label="coming soon" href="/research">
-  Nessa Agents enters private preview
+<Announce label="New" href="/ui/components">
+  nessa-ui v0.1.0 is available
 </Announce>`,
     props: [{ name: "label", type: "string", description: "Required." }],
   },

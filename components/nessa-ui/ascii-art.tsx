@@ -47,7 +47,7 @@ export function AsciiArt({
     <pre
       aria-hidden
       className={cn(
-        "pointer-events-none select-none overflow-hidden font-mono text-[8px] leading-[10px] text-dim/60 sm:text-[10px] sm:leading-[12px]",
+        "pointer-events-none select-none overflow-hidden font-mono text-[9px] leading-[11px] text-dim sm:text-[11px] sm:leading-[13px]",
         className
       )}
       {...props}

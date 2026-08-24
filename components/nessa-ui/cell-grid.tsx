@@ -11,20 +11,11 @@ const colClasses: Record<number, string> = {
   4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 
-/** A hairline grid of equal cells sharing single-pixel dividers. */
-export function CellGrid({
-  cols = 3,
-  className,
-  children,
-  ...props
-}: CellGridProps) {
+/** A grid of equal cards. */
+export function CellGrid({ cols = 3, className, children, ...props }: CellGridProps) {
   return (
     <div
-      className={cn(
-        "grid grid-cols-1 gap-px border border-line bg-line",
-        colClasses[cols],
-        className
-      )}
+      className={cn("grid grid-cols-1 gap-4", colClasses[cols], className)}
       {...props}
     >
       {children}
@@ -39,7 +30,7 @@ export function Cell({
   return (
     <div
       className={cn(
-        "bg-ink p-6 transition-colors hover:bg-surface",
+        "rounded-xl border border-line bg-surface p-5 transition-colors hover:border-dim",
         className
       )}
       {...props}

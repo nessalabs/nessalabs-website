@@ -5,26 +5,21 @@ import { cn } from "@/lib/cn";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Leading prompt glyph, e.g. "$" or ">". */
-  prompt?: string;
+  icon?: React.ReactNode;
 }
 
-export function Input({ prompt, className, ...props }: InputProps) {
+export function Input({ icon, className, ...props }: InputProps) {
   return (
     <div
       className={cn(
-        "flex h-9 items-center gap-2 border border-line bg-surface px-3",
-        "focus-within:border-dim",
+        "flex h-9 items-center gap-2 rounded-lg border border-line bg-surface px-3",
+        "transition-colors focus-within:border-dim",
         className
       )}
     >
-      {prompt ? (
-        <span aria-hidden className="select-none font-mono text-xs text-accent">
-          {prompt}
-        </span>
-      ) : null}
+      {icon ? <span className="shrink-0 text-dim">{icon}</span> : null}
       <input
-        className="h-full w-full bg-transparent font-mono text-xs text-fg outline-none placeholder:text-dim"
+        className="h-full w-full bg-transparent text-sm text-fg outline-none placeholder:text-dim"
         {...props}
       />
     </div>

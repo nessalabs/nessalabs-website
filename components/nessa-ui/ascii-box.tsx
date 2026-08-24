@@ -26,7 +26,7 @@ export function AsciiBox({
       <div className="flex items-center gap-1 select-none whitespace-nowrap">
         <span aria-hidden>┌─</span>
         {title ? (
-          <span className="text-muted uppercase tracking-[0.18em]">
+          <span className="text-muted">
             {title}
           </span>
         ) : null}
@@ -59,7 +59,7 @@ export function AsciiBox({
           {"─".repeat(400)}
         </span>
         {footer ? (
-          <span className="text-dim uppercase tracking-[0.18em]">{footer}</span>
+          <span className="text-dim">{footer}</span>
         ) : null}
         <span aria-hidden>─┘</span>
       </div>

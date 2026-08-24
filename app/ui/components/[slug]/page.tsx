@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, PropTable, Terminal } from "@/components/nessa-ui";
+import { Badge, CodeBlock, PropTable } from "@/components/nessa-ui";
 import { ComponentPreview } from "@/components/site/component-preview";
 import { getComponent, registry } from "@/registry";
 
@@ -35,42 +35,35 @@ export default async function ComponentPage({
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.28em] text-accent">
-        {doc.group}
-      </div>
+      <div className="mb-2 text-sm font-medium text-accent">{doc.group}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-medium tracking-tight text-fg">
+        <h1 className="text-3xl font-semibold tracking-tight text-fg">
           {doc.name}
         </h1>
         <Badge tone={doc.status === "stable" ? "accent" : "warn"}>
           {doc.status}
         </Badge>
       </div>
-      <p className="mt-4 font-mono text-xs leading-6 text-muted">
-        {doc.description}
-      </p>
+      <p className="mt-4 text-base leading-7 text-muted">{doc.description}</p>
 
       <div className="mt-10">
         <ComponentPreview previewId={doc.slug} code={doc.usage} />
       </div>
 
-      <h2 className="mt-14 mb-4 font-mono text-sm uppercase tracking-[0.18em] text-fg">
-        Installation
-      </h2>
-      <Terminal
-        title="nessa@labs"
-        lines={[`$ npx nessa-ui@latest add ${doc.slug}`]}
+      <h2 className="mt-12 mb-4 text-lg font-semibold text-fg">Installation</h2>
+      <CodeBlock
+        lang="bash"
+        filename="Terminal"
+        code={`npx nessa-ui@latest add ${doc.slug}`}
       />
 
       {doc.examples?.length ? (
         <>
-          <h2 className="mt-14 mb-4 font-mono text-sm uppercase tracking-[0.18em] text-fg">
-            Examples
-          </h2>
+          <h2 className="mt-12 mb-4 text-lg font-semibold text-fg">Examples</h2>
           <div className="space-y-8">
             {doc.examples.map((ex) => (
               <div key={ex.id}>
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.22em] text-dim">
+                <div className="mb-3 text-sm font-medium text-dim">
                   {ex.title}
                 </div>
                 <ComponentPreview previewId={ex.id} code={ex.code} />
@@ -80,7 +73,7 @@ export default async function ComponentPage({
         </>
       ) : null}
 
-      <h2 className="mt-14 mb-4 font-mono text-sm uppercase tracking-[0.18em] text-fg">
+      <h2 className="mt-12 mb-4 text-lg font-semibold text-fg">
         API reference
       </h2>
       <PropTable rows={doc.props} />
@@ -89,7 +82,7 @@ export default async function ComponentPage({
         {prev ? (
           <Link
             href={`/ui/components/${prev.slug}`}
-            className="font-mono text-xs text-dim hover:text-fg"
+            className="text-sm text-dim hover:text-fg"
           >
             ← {prev.name}
           </Link>
@@ -99,7 +92,7 @@ export default async function ComponentPage({
         {next ? (
           <Link
             href={`/ui/components/${next.slug}`}
-            className="font-mono text-xs text-dim hover:text-fg"
+            className="text-sm text-dim hover:text-fg"
           >
             {next.name} →
           </Link>

@@ -47,12 +47,12 @@ export function Terminal({
   return (
     <div
       className={cn(
-        "border border-line bg-surface font-mono text-xs",
+        "rounded-xl border border-line bg-surface text-xs",
         className
       )}
       {...props}
     >
-      <div className="flex items-center justify-between border-b border-line px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-dim">
+      <div className="flex items-center justify-between border-b border-line px-4 py-2 text-xs text-dim">
         <span>{title}</span>
         <span aria-hidden>─ □ ×</span>
       </div>

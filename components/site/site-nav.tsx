@@ -1,18 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Button, NavBar } from "@/components/nessa-ui";
 import { Brand } from "./brand";
 
 const links = [
-  { href: "/ui/components", label: "nessa-ui" },
-  { href: "/research", label: "research" },
-  { href: "/agents", label: "agents" },
-  {
-    href: "https://github.com/nessalabs",
-    label: "github",
-    external: true,
-  },
+  { href: "/ui/components", label: "Components" },
+  { href: "/research", label: "Research" },
+  { href: "/agents", label: "Agents" },
 ];
 
 export function SiteNav() {
@@ -24,16 +20,11 @@ export function SiteNav() {
       links={links}
       activeHref={pathname}
       action={
-        <Button
-          variant="outline"
-          size="sm"
-          brackets
-          onClick={() => {
-            window.location.href = "mailto:hello@nessalabs.ai";
-          }}
-        >
-          sync with us
-        </Button>
+        <Link href="/ui/components">
+          <Button size="sm" variant="secondary">
+            Get started
+          </Button>
+        </Link>
       }
     />
   );

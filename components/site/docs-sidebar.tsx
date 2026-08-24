@@ -5,17 +5,24 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { groups, registry } from "@/registry";
 
+/**
+ * Pinned to the viewport under the nav: the sidebar itself never scrolls with
+ * the page, only within its own overflow when the list gets long.
+ */
 export function DocsSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-line lg:block">
-      <div className="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto py-8 pr-6">
+    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 self-start overflow-y-auto lg:block">
+      <div className="py-8 pr-6">
         <div className="mb-6">
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.22em] text-dim">
+          <div className="mb-2 px-3 text-xs font-medium text-dim">
             Getting started
           </div>
-          <SidebarLink href="/ui/components" active={pathname === "/ui/components"}>
+          <SidebarLink
+            href="/ui/components"
+            active={pathname === "/ui/components"}
+          >
             Overview
           </SidebarLink>
         </div>
@@ -25,7 +32,7 @@ export function DocsSidebar() {
           if (items.length === 0) return null;
           return (
             <div key={group} className="mb-6">
-              <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.22em] text-dim">
+              <div className="mb-2 px-3 text-xs font-medium text-dim">
                 {group}
               </div>
               <div className="flex flex-col gap-0.5">
@@ -63,10 +70,10 @@ function SidebarLink({
     <Link
       href={href}
       className={cn(
-        "border-l px-3 py-1.5 font-mono text-xs transition-colors",
+        "rounded-md px-3 py-1.5 text-sm transition-colors",
         active
-          ? "border-accent bg-raised text-fg"
-          : "border-line text-dim hover:border-dim hover:text-muted"
+          ? "bg-raised font-medium text-fg"
+          : "text-dim hover:bg-surface hover:text-fg"
       )}
     >
       {children}
