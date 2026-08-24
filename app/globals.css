@@ -93,6 +93,12 @@ pre {
   color: var(--color-ink);
 }
 
+/* Themed scrollbars: overlay-style, follows the palette in both themes. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -100,10 +106,18 @@ pre {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
 ::-webkit-scrollbar-thumb {
   background: var(--color-line);
-  border: 2px solid var(--color-ink);
+  background-clip: padding-box;
+  border: 3px solid transparent;
   border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dim);
+  background-clip: padding-box;
 }
 
 @utility bg-radial-fade {

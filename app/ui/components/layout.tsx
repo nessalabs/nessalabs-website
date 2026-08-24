@@ -6,9 +6,15 @@ export default function DocsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-6xl px-6 sm:px-10">
+    // Fixed viewport height with two independent scroll regions: the sidebar
+    // cannot drift when the content scrolls.
+    <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
       <DocsSidebar />
-      <div className="min-w-0 flex-1 py-10 lg:pl-10">{children}</div>
+      <div className="min-w-0 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-6xl px-6 py-10 sm:px-8 lg:px-10">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

@@ -3,10 +3,17 @@
 The Nessa Labs website — homepage plus the **nessa-ui** component documentation
 at `/ui/components`.
 
-nessa-ui is a general-purpose React component system: primitives (button, input,
+nessa-ui is a behaviour-first React component system: primitives (button, input,
 select, switch, badge, avatar, tooltip…) plus the composites that usually cost a
-week — an application shell, a sortable/searchable data table, a drag-and-drop
-board, a month calendar, and a pan-and-zoom node canvas.
+week each — a resizable application shell, split panes, a sortable/searchable
+data table, a pointer-driven board, a day/week/month/year calendar, a
+pan-and-zoom node canvas, and the AI chat surface (streaming thread, tool and
+skill calls, attachments, queue steering).
+
+What ships is the interaction model. Styling is the consumer's: every component
+takes `className`, the interactive ones take `classNames` for their parts and a
+render prop (`renderNode`, `renderCard`, `renderMessage`) that replaces the look
+while drag, zoom, selection, streaming and keyboard behaviour stay intact.
 
 The website is a consumer of the library, not the subject of it. Anything that
 exists only for this site — the hero ASCII field, the announcement pill, the
@@ -63,6 +70,7 @@ there is nothing else to wire up.
 
 ## Design rules
 
+- Behaviour is the product; visual defaults are a starting point.
 - Quiet and legible: sans for interface text, mono only for code.
 - Neutral by default — no accent hue. Emphasis comes from contrast.
 - Light and dark are equal citizens; never hard-code a color outside the tokens.
@@ -97,3 +105,11 @@ languages the docs actually use (TS/TSX and shell). Token colors are theme
 variables (`--color-code-keyword`, `--color-code-string`, …), so highlighting
 follows light and dark like everything else. There is no grammar engine in the
 client bundle.
+
+## Attribution
+
+Credits for the open-source work nessa-ui builds on — React/Next.js, Tailwind,
+the copy-the-source distribution model from shadcn/ui, headless API patterns
+from Radix UI, the WAI-ARIA Authoring Practices, and the Inter and JetBrains
+Mono typefaces — are listed on the docs overview at `/ui/components`, and that
+list is the one to update when we take on anything new.

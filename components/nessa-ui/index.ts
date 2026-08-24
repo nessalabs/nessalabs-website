@@ -30,6 +30,9 @@ export * from "./dropdown-menu";
 
 // composites
 export * from "./app-shell";
+export * from "./chat";
+export * from "./composer";
+export * from "./split-pane";
 export * from "./calendar";
 export * from "./canvas";
 export * from "./data-table";

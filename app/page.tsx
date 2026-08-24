@@ -30,9 +30,8 @@ export default function HomePage() {
         </h1>
 
         <p className="animate-fade-up mx-auto mt-6 max-w-xl text-base leading-7 text-muted">
-          Nessa Labs is an applied AI lab. We build research, agents, and the
-          interface layer in between — including nessa-ui, the component system
-          everything we ship is made of.
+          An applied AI lab building research, agents, and the interface layer
+          in between.
         </p>
 
         <div className="animate-fade-up mt-10 flex flex-wrap items-center justify-center gap-3">

@@ -524,6 +524,29 @@ export const registry: ComponentDoc[] = [
       { name: "actions", type: "ReactNode", description: "Top bar, right side." },
       { name: "footer", type: "ReactNode", description: "Sidebar footer; hidden when collapsed." },
       { name: "defaultCollapsed", type: "boolean", default: "false" },
+      { name: "resizable", type: "boolean", default: "true", description: "Drag the sidebar edge; arrow keys work when focused." },
+      { name: "defaultSidebarWidth", type: "number", default: "224" },
+      { name: "minSidebarWidth / maxSidebarWidth", type: "number", default: "180 / 400" },
+      { name: "inspector", type: "ReactNode", description: "Right-hand panel: resizable and toggled from the top bar." },
+      { name: "inspectorTitle", type: "ReactNode", default: '"Details"' },
+    ],
+    examples: [
+      {
+        id: "app-shell-inspector",
+        title: "Resizable sidebar and inspector panel",
+        code: `<AppShell
+  resizable
+  brand="Nessa"
+  title="Run 4192"
+  inspector={<RunDetails />}
+  sections={sections}
+>
+  <SplitPane direction="vertical" defaultSize={180}>
+    <Trace />
+    <Console />
+  </SplitPane>
+</AppShell>`,
+      },
     ],
   },
   {
@@ -559,65 +582,297 @@ export const registry: ComponentDoc[] = [
     slug: "kanban",
     name: "Kanban",
     description:
-      "A board with native drag and drop between columns. Uncontrolled by default; pass onChange to own the state.",
-    status: "beta",
+      "A board with drag and drop for cards and columns. While dragging, a dashed drop slot appears at the exact insertion index, so the target is never ambiguous. Columns carry WIP limits and reorder as workflow stages.",
+    status: "stable",
     group: "Composites",
     usage: `import { Kanban } from "@/components/nessa-ui"
 
 <Kanban
   columns={[
     { id: "todo", title: "Todo", cards: [{ id: "1", title: "Ship docs" }] },
-    { id: "doing", title: "In progress", cards: [] },
+    { id: "doing", title: "In progress", limit: 2, cards: [] },
   ]}
+  onChange={setBoard}
 />`,
     props: [
-      { name: "columns", type: "KanbanColumn[]", description: "Required. id, title, cards." },
+      { name: "columns", type: "KanbanColumn[]", description: "Required. id, title, cards, optional limit and accent." },
       { name: "onChange", type: "(columns: KanbanColumn[]) => void", description: "Makes the board controlled." },
+      { name: "reorderColumns", type: "boolean", default: "true", description: "Drag column headers to reorder stages." },
+      { name: "onCardClick", type: "(card, column) => void" },
+      { name: "renderCard", type: "(card, column) => ReactNode", description: "Full control of card appearance; drag behaviour stays." },
+    ],
+    examples: [
+      {
+        id: "kanban-workflow",
+        title: "Workflow stages — WIP limits and column reordering",
+        code: `<Kanban
+  reorderColumns
+  columns={[
+    { id: "triage", title: "Triage", accent: "neutral", cards: [...] },
+    { id: "running", title: "Running", accent: "warn", limit: 2, cards: [...] },
+    { id: "review", title: "Review", accent: "success", cards: [...] },
+  ]}
+/>`,
+      },
+      {
+        id: "kanban-custom",
+        title: "Custom cards — renderCard owns the look, the board owns the drag",
+        code: `<Kanban
+  columns={columns}
+  renderCard={(card) => (
+    <div className="rounded-lg border border-line bg-ink p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-fg">{card.title}</span>
+        <Avatar size="sm" name={String(card.data?.owner)} />
+      </div>
+      <Progress className="mt-3" value={Number(card.data?.progress)} />
+    </div>
+  )}
+/>`,
+      },
     ],
   },
   {
     slug: "calendar",
     name: "Calendar",
     description:
-      "A month grid with per-day events and overflow counts. Dates are ISO strings and `today` is passed in, so rendering stays pure.",
-    status: "beta",
+      "Day, week, month and year views over one event set, with a time grid, all-day row, Today jump, and keyboard navigation. Dates are ISO strings and today is passed in, so rendering stays pure.",
+    status: "stable",
     group: "Composites",
     usage: `import { Calendar } from "@/components/nessa-ui"
 
 <Calendar
-  month="2026-08"
+  defaultView="month"
   today="2026-08-23"
-  events={[{ date: "2026-08-24", title: "Eval sweep" }]}
+  events={[
+    { date: "2026-08-24", title: "Eval sweep", start: "09:30", end: "11:00" },
+    { date: "2026-08-24", title: "Checkpoint", tone: "success" },
+  ]}
   onSelect={(date) => console.log(date)}
 />`,
     props: [
-      { name: "month", type: "string", description: "YYYY-MM. Defaults to the month of today." },
-      { name: "today", type: "string", description: "YYYY-MM-DD, highlighted in the grid." },
-      { name: "events", type: "CalendarEvent[]", description: "date and title." },
+      { name: "view", type: '"day" | "week" | "month" | "year"', description: "Controlled view." },
+      { name: "defaultView", type: "CalendarView", default: '"month"' },
+      { name: "onViewChange", type: "(view: CalendarView) => void" },
+      { name: "date", type: "string", description: "Controlled anchor date (YYYY-MM-DD)." },
+      { name: "defaultDate", type: "string", description: "Falls back to today." },
+      { name: "onDateChange", type: "(date: string) => void" },
+      { name: "events", type: "CalendarEvent[]", description: "date, title, optional start/end (HH:MM) and tone." },
+      { name: "today", type: "string", description: "Highlighted date; keeps rendering pure." },
       { name: "onSelect", type: "(date: string) => void" },
+      { name: "onEventClick", type: "(event: CalendarEvent) => void" },
+      { name: "shortcuts", type: "boolean", default: "true", description: "← → move, T today, D/W/M/Y switch view." },
+    ],
+    examples: [
+      {
+        id: "calendar-week",
+        title: "Week view — time grid and all-day row",
+        code: `<Calendar
+  defaultView="week"
+  today="2026-08-23"
+  events={[
+    { date: "2026-08-24", title: "Eval sweep", start: "09:30", end: "11:00" },
+    { date: "2026-08-25", title: "Training run", start: "13:00", end: "16:30", tone: "warn" },
+    { date: "2026-08-26", title: "Offsite", tone: "success" },
+  ]}
+/>`,
+      },
+      {
+        id: "calendar-day",
+        title: "Day view",
+        code: `<Calendar defaultView="day" defaultDate="2026-08-24" today="2026-08-23" events={events} />`,
+      },
+      {
+        id: "calendar-year",
+        title: "Year view — density at a glance, click a month to drill in",
+        code: `<Calendar defaultView="year" today="2026-08-23" events={events} />`,
+      },
+      {
+        id: "calendar-shortcuts",
+        title: "Keyboard navigation",
+        code: `// Focus the calendar, then:
+//   ← →   previous / next (day, week, month or year depending on the view)
+//   T     jump to today
+//   D W M Y   switch view
+<Calendar shortcuts today="2026-08-23" events={events} />`,
+      },
     ],
   },
   {
     slug: "canvas",
     name: "Canvas",
     description:
-      "A pan-and-zoom node canvas: drag the background to pan, drag nodes to move them, scroll to zoom. Edges are drawn as SVG curves between nodes.",
-    status: "beta",
+      "A pan-and-zoom node canvas: drag the background to pan, drag nodes to move them, scroll or use the controls to zoom, click to select. It owns the interaction model — dragging, zooming, selection, edge routing, snapping — while renderNode decides what a node looks like.",
+    status: "stable",
     group: "Composites",
     usage: `import { Canvas } from "@/components/nessa-ui"
 
 <Canvas
+  snap={8}
   nodes={[
-    { id: "a", x: 40, y: 40, title: "Ingest", subtitle: "source" },
+    { id: "a", x: 40, y: 40, title: "Ingest", subtitle: "corpus" },
     { id: "b", x: 260, y: 120, title: "Embed" },
   ]}
-  edges={[{ from: "a", to: "b" }]}
+  edges={[{ from: "a", to: "b", label: "batch" }]}
 />`,
     props: [
-      { name: "nodes", type: "CanvasNode[]", description: "Required. id, x, y, title, optional subtitle." },
-      { name: "edges", type: "CanvasEdge[]", description: "from and to node ids." },
+      { name: "nodes", type: "CanvasNode[]", description: "Required. id, x, y, title, optional subtitle, data, width, height." },
+      { name: "edges", type: "CanvasEdge[]", description: "from, to, optional label and dashed." },
       { name: "onNodesChange", type: "(nodes: CanvasNode[]) => void", description: "Makes the canvas controlled." },
+      { name: "onSelect", type: "(id: string | null) => void" },
+      { name: "renderNode", type: "(node, { selected, dragging }) => ReactNode", description: "Full control of node appearance." },
+      { name: "snap", type: "number", default: "0", description: "Snap dragged nodes to this pixel grid." },
       { name: "grid", type: "boolean", default: "true" },
+      { name: "minZoom / maxZoom", type: "number", default: "0.4 / 2" },
+      { name: "classNames", type: "{ root, node, edge, controls }", description: "Style the parts without forking the component." },
+    ],
+    examples: [
+      {
+        id: "canvas-workflow",
+        title: "Workflow nodes — renderNode with status, ports and metrics",
+        code: `<Canvas
+  snap={8}
+  nodes={nodes}
+  edges={edges}
+  renderNode={(node, { selected }) => (
+    <div className={cn(
+      "h-full rounded-xl border bg-ink shadow-lg",
+      selected ? "border-fg" : "border-line"
+    )}>
+      <div className="flex items-center gap-2 border-b border-line px-3 py-2">
+        <StatusDot status={node.data.status} />
+        <span className="text-sm font-medium text-fg">{node.title}</span>
+        <Badge tone="outline">{node.data.kind}</Badge>
+      </div>
+      <div className="px-3 py-2 text-xs text-dim">{node.data.metric}</div>
+    </div>
+  )}
+/>`,
+      },
+    ],
+  },
+  {
+    slug: "split-pane",
+    name: "SplitPane",
+    description:
+      "Two panes with a draggable divider. Drag to resize, double-click to reset, or focus the handle and use the arrow keys.",
+    status: "stable",
+    group: "Composites",
+    usage: `import { SplitPane } from "@/components/nessa-ui"
+
+<SplitPane defaultSize={280} min={180} max={520}>
+  <FileTree />
+  <Editor />
+</SplitPane>`,
+    props: [
+      { name: "children", type: "[ReactNode, ReactNode]", description: "Required. Exactly two panes." },
+      { name: "direction", type: '"horizontal" | "vertical"', default: '"horizontal"' },
+      { name: "defaultSize", type: "number", default: "260", description: "First pane size in pixels." },
+      { name: "min / max", type: "number", default: "140 / 640" },
+      { name: "onResize", type: "(size: number) => void" },
+      { name: "resetSize", type: "number", description: "Size restored on double-click." },
+    ],
+    examples: [
+      {
+        id: "split-pane-vertical",
+        title: "Vertical split",
+        code: `<SplitPane direction="vertical" defaultSize={140} min={80} max={260}>
+  <Preview />
+  <Console />
+</SplitPane>`,
+      },
+    ],
+  },
+  {
+    slug: "chat",
+    name: "Chat",
+    description:
+      "A message thread with token streaming, tool and skill calls, and attachments. Streaming is presentational: mark a message streaming and it reveals progressively, so the same component renders a live turn or a finished transcript.",
+    status: "stable",
+    group: "Composites",
+    usage: `import { Chat, Composer } from "@/components/nessa-ui"
+
+<Chat
+  messages={messages}
+  footer={<Composer onSend={send} running={running} onStop={stop} />}
+/>`,
+    props: [
+      { name: "messages", type: "ChatMessage[]", description: "Required. role, content, optional attachments, toolCalls, streaming." },
+      { name: "streamSpeed", type: "number", default: "2", description: "Characters per frame; 0 renders instantly." },
+      { name: "footer", type: "ReactNode", description: "Usually a Composer." },
+      { name: "renderMessage", type: "(message) => ReactNode", description: "Full control of message appearance." },
+      { name: "emptyState", type: "ReactNode" },
+    ],
+    examples: [
+      {
+        id: "chat-tools",
+        title: "Tool and skill calls with expandable output",
+        code: `<Chat
+  messages={[
+    {
+      id: "1",
+      role: "assistant",
+      content: "Found three regressions.",
+      toolCalls: [
+        { id: "t1", name: "search_runs", status: "done", output: "12 matches" },
+        { id: "t2", name: "eval-suite", kind: "skill", status: "running" },
+      ],
+    },
+  ]}
+/>`,
+      },
+    ],
+  },
+  {
+    slug: "composer",
+    name: "Composer",
+    description:
+      "The AI input surface: autosizing textarea, attachments, a skill picker, model selection, and queue steering — follow-ups typed while a turn is running are queued, and can be edited, reordered, promoted or dropped before they reach the model.",
+    status: "stable",
+    group: "Composites",
+    usage: `import { Composer } from "@/components/nessa-ui"
+
+<Composer
+  running={running}
+  onSend={({ text, attachments, skills }) => send(text, attachments, skills)}
+  onStop={stop}
+  skills={[{ id: "eval", name: "Eval suite", description: "Run the harness" }]}
+  models={[{ value: "large", label: "nessa-1-large" }]}
+/>`,
+    props: [
+      { name: "onSend", type: "(payload: ComposerSubmit) => void", description: "text, attachments and active skills." },
+      { name: "running", type: "boolean", default: "false", description: "Send becomes Stop; new input is queued." },
+      { name: "onStop", type: "() => void", description: "Also bound to Escape." },
+      { name: "attachments", type: "ChatAttachment[]", description: "Controlled attachments; uncontrolled otherwise." },
+      { name: "skills", type: "ComposerSkill[]", description: "Offered in the skill picker." },
+      { name: "activeSkills", type: "string[]", description: "Controlled selection." },
+      { name: "queue", type: "string[]", description: "Controlled queue for steering mid-turn." },
+      { name: "onQueueChange", type: "(queue: string[]) => void" },
+      { name: "models", type: "{ value, label }[]", description: "Shows the model selector." },
+      { name: "maxRows", type: "number", default: "8" },
+    ],
+    examples: [
+      {
+        id: "composer-queue",
+        title: "Queue steering — a turn is running, follow-ups wait and stay editable",
+        code: `<Composer
+  running
+  queue={queue}
+  onQueueChange={setQueue}
+  onStop={stop}
+/>`,
+      },
+      {
+        id: "composer-skills",
+        title: "Attachments and skills",
+        code: `<Composer
+  skills={[
+    { id: "eval", name: "Eval suite", description: "Run the harness" },
+    { id: "trace", name: "Trace reader", description: "Inspect a run" },
+  ]}
+  attachments={[{ id: "1", name: "run-4192.json", kind: "code", size: "18 KB" }]}
+/>`,
+      },
     ],
   },
 ];
