@@ -12,7 +12,11 @@ import {
   FileJson,
   FileSearch,
   FileText,
+  HelpCircle,
   KanbanSquare,
+  Languages,
+  ListTree,
+  MessageSquarePlus,
   LogOut,
   Maximize2,
   Minimize2,
@@ -21,6 +25,9 @@ import {
   Plus,
   Rows2,
   Mic,
+  Quote,
+  Search,
+  TextQuote,
   Pencil,
   Rocket,
   RotateCcw,
@@ -75,6 +82,12 @@ import {
   MermaidDiagram,
   MessageMarkdown,
   Reference,
+  SelectionTooltip,
+  SelectionTooltipAction,
+  SelectionTooltipLabel,
+  SelectionTooltipMore,
+  SelectionTooltipSeparator,
+  SelectionTooltipShelf,
   ReferenceCard,
   ReferenceContent,
   ReferenceTrigger,
@@ -407,191 +420,332 @@ const threads: Thread[] = [
     ],
   },
   {
-    id: "chat:retrieval",
-    title: "Retrieval recall drop",
+    id: "chat:krusty",
+    title: "Kanban for the Krusty Krab",
     turns: [
       {
         role: "user",
-        text: "Why did retrieval recall drop from 92% to 87% in the last eval run?",
-      },
-      {
-        role: "tool",
-        name: "search_runs",
-        meta: "suite=retrieval, last=5",
-        status: "complete",
-        output:
-          "Run 4189: 92.1% recall (2026-08-20)\nRun 4190: 90.8% recall (2026-08-21)\nRun 4191: 87.3% recall (2026-08-22)\nRun 4192: 86.9% recall (2026-08-23)",
-      },
-      {
-        role: "tool",
-        name: "query_warehouse",
-        meta: "table=run_metadata, runs=4189-4193",
-        status: "complete",
-        output:
-          "4189: embed_model=v2.1, chunk_size=512\n4190: embed_model=v2.1, chunk_size=512\n4191: embed_model=v2.2, chunk_size=256\n4192: embed_model=v2.2, chunk_size=256",
+        text: "Mr. Krabs wants a board for the fry station. Four columns, cards you can throw between them. How much of that do I write?",
       },
       {
         role: "tool",
         name: "read_file",
-        meta: "path=config/v2.2.yaml",
+        meta: "path=packages/react/src/components/kanban/index.ts",
         status: "complete",
         output:
-          "chunk_strategy: semantic_split\nmax_chunk_tokens: 256\nembedding_model: v2.2-ada\nrerank_threshold: 0.65",
+          "export { Kanban, KanbanColumn, KanbanColumnHeader, KanbanCard, KanbanCardTitle, KanbanCardMeta }\nexport type { KanbanDropResult }",
       },
       {
         role: "assistant",
-        text: "The drop tracks the v2.2 embedding model and 256 chunk size that landed in run 4191. The semantic_split strategy with tighter chunking cut context density. Worth testing chunk_size 512 against v2.2 to separate the model change from the chunking change.",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "The drag is ours, the patties are yours. You give it columns and cards, and get back a drop result you can accept or refuse:",
+          },
+          {
+            kind: "code",
+            lang: "tsx",
+            value: [
+              '<Kanban onDrop={(drop) => {',
+              '  if (drop.toColumn === "served" && !patty.cooked) return false;',
+              "  move(drop.cardId, drop.toColumn, drop.index);",
+              "}}>",
+              "  {columns.map((column) => (",
+              "    <KanbanColumn key={column.id} id={column.id}>",
+              "      <KanbanColumnHeader>{column.title}</KanbanColumnHeader>",
+              "      {column.cards.map((card) => (",
+              "        <KanbanCard key={card.id} id={card.id}>",
+              "          <KanbanCardTitle>{card.title}</KanbanCardTitle>",
+              "        </KanbanCard>",
+              "      ))}",
+              "    </KanbanColumn>",
+              "  ))}",
+              "</Kanban>",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "Returning `false` from `onDrop` snaps the card home, which is the closest thing in software to Squidward saying no.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Does the card follow the cursor, or is it one of those lists where a grey box appears somewhere and you hope?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "It follows. Three things run at once while you drag:",
+              "",
+              "1. the card lifts and tracks the pointer",
+              "2. a dotted placeholder opens at the index you are actually over",
+              "3. the column under the pointer takes a highlight",
+              "",
+              "Keyboard drag is the same model: pick up with `Space`, move with arrows, drop with `Space`, cancel with `Escape`. Try it on the Board view in the sidebar.",
+            ].join("\n"),
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "And if Plankton drags 400 cards at once?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "Only the dragged card and the two columns it touches re-render. Everything else keeps its DOM nodes, so cost per frame is:",
+          },
+          {
+            kind: "math",
+            value: String.raw`O(1) \;\text{per frame}, \quad \text{not}\; O(n)\;\text{cards}`,
+          },
+        ],
       },
     ],
   },
   {
-    id: "chat:release",
-    title: "Release freeze window",
+    id: "chat:timeline",
+    title: "A Marvel timeline, badly",
     turns: [
       {
         role: "user",
-        text: "When can we merge the new eval harness if a freeze is coming up?",
-      },
-      {
-        role: "tool",
-        name: "read_file",
-        meta: "path=RELEASE_SCHEDULE.md",
-        status: "complete",
-        output:
-          "Release v1.8: 2026-08-25 (code freeze 2026-08-24)\nRelease v1.9: 2026-09-15 (code freeze 2026-09-01)\nHotfix window: 2026-08-26 to 2026-08-31",
-      },
-      {
-        role: "tool",
-        name: "git_diff",
-        meta: "branch=eval-harness, base=main",
-        status: "complete",
-        output:
-          "173 files changed, 4521 insertions(+), 892 deletions(-)\nevaluation/harness.py, tests/eval_*.py, config/evals.yaml",
+        text: "I want to plot the MCU on EventCalendar as a joke for standup. Can it handle events that overlap into nonsense?",
       },
       {
         role: "assistant",
-        text: "The v1.8 freeze is tomorrow and this branch touches 173 files, so merging now carries real risk. Either land it before 2026-08-24 23:59 UTC or target v1.9, whose window opens 2026-09-01. Between those, 08-26 to 08-31 is hotfix only.",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "It can, and the overlap is the interesting part. Concurrent events share the column width and the layout is deterministic, so Endgame does not shove Loki off screen.",
+              "",
+              "| View | Good for | Overlap |",
+              "| --- | --- | --- |",
+              "| Day | one timeline, hour by hour | side by side |",
+              "| Week | the working week | side by side |",
+              "| Month | shape of a quarter | stacked, with a count |",
+              "",
+              "The calendar in the sidebar is clamped to 9-5 because nobody needs to see 3am.",
+            ].join("\n"),
+          },
+        ],
+      },
+      {
+        role: "tool",
+        name: "search_docs",
+        meta: "query=event-calendar drag semantics",
+        status: "complete",
+        output:
+          "event-calendar.md#drag: onEventChange fires on commit, not during\nevent-calendar.md#resize: edges resize in step increments\nevent-calendar.md#keyboard: arrows move, shift+arrows resize",
       },
       {
         role: "user",
-        text: "What if we cherry-pick the core changes and defer the refactor?",
-      },
-      {
-        role: "tool",
-        name: "run_eval",
-        meta: "suite=core_harness, baseline=4182",
-        status: "running",
-        output: "Evaluating 12 checkpoints\n2 of 12 complete, ETA 8 min",
+        text: "Wait, so if I drag the Snap to a different Tuesday, when does my state actually change?",
       },
       {
         role: "assistant",
-        text: "Running the core harness against baseline 4182 now. If the next eight minutes come back clean, cherry-picking the evaluation core alone is safe for v1.8.",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "On release. During the drag the component runs its own preview so your state is not thrashed sixty times a second; `onEventChange` fires once with the final start and end, and you can reject it. Refusing a change snaps the event back with no flicker, because the preview never touched your data.",
+          },
+          {
+            kind: "mermaid",
+            value: [
+              "sequenceDiagram",
+              "  participant U as Pointer",
+              "  participant C as EventCalendar",
+              "  participant H as Your store",
+              "  U->>C: drag Snap to Tue",
+              "  C->>C: preview position",
+              "  U->>C: release",
+              "  C->>H: onEventChange(start, end)",
+              "  H-->>C: accept or reject",
+              "  C->>U: commit or snap back",
+            ].join("\n"),
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Good. Now the important question: can I make it look like a Wakandan interface?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "Yes, and without touching a component. Every surface reads `--nessa-*` tokens, so a palette is a stylesheet, not a fork. Settings in this harness swaps eleven of them at runtime and nothing re-mounts. Purple and gold is four variables away.",
+          },
+        ],
       },
     ],
   },
   {
-    id: "chat:flaky",
-    title: "Test suite flakiness",
+    id: "chat:theming",
+    title: "Theming without a fork",
     turns: [
       {
         role: "user",
-        text: "Integration tests keep failing intermittently. What is causing the flakes?",
+        text: "Our designer wants Tokyo Night everywhere, our CEO wants paper white, and legal wants high contrast. Do I ship three builds?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "One build. Themes are variable scopes, so a theme is data you can ship after the fact, including from a database:",
+          },
+          {
+            kind: "code",
+            lang: "css",
+            value: [
+              '[data-nessa-theme="tokyo-night"] {',
+              "  --nessa-background: oklch(0.21 0.03 265);",
+              "  --nessa-foreground: oklch(0.89 0.03 265);",
+              "  --nessa-primary: oklch(0.72 0.13 265);",
+              "  --nessa-muted: oklch(0.27 0.03 265);",
+              "  --nessa-border: oklch(0.32 0.03 265);",
+              "}",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "Set the attribute on any element and everything inside it re-themes, including portalled menus, which is the part most token systems get wrong.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "What about fonts and text size? Those usually mean hunting through fifty files.",
       },
       {
         role: "tool",
-        name: "tail_logs",
-        meta: "tests/integration, pattern=FAIL",
+        name: "grep",
+        meta: 'pattern="--nessa-font", path=packages/react/src',
         status: "complete",
         output:
-          "14:32:45 test_retrieval_timeout: expected 150ms, got 280ms\n14:28:12 test_cache_consistency: assertion mismatch\n14:22:31 test_retrieval_timeout: expected 150ms, got 310ms",
+          "theme.css: --nessa-font-sans, --nessa-font-mono\ncomponents/*: font-sans, font-mono only\n0 hard-coded font families",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Fonts are two variables and nothing else. Text size is not a token, deliberately: sizes are in `rem`, so the host scales the root and the whole surface follows, including line heights and the gaps that depend on them.",
+              "",
+              "- `--nessa-font-sans` drives every prose and UI surface",
+              "- `--nessa-font-mono` drives code, diffs and tool output",
+              "- `html { font-size }` drives scale",
+              "",
+              "Settings in this harness does exactly that, and nothing else.",
+            ].join("\n"),
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Any chance of a flash of the wrong theme on load?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "Only if you defer the choice to React. Stamp the attribute in a blocking inline script before paint and the first frame is already correct. This site does it in about ten lines.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "chat:approval",
+    title: "When the agent asks first",
+    turns: [
+      {
+        role: "user",
+        text: "Our agent runs shell commands. I need the approval prompt to feel like a decision, not a modal people dismiss on reflex.",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "`ToolApproval` is built for that. The command, its arguments and its blast radius are on screen at the moment of the choice, and the surface adapts instead of becoming a dialog: a notch-sized pill when it is small, a full card when it is not.",
+          },
+        ],
       },
       {
         role: "tool",
-        name: "read_file",
-        meta: "path=tests/integration/test_retrieval.py",
+        name: "run_command",
+        meta: "cmd=rm -rf ./build, cwd=/srv/app",
         status: "error",
         output:
-          "Error: no such file\nDid you mean tests/integration/retrieval_timeout.py?",
-      },
-      {
-        role: "tool",
-        name: "read_file",
-        meta: "path=tests/integration/retrieval_timeout.py",
-        status: "complete",
-        output:
-          "def test_retrieval_timeout():\n    assert elapsed_ms < 150  # hardcoded threshold\n# note: warehouse latency varies 140-320ms",
-      },
-      {
-        role: "assistant",
-        text: "The 150ms threshold sits inside the warehouse latency range of 140 to 320ms, so the test fails whenever the warehouse is slow. Raise it to 350ms, or assert a percentile instead of an absolute bound.",
+          "Blocked: awaiting approval\npolicy=ask-approval\nreason=destructive path outside allowlist",
       },
       {
         role: "user",
-        text: "Is the cache consistency failure separate?",
-      },
-      {
-        role: "tool",
-        name: "run_eval",
-        meta: "suite=integration, runs=100, seed=42",
-        status: "complete",
-        output:
-          "retrieval_timeout: 18 of 100 failed\ncache_consistency: 3 of 100 failed",
+        text: "That is the one. What happens after I approve?",
       },
       {
         role: "assistant",
-        text: "Separate, and much rarer: 3% against 18%. Fix the timeout threshold first, then look at cache consistency on its own.",
-      },
-    ],
-  },
-  {
-    id: "chat:latency",
-    title: "Inference endpoint cost",
-    turns: [
-      {
-        role: "user",
-        text: "The inference endpoint is running hot. What is driving the cost?",
-      },
-      {
-        role: "tool",
-        name: "profile_endpoint",
-        meta: "inference-prod-v2, window=1h",
-        status: "complete",
-        output:
-          "p50 latency 287ms\np99 latency 840ms\n14,200 requests/hour\nCPU 78%, GPU 92%",
-      },
-      {
-        role: "tool",
-        name: "query_warehouse",
-        meta: "table=endpoint_costs",
-        status: "complete",
-        output:
-          "2026-08-20: $0.042 / 1k tokens\n2026-08-21: $0.041 / 1k tokens\n2026-08-22: $0.045 / 1k tokens\n2026-08-23: $0.048 / 1k tokens",
-      },
-      {
-        role: "tool",
-        name: "read_file",
-        meta: "path=config/inference-prod.yaml",
-        status: "complete",
-        output: "batch_size: 32\ncontext_window: 32k\ncache_ttl: 300s",
-      },
-      {
-        role: "assistant",
-        text: "GPU sits at 92% and cost per thousand tokens rose 14% in three days, from $0.042 to $0.048. A 32k context at batch size 32 maximises throughput but holds expensive GPU memory. Dropping to batch 16, or an 8k context, should bring cost per request down.",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "The approval turns into the tool call in place. Same row, same position in the transcript, so the history reads as one event rather than a prompt followed by a mystery. The composer's access mode picks the default policy: ask every time, allow reads, or full auto.",
+          },
+          {
+            kind: "mermaid",
+            value: [
+              "stateDiagram-v2",
+              "  [*] --> Pending",
+              "  Pending --> Running: approve",
+              "  Pending --> Denied: reject",
+              "  Running --> Complete",
+              "  Running --> Failed",
+              "  Denied --> [*]",
+              "  Complete --> [*]",
+            ].join("\n"),
+          },
+        ],
       },
       {
         role: "user",
-        text: "How much would 8k context actually save?",
-      },
-      {
-        role: "tool",
-        name: "profile_endpoint",
-        meta: "inference-staging-8k, window=1h",
-        status: "running",
-        output: "Sampling requests against context_window=8k\n~3 min remaining",
+        text: "And the risky ones? I do not want a yes-to-all button next to a delete.",
       },
       {
         role: "assistant",
-        text: "Profiling the 8k variant now. Cutting the context window usually takes 30 to 40% off memory cost and returns 8 to 15% on latency from fewer GPU operations.",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Nothing is auto-focused, so `Enter` cannot approve by accident. Beyond that it is your policy, not ours: we render what you classify.",
+              "",
+              "A rule of thumb some teams use is to require a second confirmation once the estimated blast radius crosses a threshold:",
+            ].join("\n"),
+          },
+          {
+            kind: "math",
+            value: String.raw`\text{risk} = \underbrace{p_{\text{fail}}}_{\text{history}} \times \underbrace{|\text{files}|}_{\text{scope}} \times \underbrace{c_{\text{undo}}}_{\text{recoverability}}`,
+          },
+        ],
       },
     ],
   },
@@ -904,7 +1058,6 @@ function TurnBlocks({
                     additions={block.files.reduce((n, f) => n + f.additions, 0)}
                     deletions={block.files.reduce((n, f) => n + f.deletions, 0)}
                   />
-                  <FileDiffListToggle />
                 </FileDiffCardHeader>
                 <FileDiffList>
                   {block.files.map((file) => (
@@ -917,10 +1070,133 @@ function TurnBlocks({
                     </FileDiffListItem>
                   ))}
                 </FileDiffList>
+                <FileDiffListToggle />
               </FileDiffCard>
             );
         }
       })}
+    </div>
+  );
+}
+
+/**
+ * Where the current selection sits inside `containerRef`, or null when there
+ * is none. SelectionTooltip is presentational by design, so anchoring is the
+ * host's job: this is that job, done once for every transcript.
+ */
+function useSelectionAnchor(
+  containerRef: React.RefObject<HTMLElement | null>
+) {
+  const [anchor, setAnchor] = React.useState<{
+    top: number;
+    left: number;
+    text: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    function update() {
+      const node = containerRef.current;
+      if (!node) return;
+      const selection = document.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+        setAnchor(null);
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      if (!node.contains(range.commonAncestorContainer)) {
+        setAnchor(null);
+        return;
+      }
+      const bounds = range.getBoundingClientRect();
+      if (bounds.width === 0 && bounds.height === 0) {
+        setAnchor(null);
+        return;
+      }
+      const host = node.getBoundingClientRect();
+      setAnchor({
+        top: bounds.top - host.top - 8,
+        left: bounds.left - host.left + bounds.width / 2,
+        text: selection.toString(),
+      });
+    }
+
+    document.addEventListener("selectionchange", update);
+    // The transcript scrolls under the pill, so the anchor is re-read rather
+    // than left to drift away from the words it points at.
+    container.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      document.removeEventListener("selectionchange", update);
+      container.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [containerRef]);
+
+  return anchor;
+}
+
+const selectionShelf = [
+  { label: "Explain", icon: HelpCircle },
+  { label: "Improve", icon: Sparkles },
+  { label: "Translate", icon: Languages },
+  { label: "Summarize", icon: ListTree },
+  { label: "Find similar", icon: Search },
+  { label: "Cite", icon: Quote },
+];
+
+function TranscriptSelectionTooltip({
+  anchor,
+  onQuote,
+}: {
+  anchor: { top: number; left: number; text: string };
+  onQuote: (text: string) => void;
+}) {
+  return (
+    <div
+      className="pointer-events-none absolute z-30"
+      style={{
+        top: anchor.top,
+        left: anchor.left,
+        transform: "translate(-50%, -100%)",
+      }}
+    >
+      <div className="pointer-events-auto">
+        <SelectionTooltip>
+          <SelectionTooltipAction
+            aria-label="Quote in composer"
+            tooltip="Quote in composer"
+            onClick={() => onQuote(anchor.text)}
+          >
+            <MessageSquarePlus aria-hidden="true" />
+            <SelectionTooltipLabel>Quote</SelectionTooltipLabel>
+          </SelectionTooltipAction>
+          <SelectionTooltipSeparator />
+          <SelectionTooltipAction
+            aria-label="Copy"
+            tooltip="Copy"
+            onClick={() => navigator.clipboard?.writeText(anchor.text)}
+          >
+            <Copy aria-hidden="true" />
+            <SelectionTooltipLabel>Copy</SelectionTooltipLabel>
+          </SelectionTooltipAction>
+          <SelectionTooltipSeparator />
+          <SelectionTooltipMore />
+          <SelectionTooltipShelf>
+            {selectionShelf.map(({ label, icon: Icon }) => (
+              <SelectionTooltipAction
+                key={label}
+                aria-label={label}
+                tooltip={label}
+              >
+                <Icon aria-hidden="true" />
+              </SelectionTooltipAction>
+            ))}
+          </SelectionTooltipShelf>
+        </SelectionTooltip>
+      </div>
     </div>
   );
 }
@@ -944,6 +1220,8 @@ function ChatPane({ viewId }: { viewId: string }) {
   const [editDraft, setEditDraft] = React.useState("");
   const [activeTurn, setActiveTurn] = React.useState(0);
   const turnRefs = React.useRef<Array<HTMLDivElement | null>>([]);
+  const transcriptRef = React.useRef<HTMLDivElement | null>(null);
+  const selection = useSelectionAnchor(transcriptRef);
 
   React.useEffect(() => setTurns(thread.turns), [thread]);
 
@@ -981,7 +1259,10 @@ function ChatPane({ viewId }: { viewId: string }) {
       {/* A size container: the rail appears only when the pane is wide enough
           for it, and the transcript stops stretching past a comfortable
           measure instead of running the full width of a maximised pane. */}
-      <div className="@container relative flex min-h-0 flex-1">
+      <div
+        ref={transcriptRef}
+        className="@container relative flex min-h-0 flex-1"
+      >
         <ConversationRail className="absolute left-2 top-1/2 z-10 hidden -translate-y-1/2 @[34rem]:flex">
           {turns
             .map((turn, index) => ({ turn, index }))
@@ -1009,12 +1290,14 @@ function ChatPane({ viewId }: { viewId: string }) {
             ))}
         </ConversationRail>
 
-        <MessageScroller className="mx-auto max-w-3xl flex-1">
+        <MessageScroller className="flex-1">
           <MessageScrollerViewport
             aria-label={thread.title}
             className="p-3 @[34rem]:ps-10"
           >
-            <MessageScrollerContent className="gap-3">
+            {/* The viewport spans the pane, so its scrollbar rides the pane
+                edge; only the content is held to a readable measure. */}
+            <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-3">
               {turns.map((turn, index) => {
                 if (turn.role === "tool") {
                   return (
@@ -1145,6 +1428,18 @@ function ChatPane({ viewId }: { viewId: string }) {
           {/* Appears the moment the reader leaves the live edge. */}
           <MessageScrollerButton />
         </MessageScroller>
+
+        {selection ? (
+          <TranscriptSelectionTooltip
+            anchor={selection}
+            onQuote={(text) => {
+              setDraft((current) =>
+                `${current}${current ? "\n\n" : ""}> ${text}\n\n`.trimStart()
+              );
+              editorRef.current?.focus();
+            }}
+          />
+        ) : null}
       </div>
 
       <div className="mx-auto w-full max-w-3xl p-2">
@@ -2566,7 +2861,7 @@ export function AgentHarness({
     <AppShell
       className="h-full"
       defaultLayout={createAppShellLayout({
-        views: ["chat:retrieval"],
+        views: ["chat:tour"],
         openDocks: [AppShellDockSide.Left],
         dockSizes: { [AppShellDockSide.Left]: SIDEBAR_WIDTH },
       })}

@@ -3,8 +3,10 @@
 import * as React from "react";
 import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
+  AtSign,
   Bookmark,
   Copy,
+  FileCode,
   FileSearch,
   Flag,
   HelpCircle,
@@ -1033,5 +1035,81 @@ export function MessageScrollerDemo() {
       </MessageScrollerViewport>
       <MessageScrollerButton />
     </MessageScroller>
+  );
+}
+
+const inlineChips = [
+  { id: "skill:eval", label: "Eval suite", kind: "skill" as const },
+  { id: "file:encoder", label: "encoder.ts", kind: "file" as const },
+  { id: "mention:ada", label: "Ada Lovelace", kind: "mention" as const },
+];
+
+/**
+ * Attachments as inline chips rather than pills above the input. A chip is an
+ * atomic island in the sentence: it keeps its place in the text, moves with
+ * the words around it, and deletes whole on Backspace. Long pastes become a
+ * chip too instead of flooding the field.
+ */
+export function ChatComposerInlineDemo() {
+  const editorRef = React.useRef<ChatComposerEditorHandle>(null);
+  const [content, setContent] = React.useState("");
+  const pasteCount = React.useRef(0);
+
+  return (
+    <div className="grid w-full min-w-0 gap-3">
+      <ChatComposer
+        onSubmit={(event) => {
+          event.preventDefault();
+        }}
+      >
+        <ChatComposerEditor
+          ref={editorRef}
+          placeholder="Compare @encoder.ts against the /Eval suite baseline"
+          onContentChange={(next) => setContent(next.text)}
+          // A pasted stack trace belongs in an attachment, not in the field.
+          onPasteAttachment={(text) => {
+            pasteCount.current += 1;
+            editorRef.current?.insertChip({
+              id: `paste:${pasteCount.current}`,
+              label: `Pasted text (${text.length} chars)`,
+              kind: "pasted-text",
+              textValue: text,
+            });
+          }}
+        />
+
+        <ChatComposerFooter>
+          <ChatComposerActions>
+            {inlineChips.map((chip) => (
+              <ChatComposerAction
+                key={chip.id}
+                aria-label={`Insert ${chip.label}`}
+                title={`Insert ${chip.label}`}
+                onClick={() =>
+                  editorRef.current?.insertChip({
+                    id: `${chip.id}:${Math.round(performance.now())}`,
+                    label: chip.label,
+                    kind: chip.kind,
+                  })
+                }
+              >
+                {chip.kind === "skill" ? (
+                  <Sparkles aria-hidden="true" />
+                ) : chip.kind === "file" ? (
+                  <FileCode aria-hidden="true" />
+                ) : (
+                  <AtSign aria-hidden="true" />
+                )}
+              </ChatComposerAction>
+            ))}
+          </ChatComposerActions>
+          <ChatComposerSubmit aria-label="Send" />
+        </ChatComposerFooter>
+      </ChatComposer>
+
+      <p className="text-xs text-muted-foreground">
+        Serialized: {content ? content : "empty"}
+      </p>
+    </div>
   );
 }

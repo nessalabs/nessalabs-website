@@ -160,6 +160,10 @@ const documented: {
         id: "chat-composer-full",
         title: "Attachments, / and @ menus, model and thinking controls",
       },
+      {
+        id: "chat-composer-inline",
+        title: "Inline attachment chips, including a captured paste",
+      },
     ],
   },
   {
