@@ -1,7 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Database, Filter, Shuffle, Sparkles, Webhook } from "lucide-react";
+import { cn } from "@/lib/cn";
+import {
+  Bell,
+  Columns2,
+  Database,
+  Filter,
+  Rows2,
+  Shuffle,
+  Sparkles,
+  Webhook,
+  X,
+} from "lucide-react";
 import {
   EventCalendar,
   EventCalendarGrid,
@@ -15,6 +26,7 @@ import {
   KanbanColumnHandle,
   KanbanColumnList,
   SplitView,
+  SplitViewOrientation,
   SplitViewPanel,
   SplitViewSeparator,
   WorkflowCanvas,
@@ -624,5 +636,240 @@ export function SplitViewDemo() {
         </div>
       </SplitViewPanel>
     </SplitView>
+  );
+}
+
+/* ── SplitView workspace ───────────────────────────────────────────────── */
+
+type WorkspaceNode =
+  | { type: "pane"; id: string; view: string }
+  | {
+      type: "split";
+      id: string;
+      orientation: SplitViewOrientation;
+      children: [WorkspaceNode, WorkspaceNode];
+    };
+
+const workspaceViews: Record<string, { label: string; body: string }> = {
+  editor: { label: "encoder.ts", body: "export function encode(chunk: string) {" },
+  terminal: { label: "Terminal", body: "$ pnpm test --filter retrieval" },
+  preview: { label: "Preview", body: "Recall 92.1% over 4,812 queries" },
+  notes: { label: "Notes", body: "Rerank above 0.4 only. Ask Ada." },
+};
+
+let workspaceIds = 0;
+const nextWorkspaceId = () => `node-${(workspaceIds += 1)}`;
+
+/** Replaces one pane with a split holding it and a copy of it. */
+function splitNode(
+  node: WorkspaceNode,
+  paneId: string,
+  orientation: SplitViewOrientation
+): WorkspaceNode {
+  if (node.type === "pane") {
+    if (node.id !== paneId) return node;
+    return {
+      type: "split",
+      id: nextWorkspaceId(),
+      orientation,
+      children: [
+        { type: "pane", id: nextWorkspaceId(), view: node.view },
+        { type: "pane", id: nextWorkspaceId(), view: node.view },
+      ],
+    };
+  }
+  return {
+    ...node,
+    children: [
+      splitNode(node.children[0], paneId, orientation),
+      splitNode(node.children[1], paneId, orientation),
+    ] as [WorkspaceNode, WorkspaceNode],
+  };
+}
+
+/** Drops a pane and collapses the split that held it, the way editors do. */
+function closeNode(node: WorkspaceNode, paneId: string): WorkspaceNode | null {
+  if (node.type === "pane") return node.id === paneId ? null : node;
+  const first = closeNode(node.children[0], paneId);
+  const second = closeNode(node.children[1], paneId);
+  if (!first) return second;
+  if (!second) return first;
+  return { ...node, children: [first, second] as [WorkspaceNode, WorkspaceNode] };
+}
+
+/** Swaps two panes' views, which is what a header drag between panes means. */
+function swapViews(node: WorkspaceNode, a: string, b: string): WorkspaceNode {
+  const find = (current: WorkspaceNode): string | null =>
+    current.type === "pane"
+      ? current.id === a || current.id === b
+        ? current.view
+        : null
+      : find(current.children[0]) ?? find(current.children[1]);
+
+  const viewOf = (id: string): string => {
+    const walk = (current: WorkspaceNode): string | null =>
+      current.type === "pane"
+        ? current.id === id
+          ? current.view
+          : null
+        : walk(current.children[0]) ?? walk(current.children[1]);
+    return walk(node) ?? find(node) ?? "editor";
+  };
+
+  const viewA = viewOf(a);
+  const viewB = viewOf(b);
+  const apply = (current: WorkspaceNode): WorkspaceNode => {
+    if (current.type === "pane") {
+      if (current.id === a) return { ...current, view: viewB };
+      if (current.id === b) return { ...current, view: viewA };
+      return current;
+    }
+    return {
+      ...current,
+      children: [apply(current.children[0]), apply(current.children[1])] as [
+        WorkspaceNode,
+        WorkspaceNode,
+      ],
+    };
+  };
+  return apply(node);
+}
+
+/**
+ * Splits nest, so a workspace is a tree of SplitViews. Each pane can split
+ * again on either axis, close itself, and hand its view to another pane by
+ * dragging its title bar. Only the tree is host state; sizing, keyboard
+ * resize and the separators come from the component.
+ */
+export function SplitViewWorkspaceDemo() {
+  const [root, setRoot] = React.useState<WorkspaceNode>(() => ({
+    type: "split",
+    id: "root",
+    orientation: SplitViewOrientation.Horizontal,
+    children: [
+      { type: "pane", id: "pane-a", view: "editor" },
+      {
+        type: "split",
+        id: "split-b",
+        orientation: SplitViewOrientation.Vertical,
+        children: [
+          { type: "pane", id: "pane-b", view: "preview" },
+          { type: "pane", id: "pane-c", view: "terminal" },
+        ],
+      },
+    ],
+  }));
+  const [dragging, setDragging] = React.useState<string | null>(null);
+  // The drop handler runs in the same gesture that started the drag, so it
+  // reads the ref rather than state that may not have committed yet.
+  const draggingRef = React.useRef<string | null>(null);
+
+  const paneCount = (node: WorkspaceNode): number =>
+    node.type === "pane"
+      ? 1
+      : paneCount(node.children[0]) + paneCount(node.children[1]);
+
+  function render(node: WorkspaceNode): React.ReactNode {
+    if (node.type === "split") {
+      return (
+        <SplitView orientation={node.orientation} className="h-full w-full">
+          <SplitViewPanel id={`${node.id}-1`} minSize={15}>
+            {render(node.children[0])}
+          </SplitViewPanel>
+          <SplitViewSeparator />
+          <SplitViewPanel id={`${node.id}-2`} minSize={15}>
+            {render(node.children[1])}
+          </SplitViewPanel>
+        </SplitView>
+      );
+    }
+
+    const view = workspaceViews[node.view];
+    return (
+      <div
+        className="flex h-full min-h-0 flex-col"
+        onDragOver={(event) => {
+          const source = draggingRef.current;
+          if (source && source !== node.id) event.preventDefault();
+        }}
+        onDrop={() => {
+          const source = draggingRef.current;
+          if (!source || source === node.id) return;
+          setRoot((current) => swapViews(current, source, node.id));
+          draggingRef.current = null;
+          setDragging(null);
+        }}
+      >
+        <div
+          draggable
+          onDragStart={(event) => {
+            draggingRef.current = node.id;
+            event.dataTransfer.setData("text/plain", node.id);
+            event.dataTransfer.effectAllowed = "move";
+            setDragging(node.id);
+          }}
+          onDragEnd={() => {
+            draggingRef.current = null;
+            setDragging(null);
+          }}
+          className={cn(
+            "flex h-8 shrink-0 cursor-grab items-center gap-1 border-b border-border px-2 text-xs",
+            dragging === node.id && "opacity-50"
+          )}
+        >
+          <span className="min-w-0 flex-1 truncate font-medium">
+            {view.label}
+          </span>
+          <button
+            type="button"
+            aria-label="Split right"
+            title="Split right"
+            onClick={() =>
+              setRoot((current) =>
+                splitNode(current, node.id, SplitViewOrientation.Horizontal)
+              )
+            }
+            className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <Columns2 aria-hidden className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Split down"
+            title="Split down"
+            onClick={() =>
+              setRoot((current) =>
+                splitNode(current, node.id, SplitViewOrientation.Vertical)
+              )
+            }
+            className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <Rows2 aria-hidden className="size-3.5" />
+          </button>
+          {paneCount(root) > 1 ? (
+            <button
+              type="button"
+              aria-label="Close pane"
+              title="Close pane"
+              onClick={() =>
+                setRoot((current) => closeNode(current, node.id) ?? current)
+              }
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <X aria-hidden className="size-3.5" />
+            </button>
+          ) : null}
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto p-3 font-mono text-xs text-muted-foreground">
+          {view.body}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-96 w-full overflow-hidden rounded-xl border border-border">
+      {render(root)}
+    </div>
   );
 }

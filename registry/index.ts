@@ -194,6 +194,12 @@ const documented: {
     group: "Composites",
     description:
       "Resizable panels around a draggable separator. Arrow keys resize from the keyboard.",
+    examples: [
+      {
+        id: "split-view-workspace",
+        title: "Nested splits, with views dragged between panes",
+      },
+    ],
   },
   {
     slug: "kanban",
