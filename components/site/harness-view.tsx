@@ -16,7 +16,7 @@ export function HarnessView() {
   const source = previewSource["agent-harness"];
 
   return (
-    <div className="relative h-[calc(100dvh-3.5rem-1px)] overflow-hidden">
+    <div className="relative h-dvh overflow-hidden">
       <AgentHarness />
 
       <button

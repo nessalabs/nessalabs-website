@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import {
+  ArrowLeft,
   Calendar,
   Columns2,
   KanbanSquare,
   Maximize2,
   Minimize2,
-  MessageSquare,
   PanelBottom,
   PanelLeft,
   Plus,
@@ -24,7 +24,6 @@ import {
   AppShellHeader,
   AppShellMain,
   AppShellPaneDragHandle,
-  AppShellStatusBar,
   AppShellWorkspace,
   Button,
   ChatComposer,
@@ -35,10 +34,8 @@ import {
   ChatComposerSubmit,
   ChatComposerTrigger,
   Message,
-  MessageAvatar,
   MessageBubble,
   MessageContent,
-  MessageHeader,
   MessageStreamText,
   PaneSplitDirection,
   ToolCall,
@@ -96,12 +93,12 @@ const replies = [
 ];
 
 const views = [
-  { id: "chat:retrieval", label: "Retrieval regression", icon: MessageSquare },
-  { id: "chat:release", label: "Release plan", icon: MessageSquare },
+  { id: "chat:retrieval", label: "Retrieval regression", icon: null },
+  { id: "chat:release", label: "Release plan", icon: null },
   { id: "view:board", label: "Board", icon: KanbanSquare },
   { id: "view:calendar", label: "Calendar", icon: Calendar },
   { id: "view:workflow", label: "Workflow", icon: Workflow },
-];
+] as { id: string; label: string; icon: React.ComponentType<{ className?: string }> | null }[];
 
 /* ── chat pane ─────────────────────────────────────────────────────────── */
 
@@ -134,10 +131,10 @@ function ChatPane({ viewId }: { viewId: string }) {
         {turns.map((turn) =>
           turn.from === "assistant" ? (
             <Message key={turn.id} from="assistant">
-              <MessageAvatar fallback="N" alt="Nessa" />
               <MessageContent>
-                <MessageHeader>Nessa</MessageHeader>
-                <MessageBubble>
+                {/* No avatar or sender name: the agent's turns read as plain
+                    text, and only the person's turns carry a bubble. */}
+                <MessageBubble variant="plain" streaming={turn.streaming}>
                   {turn.streaming ? (
                     <MessageStreamText text={turn.text} />
                   ) : (
@@ -396,7 +393,7 @@ function SidebarItem({
       onClick={() => onOpen({ viewId: view.id, paneId })}
       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
     >
-      <Icon aria-hidden className="size-4 shrink-0" />
+      {Icon ? <Icon aria-hidden className="size-4 shrink-0" /> : null}
       <span className="truncate">{view.label}</span>
     </button>
   );
@@ -434,6 +431,14 @@ export function AgentHarness() {
       })}
     >
       <AppShellHeader className="bg-sidebar">
+        <a
+          href="/ui/components"
+          aria-label="Back to the docs"
+          title="Back to the docs"
+          className="mr-1 inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <ArrowLeft aria-hidden className="size-3.5" />
+        </a>
         <span className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight">
           <span aria-hidden className="text-muted-foreground">
             ◼
@@ -459,11 +464,6 @@ export function AgentHarness() {
         </AppShellMain>
       </AppShellBody>
 
-      <AppShellStatusBar className="bg-sidebar">
-        <span className="text-xs text-muted-foreground">
-          nessa-1-large · 3 cases running
-        </span>
-      </AppShellStatusBar>
     </AppShell>
   );
 }

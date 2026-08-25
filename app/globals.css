@@ -66,6 +66,26 @@ pre {
   position: relative;
 }
 
+/*
+ * The shell rings the active pane. A ring reads loud in a demo surface, so the
+ * harness drops it and lets the inactive panes recede instead.
+ */
+[data-slot="app-shell-pane"] {
+  opacity: 0.55;
+  transition: opacity 200ms var(--nessa-motion-easing-standard, ease);
+}
+[data-slot="app-shell-pane"][data-active] {
+  opacity: 1;
+  --tw-ring-shadow: 0 0 #0000;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="app-shell-pane"] {
+    transition: none;
+  }
+}
+
 @utility bg-radial-fade {
   background: radial-gradient(
     ellipse 70% 60% at 50% 45%,

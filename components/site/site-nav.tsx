@@ -17,6 +17,9 @@ const links = [
 export function SiteNav() {
   const pathname = usePathname();
 
+  // The harness runs as its own app surface, with its own way back.
+  if (pathname.startsWith("/ui/harness")) return null;
+
   return (
     <NavBar
       brand={<Brand />}
