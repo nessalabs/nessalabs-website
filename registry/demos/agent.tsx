@@ -37,6 +37,10 @@ import {
   ConversationRailMarker,
   ConversationRailPreview,
   ConversationRailTrigger,
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerViewport,
   ChatComposerFooter,
   ChatComposerInput,
   ChatComposerSubmit,
@@ -991,5 +995,43 @@ export function ConversationRailDemo() {
         <p className="mt-1 text-sm text-muted-foreground">{active.preview}</p>
       </div>
     </div>
+  );
+}
+
+const scrollerTurns = [
+  "How far back does the transcript go?",
+  "All of it. The viewport keeps the reader at the live edge while they are there, and lets go the moment they scroll away.",
+  "What happens when a reply streams in while I am reading history?",
+  "Nothing moves. Following resumes only when the reader returns to the bottom, by scrolling or by pressing the button.",
+  "And the button?",
+  "It fades in once the reader leaves the live edge, and hands focus back to the viewport when it hides.",
+  "Does it fight a fast stream?",
+  "No. A return animation retargets as content grows, and any upward move cancels it rather than dragging the reader down.",
+  "Keyboard?",
+  "The viewport is the tab stop, so arrow keys and Page Up work without a mouse.",
+];
+
+/**
+ * A transcript that follows new content only while the reader is at the live
+ * edge. Scroll up and the return control fades in.
+ */
+export function MessageScrollerDemo() {
+  return (
+    <MessageScroller className="h-80 w-full max-w-2xl rounded-2xl border border-border bg-card">
+      <MessageScrollerViewport aria-label="Transcript" className="p-4">
+        <MessageScrollerContent className="gap-3">
+          {scrollerTurns.map((text, index) => (
+            <Message key={index} from={index % 2 === 0 ? "user" : "assistant"}>
+              <MessageContent>
+                <MessageBubble variant={index % 2 === 0 ? "primary" : "plain"}>
+                  {text}
+                </MessageBubble>
+              </MessageContent>
+            </Message>
+          ))}
+        </MessageScrollerContent>
+      </MessageScrollerViewport>
+      <MessageScrollerButton />
+    </MessageScroller>
   );
 }

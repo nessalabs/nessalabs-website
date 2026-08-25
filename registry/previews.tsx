@@ -16,6 +16,7 @@ import {
   ChatComposerFullDemo,
   ComposerQueueDemo,
   MessageDemo,
+  MessageScrollerDemo,
   MessageRichStreamDemo,
   MessageStreamDemo,
   ToolApprovalDemo,
@@ -70,6 +71,7 @@ export const previews: Record<string, React.ReactNode> = {
 
   // agent surfaces
   "conversation-rail": <ConversationRailDemo />,
+  "message-scroller": <MessageScrollerDemo />,
   message: <MessageDemo />,
   "message-streaming": <MessageStreamDemo />,
   "message-rich-streaming": <MessageRichStreamDemo />,

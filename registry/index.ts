@@ -115,6 +115,12 @@ const documented: {
       "Turn navigator beside a transcript. Markers widen toward the pointer; hover or focus opens a preview.",
   },
   {
+    slug: "message-scroller",
+    group: "Agent surfaces",
+    description:
+      "Transcript viewport that follows the live edge until the reader scrolls away, with a return control.",
+  },
+  {
     slug: "message",
     group: "Agent surfaces",
     description: "Transcript row. Assistant and user sides, with avatar, bubble and footer parts.",

@@ -68,6 +68,10 @@ import {
   FileDiffListToggle,
   FileDiffPath,
   MathBlock,
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerViewport,
   MermaidDiagram,
   MessageMarkdown,
   Reference,
@@ -136,7 +140,10 @@ type Block =
   | { kind: "code"; lang: string; value: string }
   | { kind: "mermaid"; value: string }
   | { kind: "math"; value: string }
-  | { kind: "diff"; files: { path: string; additions: number; deletions: number }[] }
+  | {
+      kind: "diff";
+      files: { path: string; additions: number; deletions: number }[];
+    }
   | {
       kind: "reference";
       before: string;
@@ -205,7 +212,10 @@ const threads: Thread[] = [
       {
         role: "assistant",
         blocks: [
-          { kind: "markdown", value: "Five components, no provider, no context:" },
+          {
+            kind: "markdown",
+            value: "Five components, no provider, no context:",
+          },
           {
             kind: "code",
             lang: "tsx",
@@ -298,11 +308,14 @@ const threads: Thread[] = [
         blocks: [
           {
             kind: "reference",
-            before: "Ranking is plain cosine similarity over normalised embeddings",
-            after: "so a citation is just a hover target inside the sentence it supports.",
+            before:
+              "Ranking is plain cosine similarity over normalised embeddings",
+            after:
+              "so a citation is just a hover target inside the sentence it supports.",
             source: {
               title: "retrieval/rerank.ts",
-              excerpt: "score = dot(q, d) / (norm(q) * norm(d)) // cross-encoder applied above 0.4",
+              excerpt:
+                "score = dot(q, d) / (norm(q) * norm(d)) // cross-encoder applied above 0.4",
               meta: "lines 41-58",
             },
           },
@@ -330,11 +343,31 @@ const threads: Thread[] = [
           {
             kind: "diff",
             files: [
-              { path: "packages/react/src/components/conversation-rail.tsx", additions: 148, deletions: 0 },
-              { path: "packages/react/src/components/workflow-canvas/node.tsx", additions: 62, deletions: 41 },
-              { path: "packages/react/src/components/event-calendar.tsx", additions: 34, deletions: 58 },
-              { path: "packages/react/src/components/message.tsx", additions: 21, deletions: 12 },
-              { path: "packages/react/src/index.ts", additions: 6, deletions: 1 },
+              {
+                path: "packages/react/src/components/conversation-rail.tsx",
+                additions: 148,
+                deletions: 0,
+              },
+              {
+                path: "packages/react/src/components/workflow-canvas/node.tsx",
+                additions: 62,
+                deletions: 41,
+              },
+              {
+                path: "packages/react/src/components/event-calendar.tsx",
+                additions: 34,
+                deletions: 58,
+              },
+              {
+                path: "packages/react/src/components/message.tsx",
+                additions: 21,
+                deletions: 12,
+              },
+              {
+                path: "packages/react/src/index.ts",
+                additions: 6,
+                deletions: 1,
+              },
               { path: "docs/agent-surfaces.md", additions: 13, deletions: 25 },
             ],
           },
@@ -374,183 +407,194 @@ const threads: Thread[] = [
     ],
   },
   {
-    "id": "chat:retrieval",
-    "title": "Retrieval recall drop",
-    "turns": [
+    id: "chat:retrieval",
+    title: "Retrieval recall drop",
+    turns: [
       {
-        "role": "user",
-        "text": "Why did retrieval recall drop from 92% to 87% in the last eval run?"
+        role: "user",
+        text: "Why did retrieval recall drop from 92% to 87% in the last eval run?",
       },
       {
-        "role": "tool",
-        "name": "search_runs",
-        "meta": "suite=retrieval, last=5",
-        "status": "complete",
-        "output": "Run 4189: 92.1% recall (2026-08-20)\nRun 4190: 90.8% recall (2026-08-21)\nRun 4191: 87.3% recall (2026-08-22)\nRun 4192: 86.9% recall (2026-08-23)"
+        role: "tool",
+        name: "search_runs",
+        meta: "suite=retrieval, last=5",
+        status: "complete",
+        output:
+          "Run 4189: 92.1% recall (2026-08-20)\nRun 4190: 90.8% recall (2026-08-21)\nRun 4191: 87.3% recall (2026-08-22)\nRun 4192: 86.9% recall (2026-08-23)",
       },
       {
-        "role": "tool",
-        "name": "query_warehouse",
-        "meta": "table=run_metadata, runs=4189-4193",
-        "status": "complete",
-        "output": "4189: embed_model=v2.1, chunk_size=512\n4190: embed_model=v2.1, chunk_size=512\n4191: embed_model=v2.2, chunk_size=256\n4192: embed_model=v2.2, chunk_size=256"
+        role: "tool",
+        name: "query_warehouse",
+        meta: "table=run_metadata, runs=4189-4193",
+        status: "complete",
+        output:
+          "4189: embed_model=v2.1, chunk_size=512\n4190: embed_model=v2.1, chunk_size=512\n4191: embed_model=v2.2, chunk_size=256\n4192: embed_model=v2.2, chunk_size=256",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=config/v2.2.yaml",
-        "status": "complete",
-        "output": "chunk_strategy: semantic_split\nmax_chunk_tokens: 256\nembedding_model: v2.2-ada\nrerank_threshold: 0.65"
+        role: "tool",
+        name: "read_file",
+        meta: "path=config/v2.2.yaml",
+        status: "complete",
+        output:
+          "chunk_strategy: semantic_split\nmax_chunk_tokens: 256\nembedding_model: v2.2-ada\nrerank_threshold: 0.65",
       },
       {
-        "role": "assistant",
-        "text": "The drop tracks the v2.2 embedding model and 256 chunk size that landed in run 4191. The semantic_split strategy with tighter chunking cut context density. Worth testing chunk_size 512 against v2.2 to separate the model change from the chunking change."
-      }
-    ]
+        role: "assistant",
+        text: "The drop tracks the v2.2 embedding model and 256 chunk size that landed in run 4191. The semantic_split strategy with tighter chunking cut context density. Worth testing chunk_size 512 against v2.2 to separate the model change from the chunking change.",
+      },
+    ],
   },
   {
-    "id": "chat:release",
-    "title": "Release freeze window",
-    "turns": [
+    id: "chat:release",
+    title: "Release freeze window",
+    turns: [
       {
-        "role": "user",
-        "text": "When can we merge the new eval harness if a freeze is coming up?"
+        role: "user",
+        text: "When can we merge the new eval harness if a freeze is coming up?",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=RELEASE_SCHEDULE.md",
-        "status": "complete",
-        "output": "Release v1.8: 2026-08-25 (code freeze 2026-08-24)\nRelease v1.9: 2026-09-15 (code freeze 2026-09-01)\nHotfix window: 2026-08-26 to 2026-08-31"
+        role: "tool",
+        name: "read_file",
+        meta: "path=RELEASE_SCHEDULE.md",
+        status: "complete",
+        output:
+          "Release v1.8: 2026-08-25 (code freeze 2026-08-24)\nRelease v1.9: 2026-09-15 (code freeze 2026-09-01)\nHotfix window: 2026-08-26 to 2026-08-31",
       },
       {
-        "role": "tool",
-        "name": "git_diff",
-        "meta": "branch=eval-harness, base=main",
-        "status": "complete",
-        "output": "173 files changed, 4521 insertions(+), 892 deletions(-)\nevaluation/harness.py, tests/eval_*.py, config/evals.yaml"
+        role: "tool",
+        name: "git_diff",
+        meta: "branch=eval-harness, base=main",
+        status: "complete",
+        output:
+          "173 files changed, 4521 insertions(+), 892 deletions(-)\nevaluation/harness.py, tests/eval_*.py, config/evals.yaml",
       },
       {
-        "role": "assistant",
-        "text": "The v1.8 freeze is tomorrow and this branch touches 173 files, so merging now carries real risk. Either land it before 2026-08-24 23:59 UTC or target v1.9, whose window opens 2026-09-01. Between those, 08-26 to 08-31 is hotfix only."
+        role: "assistant",
+        text: "The v1.8 freeze is tomorrow and this branch touches 173 files, so merging now carries real risk. Either land it before 2026-08-24 23:59 UTC or target v1.9, whose window opens 2026-09-01. Between those, 08-26 to 08-31 is hotfix only.",
       },
       {
-        "role": "user",
-        "text": "What if we cherry-pick the core changes and defer the refactor?"
+        role: "user",
+        text: "What if we cherry-pick the core changes and defer the refactor?",
       },
       {
-        "role": "tool",
-        "name": "run_eval",
-        "meta": "suite=core_harness, baseline=4182",
-        "status": "running",
-        "output": "Evaluating 12 checkpoints\n2 of 12 complete, ETA 8 min"
+        role: "tool",
+        name: "run_eval",
+        meta: "suite=core_harness, baseline=4182",
+        status: "running",
+        output: "Evaluating 12 checkpoints\n2 of 12 complete, ETA 8 min",
       },
       {
-        "role": "assistant",
-        "text": "Running the core harness against baseline 4182 now. If the next eight minutes come back clean, cherry-picking the evaluation core alone is safe for v1.8."
-      }
-    ]
+        role: "assistant",
+        text: "Running the core harness against baseline 4182 now. If the next eight minutes come back clean, cherry-picking the evaluation core alone is safe for v1.8.",
+      },
+    ],
   },
   {
-    "id": "chat:flaky",
-    "title": "Test suite flakiness",
-    "turns": [
+    id: "chat:flaky",
+    title: "Test suite flakiness",
+    turns: [
       {
-        "role": "user",
-        "text": "Integration tests keep failing intermittently. What is causing the flakes?"
+        role: "user",
+        text: "Integration tests keep failing intermittently. What is causing the flakes?",
       },
       {
-        "role": "tool",
-        "name": "tail_logs",
-        "meta": "tests/integration, pattern=FAIL",
-        "status": "complete",
-        "output": "14:32:45 test_retrieval_timeout: expected 150ms, got 280ms\n14:28:12 test_cache_consistency: assertion mismatch\n14:22:31 test_retrieval_timeout: expected 150ms, got 310ms"
+        role: "tool",
+        name: "tail_logs",
+        meta: "tests/integration, pattern=FAIL",
+        status: "complete",
+        output:
+          "14:32:45 test_retrieval_timeout: expected 150ms, got 280ms\n14:28:12 test_cache_consistency: assertion mismatch\n14:22:31 test_retrieval_timeout: expected 150ms, got 310ms",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=tests/integration/test_retrieval.py",
-        "status": "error",
-        "output": "Error: no such file\nDid you mean tests/integration/retrieval_timeout.py?"
+        role: "tool",
+        name: "read_file",
+        meta: "path=tests/integration/test_retrieval.py",
+        status: "error",
+        output:
+          "Error: no such file\nDid you mean tests/integration/retrieval_timeout.py?",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=tests/integration/retrieval_timeout.py",
-        "status": "complete",
-        "output": "def test_retrieval_timeout():\n    assert elapsed_ms < 150  # hardcoded threshold\n# note: warehouse latency varies 140-320ms"
+        role: "tool",
+        name: "read_file",
+        meta: "path=tests/integration/retrieval_timeout.py",
+        status: "complete",
+        output:
+          "def test_retrieval_timeout():\n    assert elapsed_ms < 150  # hardcoded threshold\n# note: warehouse latency varies 140-320ms",
       },
       {
-        "role": "assistant",
-        "text": "The 150ms threshold sits inside the warehouse latency range of 140 to 320ms, so the test fails whenever the warehouse is slow. Raise it to 350ms, or assert a percentile instead of an absolute bound."
+        role: "assistant",
+        text: "The 150ms threshold sits inside the warehouse latency range of 140 to 320ms, so the test fails whenever the warehouse is slow. Raise it to 350ms, or assert a percentile instead of an absolute bound.",
       },
       {
-        "role": "user",
-        "text": "Is the cache consistency failure separate?"
+        role: "user",
+        text: "Is the cache consistency failure separate?",
       },
       {
-        "role": "tool",
-        "name": "run_eval",
-        "meta": "suite=integration, runs=100, seed=42",
-        "status": "complete",
-        "output": "retrieval_timeout: 18 of 100 failed\ncache_consistency: 3 of 100 failed"
+        role: "tool",
+        name: "run_eval",
+        meta: "suite=integration, runs=100, seed=42",
+        status: "complete",
+        output:
+          "retrieval_timeout: 18 of 100 failed\ncache_consistency: 3 of 100 failed",
       },
       {
-        "role": "assistant",
-        "text": "Separate, and much rarer: 3% against 18%. Fix the timeout threshold first, then look at cache consistency on its own."
-      }
-    ]
+        role: "assistant",
+        text: "Separate, and much rarer: 3% against 18%. Fix the timeout threshold first, then look at cache consistency on its own.",
+      },
+    ],
   },
   {
-    "id": "chat:latency",
-    "title": "Inference endpoint cost",
-    "turns": [
+    id: "chat:latency",
+    title: "Inference endpoint cost",
+    turns: [
       {
-        "role": "user",
-        "text": "The inference endpoint is running hot. What is driving the cost?"
+        role: "user",
+        text: "The inference endpoint is running hot. What is driving the cost?",
       },
       {
-        "role": "tool",
-        "name": "profile_endpoint",
-        "meta": "inference-prod-v2, window=1h",
-        "status": "complete",
-        "output": "p50 latency 287ms\np99 latency 840ms\n14,200 requests/hour\nCPU 78%, GPU 92%"
+        role: "tool",
+        name: "profile_endpoint",
+        meta: "inference-prod-v2, window=1h",
+        status: "complete",
+        output:
+          "p50 latency 287ms\np99 latency 840ms\n14,200 requests/hour\nCPU 78%, GPU 92%",
       },
       {
-        "role": "tool",
-        "name": "query_warehouse",
-        "meta": "table=endpoint_costs",
-        "status": "complete",
-        "output": "2026-08-20: $0.042 / 1k tokens\n2026-08-21: $0.041 / 1k tokens\n2026-08-22: $0.045 / 1k tokens\n2026-08-23: $0.048 / 1k tokens"
+        role: "tool",
+        name: "query_warehouse",
+        meta: "table=endpoint_costs",
+        status: "complete",
+        output:
+          "2026-08-20: $0.042 / 1k tokens\n2026-08-21: $0.041 / 1k tokens\n2026-08-22: $0.045 / 1k tokens\n2026-08-23: $0.048 / 1k tokens",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=config/inference-prod.yaml",
-        "status": "complete",
-        "output": "batch_size: 32\ncontext_window: 32k\ncache_ttl: 300s"
+        role: "tool",
+        name: "read_file",
+        meta: "path=config/inference-prod.yaml",
+        status: "complete",
+        output: "batch_size: 32\ncontext_window: 32k\ncache_ttl: 300s",
       },
       {
-        "role": "assistant",
-        "text": "GPU sits at 92% and cost per thousand tokens rose 14% in three days, from $0.042 to $0.048. A 32k context at batch size 32 maximises throughput but holds expensive GPU memory. Dropping to batch 16, or an 8k context, should bring cost per request down."
+        role: "assistant",
+        text: "GPU sits at 92% and cost per thousand tokens rose 14% in three days, from $0.042 to $0.048. A 32k context at batch size 32 maximises throughput but holds expensive GPU memory. Dropping to batch 16, or an 8k context, should bring cost per request down.",
       },
       {
-        "role": "user",
-        "text": "How much would 8k context actually save?"
+        role: "user",
+        text: "How much would 8k context actually save?",
       },
       {
-        "role": "tool",
-        "name": "profile_endpoint",
-        "meta": "inference-staging-8k, window=1h",
-        "status": "running",
-        "output": "Sampling requests against context_window=8k\n~3 min remaining"
+        role: "tool",
+        name: "profile_endpoint",
+        meta: "inference-staging-8k, window=1h",
+        status: "running",
+        output: "Sampling requests against context_window=8k\n~3 min remaining",
       },
       {
-        "role": "assistant",
-        "text": "Profiling the 8k variant now. Cutting the context window usually takes 30 to 40% off memory cost and returns 8 to 15% on latency from fewer GPU operations."
-      }
-    ]
-  }
+        role: "assistant",
+        text: "Profiling the 8k variant now. Cutting the context window usually takes 30 to 40% off memory cost and returns 8 to 15% on latency from fewer GPU operations.",
+      },
+    ],
+  },
 ];
 
 const replies = [
@@ -559,7 +603,7 @@ const replies = [
   "Pulling the failure-rate trend for the last week so we can prioritise.",
   "Worth an alert on latency percentiles so this surfaces sooner next time.",
   "That baseline holds. Comparing it against the previous checkpoint now.",
-  "I will model the cost and latency tradeoff once profiling finishes."
+  "I will model the cost and latency tradeoff once profiling finishes.",
 ];
 
 interface SlashItem {
@@ -575,16 +619,40 @@ const slashSections: SectionedListboxSection<SlashItem>[] = [
     id: "skills",
     label: "Skills",
     items: [
-      { id: "eval", kind: "skill", label: "Eval suite", description: "run the harness", icon: <Sparkles /> },
-      { id: "trace", kind: "skill", label: "Trace reader", description: "inspect a run", icon: <FileSearch /> },
+      {
+        id: "eval",
+        kind: "skill",
+        label: "Eval suite",
+        description: "run the harness",
+        icon: <Sparkles />,
+      },
+      {
+        id: "trace",
+        kind: "skill",
+        label: "Trace reader",
+        description: "inspect a run",
+        icon: <FileSearch />,
+      },
     ],
   },
   {
     id: "plugins",
     label: "Plugins",
     items: [
-      { id: "sql", kind: "plugin", label: "Warehouse SQL", description: "query metrics", icon: <Database /> },
-      { id: "deploy", kind: "plugin", label: "Deploy", description: "ship a build", icon: <Rocket /> },
+      {
+        id: "sql",
+        kind: "plugin",
+        label: "Warehouse SQL",
+        description: "query metrics",
+        icon: <Database />,
+      },
+      {
+        id: "deploy",
+        kind: "plugin",
+        label: "Deploy",
+        description: "ship a build",
+        icon: <Rocket />,
+      },
     ],
   },
 ];
@@ -612,7 +680,13 @@ const thinkingLevels = [
   { value: "deep", label: "Deep" },
 ];
 
-function ModelAsset({ name, invert = false }: { name: string; invert?: boolean }) {
+function ModelAsset({
+  name,
+  invert = false,
+}: {
+  name: string;
+  invert?: boolean;
+}) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -632,8 +706,18 @@ const harnessModels: ModelPickerGroup[] = [
     shortLabel: "Claude",
     icon: <ModelAsset name="claude-color" />,
     models: [
-      { id: "opus", label: "Opus 5", description: "Deep reasoning", icon: <ModelAsset name="claude-color" /> },
-      { id: "sonnet", label: "Sonnet 5", description: "Everyday work", icon: <ModelAsset name="claude-color" /> },
+      {
+        id: "opus",
+        label: "Opus 5",
+        description: "Deep reasoning",
+        icon: <ModelAsset name="claude-color" />,
+      },
+      {
+        id: "sonnet",
+        label: "Sonnet 5",
+        description: "Everyday work",
+        icon: <ModelAsset name="claude-color" />,
+      },
     ],
   },
   {
@@ -642,7 +726,12 @@ const harnessModels: ModelPickerGroup[] = [
     shortLabel: "GPT",
     icon: <ModelAsset name="openai" invert />,
     models: [
-      { id: "codex", label: "Codex", description: "Agentic implementation", icon: <ModelAsset name="openai" invert /> },
+      {
+        id: "codex",
+        label: "Codex",
+        description: "Agentic implementation",
+        icon: <ModelAsset name="openai" invert />,
+      },
     ],
   },
 ];
@@ -652,7 +741,6 @@ const files = [
   "apps/api/routes/search.ts",
   "docs/retrieval.md",
 ];
-
 
 const views: {
   id: string;
@@ -921,131 +1009,142 @@ function ChatPane({ viewId }: { viewId: string }) {
             ))}
         </ConversationRail>
 
-      <div
-        role="log"
-        aria-label={thread.title}
-        tabIndex={0}
-        className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 overflow-auto p-3 outline-none @[34rem]:ps-10"
-      >
-        {turns.map((turn, index) => {
-          if (turn.role === "tool") {
-            return (
-              <ToolCall key={index} status={turn.status}>
-                <ToolCallTrigger meta={turn.meta}>{turn.name}</ToolCallTrigger>
-                {turn.output ? (
-                  <ToolCallContent>
-                    <ToolCallTabs output={turn.output} />
-                  </ToolCallContent>
-                ) : null}
-              </ToolCall>
-            );
-          }
+        <MessageScroller className="mx-auto max-w-3xl flex-1">
+          <MessageScrollerViewport
+            aria-label={thread.title}
+            className="p-3 @[34rem]:ps-10"
+          >
+            <MessageScrollerContent className="gap-3">
+              {turns.map((turn, index) => {
+                if (turn.role === "tool") {
+                  return (
+                    <ToolCall key={index} status={turn.status}>
+                      <ToolCallTrigger meta={turn.meta}>
+                        {turn.name}
+                      </ToolCallTrigger>
+                      {turn.output ? (
+                        <ToolCallContent>
+                          <ToolCallTabs output={turn.output} />
+                        </ToolCallContent>
+                      ) : null}
+                    </ToolCall>
+                  );
+                }
 
-          if (turn.role === "assistant") {
-            return (
-              <Message key={index} from="assistant">
-                <MessageContent>
-                  <MessageBubble
-                    variant="plain"
-                    streaming={turn.streaming}
-                    className={turn.blocks ? "w-full" : undefined}
-                  >
-                    {turn.blocks ? (
-                      <TurnBlocks blocks={turn.blocks} streaming={turn.streaming} />
-                    ) : turn.streaming ? (
-                      <MessageStreamText text={turn.text ?? ""} />
-                    ) : (
-                      turn.text
-                    )}
-                  </MessageBubble>
-                  {/* Actions stay hidden until the row is hovered or focused. */}
-                  <MessageFooter>
-                    <MessageActions>
-                      <CopyAction text={turn.text ?? ""} />
-                      <MessageAction aria-label="Retry" title="Retry">
-                        <RotateCcw aria-hidden className="size-3.5" />
-                      </MessageAction>
-                      <span className="ms-1">
-                        {TIMESTAMPS[index % TIMESTAMPS.length]}
-                      </span>
-                    </MessageActions>
-                  </MessageFooter>
-                </MessageContent>
-              </Message>
-            );
-          }
+                if (turn.role === "assistant") {
+                  return (
+                    <Message key={index} from="assistant">
+                      <MessageContent>
+                        <MessageBubble
+                          variant="plain"
+                          streaming={turn.streaming}
+                          className={turn.blocks ? "w-full" : undefined}
+                        >
+                          {turn.blocks ? (
+                            <TurnBlocks
+                              blocks={turn.blocks}
+                              streaming={turn.streaming}
+                            />
+                          ) : turn.streaming ? (
+                            <MessageStreamText text={turn.text ?? ""} />
+                          ) : (
+                            turn.text
+                          )}
+                        </MessageBubble>
+                        {/* Actions stay hidden until the row is hovered or focused. */}
+                        <MessageFooter>
+                          <MessageActions>
+                            <CopyAction text={turn.text ?? ""} />
+                            <MessageAction aria-label="Retry" title="Retry">
+                              <RotateCcw aria-hidden className="size-3.5" />
+                            </MessageAction>
+                            <span className="ms-1">
+                              {TIMESTAMPS[index % TIMESTAMPS.length]}
+                            </span>
+                          </MessageActions>
+                        </MessageFooter>
+                      </MessageContent>
+                    </Message>
+                  );
+                }
 
-          if (editing === index) {
-            return (
-              <Message key={index} from="user">
-                <MessageContent>
-                  <form
-                    // MessageContent is items-end, so a child only fills the
-                    // column when it asks for the width.
-                    className="flex w-[32rem] max-w-full flex-col gap-2 self-stretch"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      resend(index);
+                if (editing === index) {
+                  return (
+                    <Message key={index} from="user">
+                      <MessageContent>
+                        <form
+                          // MessageContent is items-end, so a child only fills the
+                          // column when it asks for the width.
+                          className="flex w-[32rem] max-w-full flex-col gap-2 self-stretch"
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            resend(index);
+                          }}
+                        >
+                          <AutosizeTextarea
+                            value={editDraft}
+                            onValueChange={setEditDraft}
+                            onSubmit={() => resend(index)}
+                            onCancel={() => setEditing(null)}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              type="button"
+                              onClick={() => setEditing(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button size="sm" type="submit">
+                              Send
+                            </Button>
+                          </div>
+                        </form>
+                      </MessageContent>
+                    </Message>
+                  );
+                }
+
+                return (
+                  <Message
+                    key={index}
+                    from="user"
+                    ref={(element: HTMLDivElement | null) => {
+                      turnRefs.current[index] = element;
                     }}
                   >
-                    <AutosizeTextarea
-                      value={editDraft}
-                      onValueChange={setEditDraft}
-                      onSubmit={() => resend(index)}
-                      onCancel={() => setEditing(null)}
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        type="button"
-                        onClick={() => setEditing(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button size="sm" type="submit">
-                        Send
-                      </Button>
-                    </div>
-                  </form>
-                </MessageContent>
-              </Message>
-            );
-          }
-
-          return (
-            <Message
-              key={index}
-              from="user"
-              ref={(element: HTMLDivElement | null) => {
-                turnRefs.current[index] = element;
-              }}
-            >
-              <MessageContent>
-                <MessageBubble variant="primary">{turn.text}</MessageBubble>
-                <MessageFooter className="justify-end">
-                  <MessageActions>
-                    <MessageAction
-                      aria-label="Edit message"
-                      title="Edit"
-                      onClick={() => {
-                        setEditing(index);
-                        setEditDraft(turn.text ?? "");
-                      }}
-                    >
-                      <Pencil aria-hidden className="size-3.5" />
-                    </MessageAction>
-                    <CopyAction text={turn.text ?? ""} />
-                    <span className="ms-1">
-                      {TIMESTAMPS[index % TIMESTAMPS.length]}
-                    </span>
-                  </MessageActions>
-                </MessageFooter>
-              </MessageContent>
-            </Message>
-          );
-        })}
-        </div>
+                    <MessageContent>
+                      <MessageBubble variant="primary">
+                        {turn.text}
+                      </MessageBubble>
+                      <MessageFooter className="justify-end">
+                        <MessageActions>
+                          <MessageAction
+                            aria-label="Edit message"
+                            title="Edit"
+                            onClick={() => {
+                              setEditing(index);
+                              setEditDraft(turn.text ?? "");
+                            }}
+                          >
+                            <Pencil aria-hidden className="size-3.5" />
+                          </MessageAction>
+                          <CopyAction text={turn.text ?? ""} />
+                          <span className="ms-1">
+                            {TIMESTAMPS[index % TIMESTAMPS.length]}
+                          </span>
+                        </MessageActions>
+                      </MessageFooter>
+                    </MessageContent>
+                  </Message>
+                );
+              })}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          {/* Appears the moment the reader leaves the live edge. */}
+          <MessageScrollerButton />
+        </MessageScroller>
       </div>
 
       <div className="mx-auto w-full max-w-3xl p-2">
@@ -1065,7 +1164,7 @@ function ChatPane({ viewId }: { viewId: string }) {
                   kind={file.kind}
                   onRemove={() =>
                     setAttachments((current) =>
-                      current.filter((item) => item.id !== file.id)
+                      current.filter((item) => item.id !== file.id),
                     )
                   }
                 >
@@ -1090,7 +1189,7 @@ function ChatPane({ viewId }: { viewId: string }) {
                 sections={slashSections.map((section) => ({
                   ...section,
                   items: section.items.filter((item) =>
-                    matches(query, [item.label, item.description])
+                    matches(query, [item.label, item.description]),
                   ),
                 }))}
                 getItemId={(item) => item.id}
@@ -1211,7 +1310,10 @@ function ChatPane({ viewId }: { viewId: string }) {
                 value={thinking}
                 onValueChange={setThinking}
               />
-              <ChatComposerAction aria-label="Start voice input" title="Start voice input">
+              <ChatComposerAction
+                aria-label="Start voice input"
+                title="Start voice input"
+              >
                 <Mic aria-hidden="true" />
               </ChatComposerAction>
               <ChatComposerSubmit disabled={!draft.trim()} />
@@ -1234,13 +1336,32 @@ const boardColumns = [
   { id: "done", title: "Done" },
 ];
 
-const boardCards: Record<string, { title: string; meta: string; owner: string }> = {
-  "long-context": { title: "Long-context regression", meta: "bug", owner: "AL" },
-  "tool-traces": { title: "Add tool-call traces", meta: "feature", owner: "GH" },
+const boardCards: Record<
+  string,
+  { title: string; meta: string; owner: string }
+> = {
+  "long-context": {
+    title: "Long-context regression",
+    meta: "bug",
+    owner: "AL",
+  },
+  "tool-traces": {
+    title: "Add tool-call traces",
+    meta: "feature",
+    owner: "GH",
+  },
   "sweep-4192": { title: "Sweep 4192", meta: "eval · 12m", owner: "AT" },
-  "index-rebuild": { title: "Rebuild retrieval index", meta: "infra · 4m", owner: "AL" },
+  "index-rebuild": {
+    title: "Rebuild retrieval index",
+    meta: "infra · 4m",
+    owner: "AL",
+  },
   "safety-pass": { title: "Safety pass", meta: "eval", owner: "GH" },
-  "checkpoint-4188": { title: "Checkpoint 4188", meta: "training", owner: "AT" },
+  "checkpoint-4188": {
+    title: "Checkpoint 4188",
+    meta: "training",
+    owner: "AT",
+  },
   "docs-sprint": { title: "Docs sprint", meta: "docs", owner: "AL" },
 };
 
@@ -1260,7 +1381,8 @@ function BoardView() {
       <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
         <span>Sprint 24</span>
         <span>
-          {Object.values(columns).reduce((n, cards) => n + cards.length, 0)} cards
+          {Object.values(columns).reduce((n, cards) => n + cards.length, 0)}{" "}
+          cards
         </span>
       </div>
 
@@ -1339,11 +1461,40 @@ const at = (month: number, date: number, hour = 0, minute = 0) =>
   new Date(2026, month, date, hour, minute);
 
 const harnessEvents: EventCalendarEvent[] = [
-  { id: "standup", title: "Standup", start: at(7, 18, 9, 30), end: at(7, 18, 9, 45) },
-  { id: "crit", title: "Design crit", start: at(7, 18, 13, 0), end: at(7, 18, 14, 30), location: "Studio" },
-  { id: "sweep", title: "Eval sweep", start: at(7, 19, 10, 0), end: at(7, 19, 12, 0), tone: "secondary" },
-  { id: "freeze", title: "Code freeze", start: at(7, 21, 16, 0), end: at(7, 21, 17, 0), tone: "destructive" },
-  { id: "offsite", title: "Offsite", start: at(7, 20), end: at(7, 21), tone: "muted" },
+  {
+    id: "standup",
+    title: "Standup",
+    start: at(7, 18, 9, 30),
+    end: at(7, 18, 9, 45),
+  },
+  {
+    id: "crit",
+    title: "Design crit",
+    start: at(7, 18, 13, 0),
+    end: at(7, 18, 14, 30),
+    location: "Studio",
+  },
+  {
+    id: "sweep",
+    title: "Eval sweep",
+    start: at(7, 19, 10, 0),
+    end: at(7, 19, 12, 0),
+    tone: "secondary",
+  },
+  {
+    id: "freeze",
+    title: "Code freeze",
+    start: at(7, 21, 16, 0),
+    end: at(7, 21, 17, 0),
+    tone: "destructive",
+  },
+  {
+    id: "offsite",
+    title: "Offsite",
+    start: at(7, 20),
+    end: at(7, 21),
+    tone: "muted",
+  },
 ];
 
 const CALENDAR_HOURS = { min: 8, max: 18 };
@@ -1402,10 +1553,30 @@ interface WorkflowJob {
 }
 
 const initialJobs: WorkflowJob[] = [
-  { id: "fetch", title: "Fetch corpus", detail: "every 15m", position: { x: 60, y: 80 } },
-  { id: "chunk", title: "Chunk", detail: "512 tokens", position: { x: 340, y: 80 } },
-  { id: "embed", title: "Embed", detail: "nessa-embed-1", position: { x: 340, y: 260 } },
-  { id: "serve", title: "Serve", detail: "retrieval api", position: { x: 620, y: 170 } },
+  {
+    id: "fetch",
+    title: "Fetch corpus",
+    detail: "every 15m",
+    position: { x: 60, y: 80 },
+  },
+  {
+    id: "chunk",
+    title: "Chunk",
+    detail: "512 tokens",
+    position: { x: 340, y: 80 },
+  },
+  {
+    id: "embed",
+    title: "Embed",
+    detail: "nessa-embed-1",
+    position: { x: 340, y: 260 },
+  },
+  {
+    id: "serve",
+    title: "Serve",
+    detail: "retrieval api",
+    position: { x: 620, y: 170 },
+  },
 ];
 
 /** Offered when a connection is dropped on empty canvas. */
@@ -1432,14 +1603,17 @@ function WorkflowView() {
   function removeJob(jobId: string) {
     setJobs((current) => current.filter((job) => job.id !== jobId));
     setEdges((current) =>
-      current.filter((edge) => edge.source !== jobId && edge.target !== jobId)
+      current.filter((edge) => edge.source !== jobId && edge.target !== jobId),
     );
   }
 
   function addJob(option: (typeof jobPalette)[number]) {
     if (!palette) return;
     const id = `${option.id}-${jobs.length}`;
-    setJobs((current) => [...current, { ...option, id, position: palette.point }]);
+    setJobs((current) => [
+      ...current,
+      { ...option, id, position: palette.point },
+    ]);
     setEdges((current) => [
       ...current,
       { id: `${palette.source}-${id}`, source: palette.source, target: id },
@@ -1462,7 +1636,9 @@ function WorkflowView() {
           },
         ])
       }
-      onConnectEnd={(end) => setPalette({ source: end.source, point: end.point })}
+      onConnectEnd={(end) =>
+        setPalette({ source: end.source, point: end.point })
+      }
       onDismiss={() => setPalette(null)}
     >
       <WorkflowCanvasGrid />
@@ -1562,16 +1738,44 @@ const themePresets = [
  * --nessa-font-sans and --nessa-font-mono, so a family swap is two variables.
  */
 const sansFonts = [
-  { id: "", label: "Geist", stack: "var(--font-geist), ui-sans-serif, system-ui, sans-serif" },
-  { id: "inter", label: "Inter", stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif" },
-  { id: "serif", label: "Source Serif", stack: "var(--font-source-serif), ui-serif, Georgia, serif" },
-  { id: "system", label: "System", stack: "ui-sans-serif, system-ui, sans-serif" },
+  {
+    id: "",
+    label: "Geist",
+    stack: "var(--font-geist), ui-sans-serif, system-ui, sans-serif",
+  },
+  {
+    id: "inter",
+    label: "Inter",
+    stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+  },
+  {
+    id: "serif",
+    label: "Source Serif",
+    stack: "var(--font-source-serif), ui-serif, Georgia, serif",
+  },
+  {
+    id: "system",
+    label: "System",
+    stack: "ui-sans-serif, system-ui, sans-serif",
+  },
 ];
 
 const monoFonts = [
-  { id: "", label: "Geist Mono", stack: "var(--font-geist-mono), ui-monospace, monospace" },
-  { id: "jetbrains", label: "JetBrains Mono", stack: "var(--font-jetbrains), ui-monospace, monospace" },
-  { id: "plex", label: "IBM Plex Mono", stack: "var(--font-plex-mono), ui-monospace, monospace" },
+  {
+    id: "",
+    label: "Geist Mono",
+    stack: "var(--font-geist-mono), ui-monospace, monospace",
+  },
+  {
+    id: "jetbrains",
+    label: "JetBrains Mono",
+    stack: "var(--font-jetbrains), ui-monospace, monospace",
+  },
+  {
+    id: "plex",
+    label: "IBM Plex Mono",
+    stack: "var(--font-plex-mono), ui-monospace, monospace",
+  },
 ];
 
 const textSizes = [
@@ -1595,7 +1799,7 @@ function AppearanceView() {
 
   React.useEffect(() => {
     setMode(
-      document.documentElement.classList.contains("dark") ? "dark" : "light"
+      document.documentElement.classList.contains("dark") ? "dark" : "light",
     );
     setPreset(document.documentElement.dataset.nessaTheme ?? "");
   }, []);
@@ -1618,13 +1822,19 @@ function AppearanceView() {
   function applySans(next: string) {
     setSans(next);
     const stack = sansFonts.find((font) => font.id === next)?.stack;
-    document.documentElement.style.setProperty("--nessa-font-sans", stack ?? "");
+    document.documentElement.style.setProperty(
+      "--nessa-font-sans",
+      stack ?? "",
+    );
   }
 
   function applyMono(next: string) {
     setMono(next);
     const stack = monoFonts.find((font) => font.id === next)?.stack;
-    document.documentElement.style.setProperty("--nessa-font-mono", stack ?? "");
+    document.documentElement.style.setProperty(
+      "--nessa-font-mono",
+      stack ?? "",
+    );
   }
 
   /**
@@ -1665,7 +1875,7 @@ function AppearanceView() {
                   "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
                   active
                     ? "border-ring bg-accent"
-                    : "border-border hover:bg-accent/50"
+                    : "border-border hover:bg-accent/50",
                 )}
               >
                 <span
@@ -1691,7 +1901,9 @@ function AppearanceView() {
         <h2 className="mt-8 mb-3 text-sm font-medium">Font</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
-            <span className="mb-1.5 block text-muted-foreground">Interface</span>
+            <span className="mb-1.5 block text-muted-foreground">
+              Interface
+            </span>
             <select
               value={sans}
               onChange={(event) => applySans(event.target.value)}
@@ -1706,7 +1918,9 @@ function AppearanceView() {
           </label>
 
           <label className="text-sm">
-            <span className="mb-1.5 block text-muted-foreground">Monospace</span>
+            <span className="mb-1.5 block text-muted-foreground">
+              Monospace
+            </span>
             <select
               value={mono}
               onChange={(event) => applyMono(event.target.value)}
@@ -1736,7 +1950,7 @@ function AppearanceView() {
 
         <h2 className="mt-8 mb-3 text-sm font-medium">What a theme is</h2>
         <pre className="overflow-x-auto rounded-xl border border-border bg-card p-3 font-mono text-xs leading-6 text-muted-foreground">
-{`[data-nessa-theme="tokyo-night"] {
+          {`[data-nessa-theme="tokyo-night"] {
   --background: oklch(0.24 0.03 267);
   --foreground: oklch(0.86 0.03 267);
   --primary:    oklch(0.72 0.13 267);
@@ -1773,7 +1987,7 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
               "mb-0.5 block w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors",
               section === entry.id
                 ? "bg-secondary font-medium text-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
             {entry.label}
@@ -1797,7 +2011,10 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
             title="Models"
             description="The default model for new conversations."
           >
-            <ModelPicker groups={harnessModels} defaultValue={{ providerId: "anthropic", modelId: "opus" }} />
+            <ModelPicker
+              groups={harnessModels}
+              defaultValue={{ providerId: "anthropic", modelId: "opus" }}
+            />
           </SettingsSection>
         ) : null}
         {section === "shortcuts" ? (
@@ -1813,7 +2030,10 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
                 ["Skills and commands", "/"],
                 ["Mention a file", "@"],
               ].map(([label, keys]) => (
-                <div key={label} className="flex items-center justify-between p-3">
+                <div
+                  key={label}
+                  className="flex items-center justify-between p-3"
+                >
                   <dt className="text-muted-foreground">{label}</dt>
                   <dd className="font-mono text-xs">{keys}</dd>
                 </div>
@@ -1832,7 +2052,10 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
                 ["Surfaces", "AppShell, Message, ChatComposer, ToolCall"],
                 ["Views", "Kanban, EventCalendar, WorkflowCanvas"],
               ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between gap-4 p-3">
+                <div
+                  key={label}
+                  className="flex items-center justify-between gap-4 p-3"
+                >
                   <dt className="text-muted-foreground">{label}</dt>
                   <dd className="truncate">{value}</dd>
                 </div>
@@ -1893,7 +2116,7 @@ function PaneAction({
       variant="ghost"
       className={cn(
         "size-6 shrink-0 text-muted-foreground hover:text-foreground",
-        className
+        className,
       )}
       aria-label={label}
       title={label}
@@ -1925,13 +2148,21 @@ function usePaneActions(pane: PaneNode, maximized: boolean): PaneActionItem[] {
       label: "Split right",
       icon: <Columns2 aria-hidden className="size-3.5" />,
       run: () =>
-        splitPane({ paneId: pane.id, direction: PaneSplitDirection.Right, views: [] }),
+        splitPane({
+          paneId: pane.id,
+          direction: PaneSplitDirection.Right,
+          views: [],
+        }),
     },
     {
       label: "Split down",
       icon: <Rows2 aria-hidden className="size-3.5" />,
       run: () =>
-        splitPane({ paneId: pane.id, direction: PaneSplitDirection.Down, views: [] }),
+        splitPane({
+          paneId: pane.id,
+          direction: PaneSplitDirection.Down,
+          views: [],
+        }),
     },
     {
       label: maximized ? "Restore" : "Maximize",
@@ -1941,7 +2172,8 @@ function usePaneActions(pane: PaneNode, maximized: boolean): PaneActionItem[] {
         <Maximize2 aria-hidden className="size-3.5" />
       ),
       shortcut: "⇧⎋",
-      run: () => (maximized ? restorePane() : maximizePane({ paneId: pane.id })),
+      run: () =>
+        maximized ? restorePane() : maximizePane({ paneId: pane.id }),
     },
     {
       label: "Close pane",
@@ -1985,7 +2217,7 @@ function Pane({ pane }: { pane: PaneNode }) {
               paneId={pane.id}
               className={cn(
                 "flex h-full min-w-0 items-center gap-1.5",
-                showReveal ? "ps-1.5" : "ps-2.5"
+                showReveal ? "ps-1.5" : "ps-2.5",
               )}
               title="Drag to move this pane"
             >
@@ -2022,7 +2254,7 @@ function Pane({ pane }: { pane: PaneNode }) {
                         "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden",
                         "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
                         action.destructive &&
-                          "text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
+                          "text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive",
                       )}
                     >
                       {action.icon}
@@ -2102,7 +2334,12 @@ function Sidebar({
         {views
           .filter((view) => view.id.startsWith("chat:"))
           .map((view) => (
-            <SidebarItem key={view.id} view={view} onOpen={openView} paneId={active} />
+            <SidebarItem
+              key={view.id}
+              view={view}
+              onOpen={openView}
+              paneId={active}
+            />
           ))}
 
         <div className="mt-4 px-2 py-1 text-xs font-medium text-muted-foreground">
@@ -2111,7 +2348,12 @@ function Sidebar({
         {views
           .filter((view) => view.id.startsWith("view:"))
           .map((view) => (
-            <SidebarItem key={view.id} view={view} onOpen={openView} paneId={active} />
+            <SidebarItem
+              key={view.id}
+              view={view}
+              onOpen={openView}
+              paneId={active}
+            />
           ))}
       </nav>
 
@@ -2196,7 +2438,9 @@ function useHarnessShortcuts() {
       event.preventDefault();
 
       const panes = [
-        ...document.querySelectorAll<HTMLElement>("[data-slot='app-shell-pane']"),
+        ...document.querySelectorAll<HTMLElement>(
+          "[data-slot='app-shell-pane']",
+        ),
       ].map((element) => ({
         id: element.dataset.paneId!,
         rect: element.getBoundingClientRect(),
@@ -2206,8 +2450,10 @@ function useHarnessShortcuts() {
 
       const candidates = panes.filter((pane) => {
         if (pane.id === current.id) return false;
-        if (direction === "left") return pane.rect.right <= current.rect.left + 1;
-        if (direction === "right") return pane.rect.left >= current.rect.right - 1;
+        if (direction === "left")
+          return pane.rect.right <= current.rect.left + 1;
+        if (direction === "right")
+          return pane.rect.left >= current.rect.right - 1;
         if (direction === "up") return pane.rect.bottom <= current.rect.top + 1;
         return pane.rect.top >= current.rect.bottom - 1;
       });
@@ -2242,9 +2488,15 @@ function useHarnessShortcuts() {
 /* ── terminal dock ─────────────────────────────────────────────────────── */
 
 const terminalSession = [
-  { prompt: "nessa eval --suite retrieval", output: "worker-3 attached\n128/131 evaluations complete" },
+  {
+    prompt: "nessa eval --suite retrieval",
+    output: "worker-3 attached\n128/131 evaluations complete",
+  },
   { prompt: "nessa runs tail 4192", output: "re-running 3 cases" },
-  { prompt: "nessa index status", output: "index 4188 · encoder 4189 · mismatch" },
+  {
+    prompt: "nessa index status",
+    output: "index 4188 · encoder 4189 · mismatch",
+  },
 ];
 
 /** The shell's bottom dock, carrying a terminal session. Read-only here. */
@@ -2327,12 +2579,15 @@ export function AgentHarness({
         />
         <AppShellMain className="relative">
           <AppShellWorkspace renderPane={(pane) => <Pane pane={pane} />} />
-          <AppShellDock side={AppShellDockSide.Bottom} minSize={120} maxSize={360}>
+          <AppShellDock
+            side={AppShellDockSide.Bottom}
+            minSize={120}
+            maxSize={360}
+          >
             <TerminalDock />
           </AppShellDock>
         </AppShellMain>
       </AppShellBody>
-
     </AppShell>
   );
 }
