@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
+import { cn } from "@/lib/cn";
 import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
   AppShell,
@@ -42,7 +43,6 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
   ComposerAccessMode,
@@ -230,7 +230,7 @@ function ChatPane({ viewId }: { viewId: string }) {
         </ToolCall>
       </div>
 
-      <div className="border-t border-border p-2">
+      <div className="p-2">
         <ChatComposer
           size="compact"
           onSubmit={(event) => {
@@ -423,63 +423,52 @@ function PaneAction({
   );
 }
 
+interface PaneActionItem {
+  label: string;
+  icon: React.ReactNode;
+  shortcut?: string;
+  destructive?: boolean;
+  run: () => void;
+}
+
 /**
- * One menu of pane actions, reachable two ways: the row's "..." button, and a
- * right-click anywhere on the pane header. Four icon buttons per pane read as
- * clutter once panes are small, and the menu can name each action and carry
- * its shortcut.
+ * The pane's actions as data, so the same list can render as a dropdown from
+ * the "..." button and as a context menu on right-click. Each menu owns its own
+ * item components; mixing them throws, since both read their own context.
  */
-function PaneMenuItems({
-  pane,
-  maximized,
-}: {
-  pane: PaneNode;
-  maximized: boolean;
-}) {
+function usePaneActions(pane: PaneNode, maximized: boolean): PaneActionItem[] {
   const { splitPane, closePane, maximizePane, restorePane } = useAppShell();
 
-  return (
-    <>
-      <ContextMenuItem
-        onSelect={() =>
-          splitPane({ paneId: pane.id, direction: PaneSplitDirection.Right, views: [] })
-        }
-      >
-        <Columns2 aria-hidden className="size-3.5" />
-        Split right
-      </ContextMenuItem>
-      <ContextMenuItem
-        onSelect={() =>
-          splitPane({ paneId: pane.id, direction: PaneSplitDirection.Down, views: [] })
-        }
-      >
-        <Rows2 aria-hidden className="size-3.5" />
-        Split down
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem
-        onSelect={() =>
-          maximized ? restorePane() : maximizePane({ paneId: pane.id })
-        }
-      >
-        {maximized ? (
-          <Minimize2 aria-hidden className="size-3.5" />
-        ) : (
-          <Maximize2 aria-hidden className="size-3.5" />
-        )}
-        {maximized ? "Restore" : "Maximize"}
-        <ContextMenuShortcut>⇧⎋</ContextMenuShortcut>
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem
-        variant="destructive"
-        onSelect={() => closePane({ paneId: pane.id })}
-      >
-        <X aria-hidden className="size-3.5" />
-        Close pane
-      </ContextMenuItem>
-    </>
-  );
+  return [
+    {
+      label: "Split right",
+      icon: <Columns2 aria-hidden className="size-3.5" />,
+      run: () =>
+        splitPane({ paneId: pane.id, direction: PaneSplitDirection.Right, views: [] }),
+    },
+    {
+      label: "Split down",
+      icon: <Rows2 aria-hidden className="size-3.5" />,
+      run: () =>
+        splitPane({ paneId: pane.id, direction: PaneSplitDirection.Down, views: [] }),
+    },
+    {
+      label: maximized ? "Restore" : "Maximize",
+      icon: maximized ? (
+        <Minimize2 aria-hidden className="size-3.5" />
+      ) : (
+        <Maximize2 aria-hidden className="size-3.5" />
+      ),
+      shortcut: "⇧⎋",
+      run: () => (maximized ? restorePane() : maximizePane({ paneId: pane.id })),
+    },
+    {
+      label: "Close pane",
+      icon: <X aria-hidden className="size-3.5" />,
+      destructive: true,
+      run: () => closePane({ paneId: pane.id }),
+    },
+  ];
 }
 
 function Pane({ pane }: { pane: PaneNode }) {
@@ -487,15 +476,16 @@ function Pane({ pane }: { pane: PaneNode }) {
   const viewId = pane.views[0];
   const view = views.find((entry) => entry.id === viewId);
   const maximized = layout.workspace.maximizedPaneId === pane.id;
+  const actions = usePaneActions(pane, maximized);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div className="group/pane-bar flex h-8 items-center gap-0.5 border-b border-border pe-1">
+          <div className="group/pane-bar flex h-8 items-center pe-1">
             <AppShellPaneDragHandle
               paneId={pane.id}
-              className="flex h-full min-w-0 flex-1 items-center gap-1.5 ps-2"
+              className="flex h-full min-w-0 items-center gap-1.5 ps-2"
               title="Drag to move this pane"
             >
               <span className="truncate text-xs font-medium">
@@ -503,6 +493,8 @@ function Pane({ pane }: { pane: PaneNode }) {
               </span>
             </AppShellPaneDragHandle>
 
+            {/* Sits with the title rather than across the row, so it reads as
+                this pane's menu at any pane width. */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button
@@ -510,25 +502,59 @@ function Pane({ pane }: { pane: PaneNode }) {
                   variant="ghost"
                   aria-label="Pane actions"
                   title="Pane actions"
-                  className="size-6 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/pane-bar:opacity-100 data-[state=open]:opacity-100"
+                  className="ms-1 size-6 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/pane-bar:opacity-100 data-[state=open]:opacity-100"
                 >
                   <MoreHorizontal aria-hidden className="size-3.5" />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                  align="end"
+                  align="start"
                   sideOffset={4}
                   className="z-50 min-w-44 overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
                 >
-                  <PaneMenuItems pane={pane} maximized={maximized} />
+                  {actions.map((action) => (
+                    <DropdownMenu.Item
+                      key={action.label}
+                      onSelect={action.run}
+                      className={cn(
+                        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden",
+                        "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
+                        action.destructive &&
+                          "text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
+                      )}
+                    >
+                      {action.icon}
+                      {action.label}
+                      {action.shortcut ? (
+                        <span className="ms-auto text-xs text-muted-foreground">
+                          {action.shortcut}
+                        </span>
+                      ) : null}
+                    </DropdownMenu.Item>
+                  ))}
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
+
+            <span className="flex-1" />
           </div>
         </ContextMenuTrigger>
+
         <ContextMenuContent>
-          <PaneMenuItems pane={pane} maximized={maximized} />
+          {actions.map((action) => (
+            <ContextMenuItem
+              key={action.label}
+              variant={action.destructive ? "destructive" : "default"}
+              onSelect={action.run}
+            >
+              {action.icon}
+              {action.label}
+              {action.shortcut ? (
+                <ContextMenuShortcut>{action.shortcut}</ContextMenuShortcut>
+              ) : null}
+            </ContextMenuItem>
+          ))}
         </ContextMenuContent>
       </ContextMenu>
       <PaneBody viewId={viewId} />
