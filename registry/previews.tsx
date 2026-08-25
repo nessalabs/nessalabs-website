@@ -6,11 +6,13 @@ import {
   GanttChartDemo,
   KanbanDemo,
   WorkflowCanvasDemo,
+  WorkflowCanvasNestedDemo,
 } from "./demos/composites";
 import {
   ChatComposerDemo,
   ComposerQueueDemo,
   MessageDemo,
+  MessageStreamDemo,
   ToolApprovalDemo,
   ToolCallDemo,
   ToolCallStatesDemo,
@@ -55,6 +57,7 @@ export const previews: Record<string, React.ReactNode> = {
 
   // agent surfaces
   message: <MessageDemo />,
+  "message-streaming": <MessageStreamDemo />,
   "tool-call": <ToolCallDemo />,
   "tool-call-states": <ToolCallStatesDemo />,
   "tool-approval": <ToolApprovalDemo />,
@@ -66,11 +69,8 @@ export const previews: Record<string, React.ReactNode> = {
 
   // composites
   "event-calendar": <EventCalendarDemo />,
-  "event-calendar-day": <EventCalendarDemo defaultView="day" />,
-  "event-calendar-month": <EventCalendarDemo defaultView="month" />,
   "gantt-chart": <GanttChartDemo />,
-  "gantt-chart-day": <GanttChartDemo scale="day" />,
-  "gantt-chart-month": <GanttChartDemo scale="month" />,
   kanban: <KanbanDemo />,
   "workflow-canvas": <WorkflowCanvasDemo />,
+  "workflow-canvas-nested": <WorkflowCanvasNestedDemo />,
 };

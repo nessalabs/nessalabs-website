@@ -18,6 +18,7 @@ import {
   Search,
   Share2,
   Sparkles,
+  RotateCcw,
   Terminal,
   TextQuote,
   Wand2,
@@ -37,6 +38,7 @@ import {
   MessageContent,
   MessageFooter,
   MessageHeader,
+  MessageStreamText,
   ModelPicker,
   ToolApproval,
   ToolApprovalAction,
@@ -47,6 +49,7 @@ import {
   ToolApprovalHeading,
   ToolApprovalIcon,
   ToolApprovalTitle,
+  Button,
   ToolCall,
   ToolCallContent,
   ToolCallFile,
@@ -363,6 +366,56 @@ export function ComposerQueueDemo() {
   );
 }
 
+const streamedReply = `The retrieval regression traces back to last night's index rebuild.
+
+At 02:14 the index was rebuilt against checkpoint 4188 while the query encoder had already moved to 4189. The two halves of the pair no longer agree, so nearest-neighbour lookups drift on long-tail queries where the margin between candidates is small.
+
+Three cases fail as a result: 4189, 4191 and 4193. The first two return the right document at rank 4 or 5 instead of rank 1; the third times out because the reranker keeps widening its window looking for a match that is not there.
+
+The fix is to pin the encoder to the checkpoint that wrote the index, then re-run the suite. I can rebuild the index against 4189 instead, which costs about nine minutes.`;
+
+/** A long reply arriving as a stream. Replay to watch the reveal pace itself. */
+export function MessageStreamDemo() {
+  const [received, setReceived] = React.useState("");
+  const [run, setRun] = React.useState(0);
+
+  React.useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setReceived(streamedReply);
+      return;
+    }
+    let i = 0;
+    setReceived("");
+    // Chunky, uneven arrivals, the way a real stream lands.
+    const id = window.setInterval(() => {
+      i += 12 + ((i * 7) % 23);
+      setReceived(streamedReply.slice(0, i));
+      if (i >= streamedReply.length) window.clearInterval(id);
+    }, 90);
+    return () => window.clearInterval(id);
+  }, [run]);
+
+  return (
+    <div className="flex w-full max-w-2xl flex-col gap-4">
+      <Message from="assistant">
+        <MessageAvatar fallback="N" alt="Nessa" />
+        <MessageContent>
+          <MessageHeader>Nessa</MessageHeader>
+          <MessageBubble>
+            <MessageStreamText text={received} />
+          </MessageBubble>
+        </MessageContent>
+      </Message>
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setRun((n) => n + 1)}>
+          <RotateCcw aria-hidden="true" />
+          Replay
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function MessageDemo() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
@@ -437,13 +490,23 @@ const shelfActions = [
   { label: "Report", icon: Flag },
 ];
 
-/** The shelf takes any number of actions and scrolls, without a scrollbar. */
+/**
+ * Twelve shelf actions behind the chevron. Expanding keeps the pill at its
+ * collapsed width: the labels hide, the shelf fills the freed space and
+ * scrolls, and the chevron stays put, so collapsing again needs no cursor
+ * travel.
+ */
 export function SelectionTooltipShelfDemo() {
   return (
-    <SelectionTooltip defaultExpanded>
+    <SelectionTooltip>
       <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
         <MessageSquare aria-hidden="true" />
         <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
+      </SelectionTooltipAction>
+      <SelectionTooltipSeparator />
+      <SelectionTooltipAction aria-label="Add to chat" tooltip="Add to chat">
+        <MessageSquarePlus aria-hidden="true" />
+        <SelectionTooltipLabel>Add to chat</SelectionTooltipLabel>
       </SelectionTooltipAction>
       <SelectionTooltipSeparator />
       <SelectionTooltipMore />

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Bell, Database, Filter, Shuffle, Sparkles, Webhook } from "lucide-react";
 import {
   EventCalendar,
   EventCalendarGrid,
@@ -18,6 +19,7 @@ import {
   WorkflowCanvasEdges,
   WorkflowCanvasGrid,
   WorkflowCanvasNode,
+  WorkflowCanvasNodeHandle,
   WorkflowCanvasSurface,
   applyKanbanMove,
   type EventCalendarEvent,
@@ -252,12 +254,59 @@ export function KanbanDemo() {
 
 /* ── WorkflowCanvas ────────────────────────────────────────────────────── */
 
-const boardJobs = [
-  { id: "fetch", title: "Fetch corpus", detail: "every 15m", position: { x: 40, y: 60 } },
-  { id: "listen", title: "Listen for events", detail: "webhook", position: { x: 40, y: 220 } },
-  { id: "enrich", title: "Enrich", detail: "nessa-embed-1", position: { x: 300, y: 140 } },
-  { id: "notify", title: "Notify", detail: "slack", position: { x: 560, y: 140 } },
+const jobTones = {
+  source: "bg-sky-500/15 text-sky-600 dark:text-sky-300",
+  transform: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+  model: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+  output: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+} as const;
+
+interface Job {
+  id: string;
+  title: string;
+  detail: string;
+  tone: keyof typeof jobTones;
+  icon: React.ComponentType<{ className?: string }>;
+  position: { x: number; y: number };
+}
+
+const boardJobs: Job[] = [
+  { id: "fetch", title: "Fetch corpus", detail: "every 15m", tone: "source", icon: Database, position: { x: 40, y: 60 } },
+  { id: "listen", title: "Listen for events", detail: "webhook", tone: "source", icon: Webhook, position: { x: 40, y: 220 } },
+  { id: "enrich", title: "Enrich", detail: "nessa-embed-1", tone: "model", icon: Sparkles, position: { x: 320, y: 140 } },
+  { id: "notify", title: "Notify", detail: "slack", tone: "output", icon: Bell, position: { x: 600, y: 140 } },
 ];
+
+/** Node bodies are host markup; the canvas owns drag, zoom and connections. */
+function JobCard({ job }: { job: Job }) {
+  const Icon = job.icon;
+  return (
+    <div className="flex w-52 items-start gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+      <span
+        className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${jobTones[job.tone]}`}
+      >
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium">{job.title}</span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {job.detail}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+function AllHandles() {
+  return (
+    <>
+      <WorkflowCanvasNodeHandle side="top" />
+      <WorkflowCanvasNodeHandle side="right" />
+      <WorkflowCanvasNodeHandle side="bottom" />
+      <WorkflowCanvasNodeHandle side="left" />
+    </>
+  );
+}
 
 interface BoardEdge {
   id: string;
@@ -319,14 +368,92 @@ export function WorkflowCanvasDemo() {
             defaultPosition={job.position}
             aria-label={`${job.title} job`}
           >
-            <span className="block w-44 rounded-xl border border-border bg-card p-3 shadow-sm">
-              <span className="block text-sm font-medium">{job.title}</span>
-              <span className="block text-xs text-muted-foreground">
-                {job.detail}
-              </span>
-            </span>
+            <JobCard job={job} />
+            <AllHandles />
           </WorkflowCanvasNode>
         ))}
+      </WorkflowCanvasSurface>
+    </WorkflowCanvas>
+  );
+}
+
+/** A node hosting its own canvas. Nesting stops at one level by design. */
+export function WorkflowCanvasNestedDemo() {
+  const subflow: Job[] = [
+    { id: "dedupe", title: "Dedupe", detail: "by hash", tone: "transform", icon: Filter, position: { x: 24, y: 24 } },
+    { id: "chunk", title: "Chunk", detail: "512 tokens", tone: "transform", icon: Shuffle, position: { x: 24, y: 132 } },
+  ];
+
+  return (
+    <WorkflowCanvas aria-label="Enrichment workflow" className="h-96 w-full">
+      <WorkflowCanvasGrid />
+      <WorkflowCanvasSurface>
+        <WorkflowCanvasEdges>
+          <WorkflowCanvasEdge
+            source="ingest"
+            target="enrichment"
+            aria-label="Edge from ingest to enrichment"
+          />
+        </WorkflowCanvasEdges>
+
+        <WorkflowCanvasNode
+          nodeId="ingest"
+          defaultPosition={{ x: 32, y: 120 }}
+          aria-label="Ingest job"
+        >
+          <JobCard
+            job={{
+              id: "ingest",
+              title: "Ingest",
+              detail: "1.2M docs",
+              tone: "source",
+              icon: Database,
+              position: { x: 0, y: 0 },
+            }}
+          />
+          <AllHandles />
+        </WorkflowCanvasNode>
+
+        <WorkflowCanvasNode
+          nodeId="enrichment"
+          defaultPosition={{ x: 320, y: 40 }}
+          aria-label="Enrichment subflow"
+        >
+          <div className="w-80 rounded-2xl border border-border bg-card p-3 shadow-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-medium">Enrichment</span>
+              <span className="text-xs text-muted-foreground">2 steps</span>
+            </div>
+            <WorkflowCanvas
+              aria-label="Enrichment steps"
+              readOnly={false}
+              className="h-52 rounded-xl border border-border"
+            >
+              <WorkflowCanvasGrid />
+              <WorkflowCanvasSurface>
+                <WorkflowCanvasEdges>
+                  <WorkflowCanvasEdge
+                    source="dedupe"
+                    target="chunk"
+                    aria-label="Edge from dedupe to chunk"
+                  />
+                </WorkflowCanvasEdges>
+                {subflow.map((job) => (
+                  <WorkflowCanvasNode
+                    key={job.id}
+                    nodeId={job.id}
+                    defaultPosition={job.position}
+                    aria-label={`${job.title} step`}
+                  >
+                    <JobCard job={job} />
+                    <AllHandles />
+                  </WorkflowCanvasNode>
+                ))}
+              </WorkflowCanvasSurface>
+            </WorkflowCanvas>
+          </div>
+          <AllHandles />
+        </WorkflowCanvasNode>
       </WorkflowCanvasSurface>
     </WorkflowCanvas>
   );

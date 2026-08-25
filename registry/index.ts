@@ -88,7 +88,7 @@ const documented: {
     group: "Content",
     description: "Action pill for selected text. Overflow actions live in a scrolling shelf.",
     examples: [
-      { id: "selection-tooltip-shelf", title: "Shelf expanded, twelve actions" },
+      { id: "selection-tooltip-shelf", title: "Twelve shelf actions, one width" },
     ],
   },
   {
@@ -101,6 +101,7 @@ const documented: {
     slug: "message",
     group: "Agent surfaces",
     description: "Transcript row. Assistant and user sides, with avatar, bubble and footer parts.",
+    examples: [{ id: "message-streaming", title: "Streaming a long reply" }],
   },
   {
     slug: "tool-call",
@@ -137,20 +138,12 @@ const documented: {
     group: "Composites",
     description:
       "Day, week and month scheduling. Drag to create, move and resize events.",
-    examples: [
-      { id: "event-calendar-day", title: "Day view" },
-      { id: "event-calendar-month", title: "Month view" },
-    ],
   },
   {
     slug: "gantt-chart",
     group: "Composites",
     description:
       "Project timeline with summary roll-ups, milestones and dependency arrows. Bars reschedule by drag or keyboard.",
-    examples: [
-      { id: "gantt-chart-day", title: "Day scale" },
-      { id: "gantt-chart-month", title: "Month scale" },
-    ],
   },
   {
     slug: "kanban",
@@ -161,6 +154,9 @@ const documented: {
     slug: "workflow-canvas",
     group: "Composites",
     description: "Pan-and-zoom node graph. Drag nodes, draw edges, delete with the keyboard.",
+    examples: [
+      { id: "workflow-canvas-nested", title: "A node hosting a subflow" },
+    ],
   },
 ];
 
