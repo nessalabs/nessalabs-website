@@ -30,7 +30,7 @@ export function NavBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 border-b border-line bg-ink/80 backdrop-blur",
+        "sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur",
         className
       )}
       {...props}
@@ -48,8 +48,8 @@ export function NavBar({
                 className={cn(
                   "text-sm transition-colors",
                   activeHref && activeHref.startsWith(link.href)
-                    ? "text-fg"
-                    : "text-dim hover:text-fg"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {link.label}
@@ -65,7 +65,7 @@ export function NavBar({
             aria-label="Toggle menu"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="text-sm text-dim hover:text-fg md:hidden"
+            className="text-sm text-muted-foreground hover:text-foreground md:hidden"
           >
             {open ? "Close" : "Menu"}
           </button>
@@ -73,13 +73,13 @@ export function NavBar({
       </div>
 
       {open && (
-        <nav className="border-t border-line px-6 py-4 md:hidden">
+        <nav className="border-t border-border px-6 py-4 md:hidden">
           <div className="flex flex-col gap-3">
             {links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted hover:text-fg"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 {link.label}
               </a>

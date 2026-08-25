@@ -10,26 +10,6 @@
  */
 @custom-variant dark (&:is(.dark, [data-theme="dark"], .dark *, [data-theme="dark"] *));
 
-/*
- * Site chrome is written against these semantic aliases, mapped onto the
- * library's tokens so the marketing pages and the components share one palette.
- */
-@theme inline {
-  --color-ink: var(--background);
-  --color-surface: var(--card);
-  --color-raised: var(--secondary);
-  --color-line: var(--border);
-  --color-fg: var(--foreground);
-  --color-muted: var(--muted-foreground);
-  --color-dim: var(--muted-foreground);
-  --color-success: var(--nessa-status-success, oklch(0.6 0.13 160));
-  --color-warn: var(--nessa-status-warning, oklch(0.68 0.15 75));
-  --color-danger: var(--destructive);
-
-  --font-sans: var(--nessa-font-sans);
-  --font-mono: var(--nessa-font-mono);
-}
-
 * {
   border-color: var(--border);
 }

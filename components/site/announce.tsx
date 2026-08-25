@@ -11,17 +11,17 @@ export function Announce({ label, className, children, ...props }: AnnounceProps
   return (
     <a
       className={cn(
-        "inline-flex items-center gap-2.5 rounded-full border border-line bg-surface py-1 pl-1 pr-4",
-        "text-sm text-muted transition-colors hover:border-dim hover:text-fg",
+        "inline-flex items-center gap-2.5 rounded-full border border-border bg-card py-1 pl-1 pr-4",
+        "text-sm text-muted-foreground transition-colors hover:border-dim hover:text-foreground",
         className
       )}
       {...props}
     >
-      <span className="rounded-full bg-raised px-2.5 py-0.5 text-xs font-medium text-fg">
+      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-foreground">
         {label}
       </span>
       <span className="truncate">{children}</span>
-      <span aria-hidden className="text-dim">
+      <span aria-hidden className="text-muted-foreground">
         →
       </span>
     </a>
