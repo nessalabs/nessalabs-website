@@ -93,7 +93,10 @@ const documented: {
     group: "Content",
     description: "Action pill for selected text. Overflow actions live in a scrolling shelf.",
     examples: [
-      { id: "selection-tooltip-shelf", title: "Twelve shelf actions, one width" },
+      {
+        id: "selection-tooltip-shelf",
+        title: "Twelve shelf actions. Expand, then scroll the shelf sideways",
+      },
     ],
   },
   {

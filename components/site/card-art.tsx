@@ -180,12 +180,19 @@ export function CardArt({ slug }: { slug: string }) {
     <svg
       aria-hidden="true"
       viewBox="0 0 108 72"
-      className="pointer-events-none absolute -right-2 -top-2 h-24 w-36 text-foreground opacity-[0.04] transition-opacity duration-300 group-hover:opacity-[0.10]"
+      className="pointer-events-none absolute -right-6 -top-4 h-28 w-44 text-foreground opacity-[0.05] transition-opacity duration-500 group-hover:opacity-[0.09]"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2.5"
+      strokeWidth="1.25"
       strokeLinecap="round"
       strokeLinejoin="round"
+      style={{
+        // Fades toward the text so the motif never competes with it.
+        maskImage:
+          "radial-gradient(120% 120% at 85% 15%, #000 15%, transparent 72%)",
+        WebkitMaskImage:
+          "radial-gradient(120% 120% at 85% 15%, #000 15%, transparent 72%)",
+      }}
     >
       {motif}
     </svg>

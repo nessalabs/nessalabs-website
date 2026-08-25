@@ -12,20 +12,20 @@ export const metadata: Metadata = {
 
 const principles = [
   {
-    title: "The library itself",
-    body: "These pages render @nessa-ui/react, the package our products import.",
+    title: "Interaction, not appearance",
+    body: "What ships is the hard part: drag models, pan and zoom, streaming, focus and keyboard paths.",
+  },
+  {
+    title: "You render the content",
+    body: "Calendar events, Gantt bars, board cards and canvas nodes are yours, through render props and children.",
   },
   {
     title: "Compound parts",
-    body: "Components ship as parts. Recompose a surface without forking it.",
+    body: "Surfaces are assembled from parts, so you can rearrange one without forking it.",
   },
   {
-    title: "Behaviour, not decoration",
-    body: "Drag, pan-zoom, streaming, keyboard paths. Styling stays yours.",
-  },
-  {
-    title: "Semantic tokens",
-    body: "Light and dark come from one definition. Restyle without patching.",
+    title: "Styling stays open",
+    body: "Every part carries a data-slot and merges className. Tokens drive light and dark.",
   },
 ];
 
@@ -51,6 +51,15 @@ export default function ComponentsOverviewPage() {
         Accessible React components and tokens for Nessa products: primitives,
         agent surfaces, and composites.
       </p>
+      <p className="mt-3 text-base leading-7 text-muted-foreground">
+        Closer to Radix than to a theme. Components own the behaviour and hand
+        you the presentation: <code className="text-foreground">renderEvent</code>{" "}
+        and <code className="text-foreground">renderTask</code> for the calendar
+        and Gantt, node and card children for the canvas and board, compound
+        parts everywhere else. Unlike Radix they arrive with a working default
+        skin, painted in tokens rather than fixed color, so you can ship first
+        and restyle after.
+      </p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {principles.map((item) => (
@@ -70,24 +79,6 @@ export default function ComponentsOverviewPage() {
 
 # or take the source, shadcn-style
 npx shadcn@latest add https://nessalabs.ai/r/tool-call.json`}
-      />
-
-      <h2 className="mt-10 mb-4 text-lg font-semibold">Usage</h2>
-      <SourceBlock
-        lang="tsx"
-        code={`import "@nessa-ui/react/styles.css"
-import { ToolCall, ToolCallTabs, ToolCallTrigger } from "@nessa-ui/react"
-
-export function Row() {
-  return (
-    <ToolCall status="running">
-      <ToolCallTrigger meta="run 4192">Evaluating</ToolCallTrigger>
-      <ToolCallContent>
-        <ToolCallTabs input={input} output={output} />
-      </ToolCallContent>
-    </ToolCall>
-  )
-}`}
       />
 
       <h2 className="mt-12 mb-4 text-lg font-semibold">All components</h2>
