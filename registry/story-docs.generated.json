@@ -1,0 +1,1229 @@
+{
+  "app-shell": {
+    "title": "Composites/AppShell",
+    "component": "AppShell",
+    "description": "AppShell composes an agent-workspace frame: a header, pixel-sized resizable docks, a status bar, and a center workspace whose panes split recursively in any direction and can be rearranged by dragging one pane onto another to swap them. The whole arrangement is one serializable layout document; the shell renders it and reports changes, while the consuming application owns state and persistence. This catalog demonstrates it as a multi-agent chat app: conversations live in the sidebar dock, every chat opens in a pane, and panes split, maximize (Shift+Escape), swap by dragging, and close like an IDE.",
+    "stories": [
+      {
+        "name": "AgentWorkspace",
+        "note": "The full composition as a multi-agent chat app: conversations in the sidebar dock open into workspace panes with messages and a composer. Split a chat with the pane actions, drag it by its grip onto another pane's edge to rearrange, maximize with Shift+Escape, and resize every region from its separators."
+      },
+      {
+        "name": "SplitAndClose",
+        "note": "Splitting inserts a focused pane beside the target and closing returns its space to the neighbor it was split from; the tree re-normalizes after every operation."
+      },
+      {
+        "name": "SwapPanes",
+        "note": "Dragging one pane onto another swaps them — the split structure and orientations stay exactly as they were, and new sections come from the explicit split actions instead. While hovering, the target highlights and previews the incoming content, a miniature of the dragged pane rides the cursor, and uninvolved panes fade."
+      },
+      {
+        "name": "DockToggles",
+        "note": "Docks live outside the workspace tree: toggling one never restructures the panes, and a closed dock keeps its pixel size for reopening."
+      },
+      {
+        "name": "MaximizeAndRestore",
+        "note": "Maximizing presents one pane over the whole workspace while every pane stays mounted — content state survives the round trip — and restoring returns exactly the previous arrangement. Shift+Escape toggles maximize on the active pane (override or disable via the maximizeShortcut property)."
+      }
+    ]
+  },
+  "badge": {
+    "title": "Components/Badge",
+    "component": "Badge",
+    "description": "A compact, non-interactive label for status, category, or metadata. Badge follows the shadcn composition model and uses Nessa semantic color tokens. Keep labels short; use Button when the element performs an action.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use the controls to compare Badge variants while keeping the label short and non-interactive."
+      },
+      {
+        "name": "AllVariants",
+        "note": "Choose the least emphatic variant that still communicates the status."
+      }
+    ]
+  },
+  "button": {
+    "title": "Components/Button",
+    "component": "Button",
+    "description": "The primary action primitive for Nessa interfaces. Button is built on the shadcn/Radix composition model, supports semantic variants and sizes, and can render another element through `asChild`. Use one primary action per decision area and reserve `destructive` for irreversible outcomes.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use the controls to compare Button hierarchy and sizing with one stable action label."
+      },
+      {
+        "name": "WithIcon",
+        "note": "Place a quiet 16px icon after the label when it reinforces the action."
+      },
+      {
+        "name": "IconOnly",
+        "note": "Icon-only buttons require an accessible name through `aria-label`."
+      },
+      {
+        "name": "AllVariants",
+        "note": "Semantic variants establish hierarchy without changing the component API."
+      }
+    ]
+  },
+  "card": {
+    "title": "Components/Card",
+    "component": "Card",
+    "description": "A composable surface for grouping related content and actions. Card is a shadcn-style family of layout primitives rather than a single rigid template: combine Header, Title, Description, Action, Content, and Footer only when those regions are meaningful.",
+    "stories": [
+      {
+        "name": "Default",
+        "note": "A complete Card composition with supporting metadata and a clear primary action."
+      }
+    ]
+  },
+  "chat-composer-editor": {
+    "title": "Components/ChatComposerEditor",
+    "component": "ChatComposerEditor",
+    "description": "A rich chat-composer input where attachments are true inline chips: atomic non-editable tokens that flow with the text on its baseline and type metrics, carry kind or custom icons (including images), delete as a whole with Backspace, and surface press and hover actions. Pastes and drops land as plain text; large pastes route to the host as attachments. Composes with ChatComposer and ChatComposerTrigger in place of the plain textarea input.",
+    "stories": [
+      {
+        "name": "InlineAttachments",
+        "note": "Attachments render as atomic inline tokens — an icon plus colored text on the same baseline and type metrics as the message, with no pill surface — so \"talk to [Mira Chen] and then [Sasha Ortiz]\" keeps its meaning. Tokens carry custom icons (here avatar images) and custom classes, delete as a whole with Backspace, report presses through onChipPress, and report hover through onChipHoverChange — here a contact card. Chip press and hover are pointer affordances (the declared inline-text exception): the caret can never land inside a chip, and Backspace remains the keyboard path."
+      },
+      {
+        "name": "PastedTextCapture",
+        "note": "onPasteAttachment captures pastes at or above pasteAttachmentMinLength instead of flooding the input — here the host inserts a pasted-text chip at the caret — while short pastes keep flowing in as plain text. All pastes land as plain text."
+      },
+      {
+        "name": "SlashSkillMenu",
+        "note": "Typing the / trigger opens host-supplied menu content anchored above the composer — here a SectionedListbox of skills and plugins. Typing filters via the trigger query, Enter attaches the primary match as a chip and clears the token, and Escape dismisses the menu until the token changes. With no selectable option, Enter submits as usual."
+      },
+      {
+        "name": "MentionTrigger",
+        "note": "A second trigger on @ presents its own panel content mid-message — here a People listbox. ArrowDown moves focus into the options, Enter or Tab attaches the mention as a chip without the trigger text, and Backspace deletes the whole chip at once."
+      }
+    ]
+  },
+  "chat-composer": {
+    "title": "Components/ChatComposer",
+    "component": "ChatComposer",
+    "description": "A compound chat-entry surface built from input, footer, action, and submit primitives, plus opt-in attachment capabilities: a stacked attachments-row of pills, paste-to-attachment capture, and key-triggered menus (such as / and @) that anchor host-supplied content above the composer. Pair it with ChatComposerEditor for inline chip attachments, and compose it with ModelPicker or application-owned controls without moving message, upload, voice, or runtime state into the design system.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "Compact",
+        "note": "Compact reduces vertical geometry for docked or floating chat surfaces while preserving the same slots and behavior."
+      },
+      {
+        "name": "ConfiguredWidth",
+        "note": "width sets the preferred composer inline size while max-width preserves containment inside narrower hosts."
+      },
+      {
+        "name": "ConfiguredWidthNarrow",
+        "note": null
+      },
+      {
+        "name": "WidthStylePrecedence",
+        "note": "Native style.width remains an escape hatch, while the dedicated numeric width prop takes precedence and supplies responsive containment."
+      },
+      {
+        "name": "CappedHeight",
+        "note": "maxHeight caps the complete composer while the input becomes the scrolling region and the footer remains visible."
+      },
+      {
+        "name": "CappedHeightFloors",
+        "note": "Caps below the footer-safe height yield to the footer's intrinsic size instead of clipping its controls."
+      },
+      {
+        "name": "CappedHeightFloor280",
+        "note": null
+      },
+      {
+        "name": "CappedHeightFloor240",
+        "note": null
+      },
+      {
+        "name": "FocusBorder",
+        "note": "borderMode focus reveals the composer border only while a descendant owns focus."
+      },
+      {
+        "name": "AlwaysBorder",
+        "note": "borderMode always preserves the bordered surface treatment before and during interaction."
+      },
+      {
+        "name": "KeyboardFocusWithoutBorder",
+        "note": "The default borderless composer keeps its outer border transparent and draws no box around the focused textarea — the caret is the input's focus indicator, since browsers apply :focus-visible to editable fields on pointer focus too. Action controls keep their visible focus outlines."
+      },
+      {
+        "name": "Responsive400",
+        "note": null
+      },
+      {
+        "name": "NarrowCapabilities",
+        "note": null
+      },
+      {
+        "name": "Responsive280",
+        "note": null
+      },
+      {
+        "name": "Responsive240",
+        "note": null
+      },
+      {
+        "name": "Dark",
+        "note": "All surfaces and controls use semantic tokens and inherit dark mode from the consuming application."
+      },
+      {
+        "name": "Light",
+        "note": "Explicit Light mode resolves every demo and composer surface from the Light semantic palette without retaining a dark frame."
+      },
+      {
+        "name": "Sending",
+        "note": "The submit primitive exposes a busy state without disabling the rest of the composer's independently owned controls."
+      },
+      {
+        "name": "VisibleSubmitLabel",
+        "note": "Visible submit children provide their own accessible name unless the consumer explicitly supplies an aria-label."
+      },
+      {
+        "name": "Attachments",
+        "note": "The row placement option stacks attachments as atomic pills with kind-specific icons above the input. Trigger menus attach pills over the plain textarea too, the remove control deletes the whole pill, and Backspace at the start of the input removes the trailing pill without touching typed text."
+      },
+      {
+        "name": "AttachmentsCappedHeight",
+        "note": "With maxHeight set, the attachments row caps its own height and scrolls when pills wrap, while the input remains the scrolling text region and the footer stays visible."
+      }
+    ]
+  },
+  "code-block": {
+    "title": "Components/CodeBlock",
+    "component": "CodeBlock",
+    "description": "A syntax-highlighted code block backed by Pierre's Shiki-based rendering engine. Standalone it renders any snippet with dark and light theme support, an optional file header, line numbers, and line wrapping; MessageMarkdown composes it automatically for fenced code. Appearance resolves from props first, then the nearest CodeBlockProvider, then defaults — so a host sets its code theme once at the root and every code surface in the app follows, exactly like the app's light and dark mode.",
+    "stories": []
+  },
+  "composer-access-mode": {
+    "title": "Components/ComposerAccessMode",
+    "component": "ComposerAccessMode",
+    "description": "An icon-first composer dropdown for Ask for approval, Auto approval, and Full access using the licensed Nucleo shield icon family supplied for this component. The icons are included in Nessa's tracked Nucleo inventory; Full access is last and uses the destructive semantic color.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use the controlled value and onValueChange to select the active tool-approval policy beside the composer actions."
+      },
+      {
+        "name": "AllModes",
+        "note": "The three supplied shield silhouettes remain visually distinct at the composer's compact 18px icon size."
+      },
+      {
+        "name": "IconOnly",
+        "note": "Icon-only usage retains the mode label as the button's accessible name."
+      }
+    ]
+  },
+  "composer-queue": {
+    "title": "Components/ComposerQueue",
+    "component": "ComposerQueue",
+    "description": "Pending-message rows for active agent runs, plus a delivery-mode control for choosing whether the next follow-up queues behind the run or steers it immediately. The host owns ordering and delivery semantics.",
+    "stories": [
+      {
+        "name": "PendingMessages",
+        "note": "Each row exposes steer, remove, and overflow actions while preserving the queued message as application-owned content."
+      },
+      {
+        "name": "PointerAndTouchSorting",
+        "note": "Pointer and touch drags use the same controlled reorder contract as keyboard sorting."
+      },
+      {
+        "name": "IndependentQueueIdentities",
+        "note": "Independent queue instances may reuse host-local sortable IDs without emitting duplicate global DOM IDs."
+      },
+      {
+        "name": "ActiveRunComposition",
+        "note": "Compose the queue above a compact ChatComposer during an active run; switching delivery mode changes host intent without disabling text entry."
+      }
+    ]
+  },
+  "context-menu": {
+    "title": "Components/ContextMenu",
+    "component": "ContextMenu",
+    "description": "A right-click menu on Nessa's popover surface: the shadcn context-menu layout — items with keyboard shortcuts, groups and labels, nested submenus, checkbox and radio selection — rebuilt on Radix context-menu primitives with Nessa tokens, the shared popover surface recipe, and a destructive item variant. Icons drop into items directly; Nessa's Nucleo set and lucide both fit the 16px item slot.",
+    "stories": [
+      {
+        "name": "Browser",
+        "note": "The full shadcn context-menu layout: navigation items with shortcuts, a disabled item, a More Tools submenu, checkbox items, and a People radio group. Checkbox items keep the menu open on toggle so several can be picked in one session; plain items and radio items dismiss on select. The play test opens the menu by right click, proves the popover surface by computed style, walks into the submenu, toggles both checkboxes without the menu closing, changes the radio selection, and closes the menu with Escape."
+      },
+      {
+        "name": "NucleoIcons",
+        "note": "Items dressed with Nessa's tracked Nucleo icons in the 16px slot: plain items with shortcuts, a Layout section of checkbox items that pair an icon with the check indicator and keep the menu open while several are toggled, and a destructive Delete item in the destructive semantic color. The play test opens the menu, toggles both sidebar checkboxes without the menu closing, verifies the destructive item resolves a different computed color than a default item, and closes with Escape."
+      }
+    ]
+  },
+  "conversation-rail": {
+    "title": "Build the composer",
+    "component": "ConversationRail",
+    "description": "An edge-mounted conversation navigator. The rail lies flat until the pointer moves along it and raises a hill: every marker widens by a raised-cosine falloff of its distance to the pointer (tune with proximityRadius, replace with proximityFalloff, or disable with proximity={false}), while hover and keyboard focus pin their row fully open; the active turn is only tinted. Each row reveals a floating preview beside the rail that dismisses once the turn is clicked and re-arms on a fresh pointer approach or when focus moves on; only keyboard focus (focus-visible) reveals it, so a mouse click never leaves a row stuck open. The trigger is a plain button, so hosts decide what selecting a turn does via onClick, own the active turn, and render any row content inside the trigger — custom rows can read the inherited --nessa-rail-boost variable to join the hill, and the default animations are replaced by overriding marker or preview classes. The whole marker animation scales from --nessa-rail-marker-max (default 1.75rem): rows rest at --nessa-rail-marker-base-ratio (default 0.25) of it and the hill interpolates between the two, so retuning either variable retunes every state at once. Because active is controlled, the rail syncs to a scrolled message list by feeding it visibility — the ScrollSync story wires an IntersectionObserver so on-screen turns tint as you scroll and clicking a tick scrolls to its message.",
+    "stories": [
+      {
+        "name": "TurnNavigator",
+        "note": "Clicking a marker calls the host's onClick, which moves the active turn; the active row stays flat but is tinted and exposes aria-current."
+      },
+      {
+        "name": "HoverAndFocusPreview",
+        "note": "Hovering or focusing a marker fades and slides its preview card in beside the rail; the preview is linked to the trigger through aria-describedby, and both clicking and Escape dismiss it."
+      },
+      {
+        "name": "ProximityHill",
+        "note": "Pointer movement over the rail widens every marker along a raised-cosine hill centered on the pointer, so neighbors swell and taper with distance instead of only the hovered row changing."
+      },
+      {
+        "name": "ScrollSync",
+        "note": "The host observes message visibility with an IntersectionObserver: the most-visible observed turn becomes the single active one (owning aria-current) while other on-screen turns get a softer tint, and clicking a tick scrolls its message into view."
+      },
+      {
+        "name": "CustomRowsAndAnimation",
+        "note": "Rows are host-rendered: this example swaps markers for dots that read the inherited --nessa-rail-boost variable to scale along the same hill, and replaces the default preview slide with a slower fade-and-scale by overriding classes."
+      }
+    ]
+  },
+  "event-calendar": {
+    "title": "Nessa design summit",
+    "component": "EventCalendar",
+    "description": "An Outlook-style scheduling surface with day, week, and month views. Hosts stack an EventCalendarToolbar — Today, previous/next paging, a live range label, and a Day/Week/Month switcher — above an EventCalendarGrid. The day and week views render a scrollable 24-hour grid with an all-day shelf, overlap-packed event chips, and a now indicator; the month view is a six-week matrix where each day's event pills scroll in place when they outgrow the cell. Dragging across empty slots, or arrowing on a day column and pressing Enter, selects a range and opens the host's own quick-create UI, supplied through the renderQuickCreate render prop and resolved via its createEvent/cancel context; onSelectRange, onCreateEvent, and onEventMove mirror every step for hosts that own scheduling.",
+    "stories": [
+      {
+        "name": "WeekView",
+        "note": "The flagship week: Monday-first columns under a sticky header with an all-day shelf, tone-colored event chips (primary meetings, secondary personal blocks, muted tentative, destructive deadline), and the now indicator on today's column. Tuesday's design crit and pairing session conflict, so the play test proves the Outlook-style cascade by computed geometry — the later event indents from the left and stacks above the earlier one at a slightly narrower width. Clicking a chip also selects it: a subtle ring-and-offset highlight (host-observable through selectedEventId/onSelectedEventChange) that clears when empty grid is pressed, which the play test verifies by computed box shadow."
+      },
+      {
+        "name": "DayView",
+        "note": "A single day at the same fixed clock: the full-width column keeps the hour gutter, overlap packing, and the now line, and the header date stays highlighted as today. Ideal when a host boots the calendar into an agenda-style focus view."
+      },
+      {
+        "name": "MonthView",
+        "note": "The six-week month matrix with per-day event pills. Tuesday the 18th holds five events — more than its cell can show — so the pill list scrolls in place without scrollbar chrome, keeping every event reachable from the month. The play test proves all five pills exist, that the list really overflows and scrolls by computed metrics, and that double-clicking the cell still opens the day view."
+      },
+      {
+        "name": "DragToCreate",
+        "note": "The Outlook quick-compose gesture: dragging across empty slots highlights a snapped range and releasing opens the host-supplied quick-create card — a story-side composition passed through renderQuickCreate — with the title field focused — a plain click only parks the highlight without opening anything. The play test proves the click stays quiet, then drags 9:00 to 10:30, types a title, saves, and proves the new chip exists at the computed 9:00 offset with the primary tone's computed background."
+      },
+      {
+        "name": "DragToMove",
+        "note": "Rescheduling by direct manipulation with the confirmation gate opted out (confirmMoves={false}): grabbing a chip and dragging shows a ghost preview snapped to the slot grid, and releasing commits the move immediately — across times and across days — through onEventMove. From the keyboard, the default Shift+Arrow keys nudge a pending ghost (the same gesture that extends a draft selection, aimed at a focused event instead), Mod+Alt+J/K grow or shrink its duration, and Enter places it (every shortcut is host-replaceable via the shortcuts prop). The play test drags the design crit from 1:00 PM to 3:00 PM by computed chip offset, nudges it to Wednesday and half an hour later with Shift+Arrow, then stretches its bottom edge from 5:00 to 6:00 and proves the new duration by computed chip height."
+      },
+      {
+        "name": "MoveConfirmation",
+        "note": "Every reschedule is gated by default: dropping, edge-drag resizing, or Shift+Arrow nudging an event parks it as pending and the built-in confirmation dialog renders at the proposed slot, committing through Move or abandoning through Keep and Escape. The dialog autofocuses Move, so from the keyboard a nudge, Enter, Enter places and commits without touching the pointer. Hosts swap in their own dialog with renderMoveConfirm or turn the gate off with confirmMoves={false}. The play test drags the design crit from 1:00 PM toward 3:00 PM, confirms, proves the chip landed, then drags again and keeps the original time via cancel."
+      },
+      {
+        "name": "KeyboardCreate",
+        "note": "The keyboard path to the same quick create: the day surface takes focus, arrow keys move a snapped selection from the 9:00 anchor, Shift+ArrowDown extends it, and Enter opens the host-supplied card. The play test builds a 9:30–10:30 selection entirely from the keyboard, saves 'Deep work', and proves the chip renders with a visible computed background."
+      },
+      {
+        "name": "CustomEventAppearance",
+        "note": "The tones are defaults, not a ceiling. The eventClassName prop computes host token classes per chip, merged over the tone so they win (here the focus block goes outlined: transparent wash, dashed border, foreground text) while events stay plain serializable data, and the calendar-level renderEvent prop replaces every chip's interior — this story renders a status dot, title, and right-aligned start time on all surfaces while the calendar keeps geometry, drag, resize, focus, and selection. The play test proves the custom class by computed border style and the custom interior by the rendered dots."
+      },
+      {
+        "name": "WorkingHours",
+        "note": "A host-configured visible window: minHour/maxHour trim the day and week grids to the hours a user chose in external settings — here 7:00 to 19:00 — while the default stays the full 24-hour range. Selection, drag-move, the now line, and the gutter all clamp to the window. The play test proves the grid height is exactly twelve hour rows and that a chip positions relative to the window's start, not midnight."
+      },
+      {
+        "name": "LocalizedLabels",
+        "note": "Every rendered and announced string routes through the labels prop, merged over eventCalendarDefaultLabels — here a French pass covering the toolbar, view switcher, and the confirmation dialog, paired with locale='fr-FR' so Intl formats the dates to match. Interpolated strings are functions, keeping word order in the translator's control. The play test asserts the localized toolbar and switches views through the translated buttons."
+      },
+      {
+        "name": "ViewsAndNavigation",
+        "note": "The toolbar's full command set plus the default vim-flavored keymap: the Day/Week/Month switcher swaps layouts in place while the live range label re-announces the span, paging steps by the active view's unit, and Today returns to the fixed clock — all also reachable from the keyboard with h/l to page, t for today, and d/w/m to switch views (each shortcut host-replaceable or disableable through the shortcuts prop). The play test walks the toolbar first, then repeats the journey purely with keystrokes, asserting the label at every stop."
+      }
+    ]
+  },
+  "file-diff-list": {
+    "title": "Components/FileDiffList",
+    "component": "FileDiffCard",
+    "description": "Changed-file summary card for agent edit turns: header primitives with aggregate diff stats, a scrollable file list with per-file additions and deletions, hover- and focus-revealed row actions, and a collapse toggle that keeps long change sets compact.",
+    "stories": [
+      {
+        "name": "CollapsedSummary",
+        "note": "Collapsed by default the card shows the first rows and a toggle naming the hidden remainder; expanding swaps the toggle to a collapse affordance."
+      },
+      {
+        "name": "HoverRowActions",
+        "note": "Row actions stay transparent until the row is hovered or an action receives keyboard focus; a pointer click never pins a row's actions open once the pointer moves on."
+      },
+      {
+        "name": "ScrollableList",
+        "note": "The list ships with a default height cap, so even a hundred-file change set scrolls inside a stable card — header and toggle stay pinned — instead of growing without bound."
+      },
+      {
+        "name": "AgentTurnComposition",
+        "note": "App-fidelity composition of an agent edit turn in dark mode: aggregate stats beside the card icon and undo/review actions in the header. Rows stay chrome-free here; per-row actions remain an opt-in shown in Hover Row Actions."
+      }
+    ]
+  },
+  "gantt-chart": {
+    "title": "Components/GanttChart",
+    "component": "GanttChart",
+    "description": "A project-plan timeline in the industry's Gantt shape: a pinned task list beside a scrollable day/week/month timeline of bars, milestones, and roll-up summary brackets, with finish-to-start dependency arrows, a today marker, weekend shading, and collapsible groups. Bars reschedule by drag, edge-drag resizing, or keyboard chords behind a confirmable move gate, the toolbar composes the SegmentedControl primitive for its scale switcher, and labels plus shortcuts are fully host-overridable.",
+    "stories": [
+      {
+        "name": "ProjectPlan",
+        "note": "The flagship composition at the default week scale: grouped bars with progress fills, milestone diamonds, dependency arrows, and the today marker. The play test proves the surfaces by computed style — a painted bar, a painted today line, a non-empty progress fill — and that activating a bar takes the selected state."
+      },
+      {
+        "name": "DayScale",
+        "note": "The day scale zooms each column to a single day and shades weekends. The play test asserts the weekend underlay actually paints (computed background, not class names) and that the scale switcher reports the day option pressed."
+      },
+      {
+        "name": "MonthScale",
+        "note": "The month scale compresses the plan to a portfolio overview: month columns under a year tier. The play test asserts a known bar's computed width matches the scale's four pixels per day."
+      },
+      {
+        "name": "GroupCollapse",
+        "note": "Summary rows collapse their subtree from the task list's chevron toggles; the Launch group starts collapsed here. The play test expands it, proves the chevron actually rotates by computed style, asserts the hidden rows return, and checks a summary bracket spans its children's union."
+      },
+      {
+        "name": "KeyboardRescheduling",
+        "note": "The keyboard path: Shift+Arrow nudges reposition a pending ghost without committing, Enter raises the confirmation dialog with its Move button focused, and Escape abandons an adjustment. The play test walks a two-day nudge through the dialog and asserts the bar's committed position by computed left offset, then switches scales with the global `d` shortcut."
+      },
+      {
+        "name": "PointerRescheduling",
+        "note": "The pointer path: dragging a bar proposes new dates behind the confirmation dialog, and the edge handles resize instead of move. The play test drags a bar two days out and Keeps it (asserting nothing changed), then drags the end handle and commits the Resize, asserting the grown width by computed style. Synthetic drags must carry buttons: 1 — the chart aborts a session whose buttons report released."
+      },
+      {
+        "name": "DependentCascade",
+        "note": "The moveDependents option: while it is on, the built-in confirmation asks per move — Move all takes every transitive dependent along by the same day count (simplest finish-to-start push scheduling), Only this reschedules just the task — and names how many tasks would follow; while it is off, arrows stay purely visual and the dialog shows its plain Move. The host owns the toggle (a toolbar button here), the built-in ask is only the example: renderMoveConfirm plus confirm({ moveDependents }) and the context's dependentTaskIds let hosts build their own chooser. The play test commits a Move all and asserts Composites followed by computed offset, then an Only this and proves the chain stayed put."
+      },
+      {
+        "name": "CustomTaskContent",
+        "note": "renderTask replaces every bar's interior — here a name with a live percent readout — while the chart keeps geometry, drag, and selection; taskClassName layers styling policy (dimming completed work) without touching the task data. The play test asserts the custom interior renders inside a bar the chart still positions."
+      },
+      {
+        "name": "LocalizedLabels",
+        "note": "Every rendered and announced string routes through the labels prop — interpolated ones as functions so translators own word order. A French chart: toolbar, scale switcher, timeline region, and confirmation verbs all re-voiced, with dates formatted by the fr-FR locale."
+      }
+    ]
+  },
+  "generating-surface": {
+    "title": "Components/GeneratingSurface",
+    "component": "GeneratingSurface",
+    "description": "A container for content that takes a while to generate — diagrams, images, page previews, anything an assistant streams or renders. While `generating` it reserves space with an ambient placeholder: soft smoke plumes drift behind a shimmering status label instead of half-finished output. When `generating` flips off, the placeholder morphs into the content in two beats, like a container transform: the surface first resizes to the content's height with the placeholder still opaque, then fades through — smoke out fully, content sharpening in from a soft blur — so the finished artifact lands without a layout jump or a ghosted cross-dissolve. MermaidDiagram composes it automatically while streaming diagram source, and under reduced motion the reveal applies its end state instantly.",
+    "stories": [
+      {
+        "name": "Generating",
+        "note": null
+      },
+      {
+        "name": "RevealMorph",
+        "note": null
+      }
+    ]
+  },
+  "input": {
+    "title": "Components/Input",
+    "component": "Input",
+    "description": "A styled native input for text entry. Input preserves native HTML attributes and shadcn conventions while applying Nessa tokens for border, focus, disabled, and invalid states. Always pair it with a visible label; placeholders are examples, not labels.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Associate a visible label with the input using matching `htmlFor` and `id` values."
+      },
+      {
+        "name": "Invalid",
+        "note": "Set `aria-invalid` and connect specific error text with `aria-describedby`."
+      }
+    ]
+  },
+  "introduction": {
+    "title": "Nessa UI/Introduction",
+    "component": "Introduction",
+    "stories": [
+      {
+        "name": "Overview",
+        "note": null
+      }
+    ]
+  },
+  "json-tree": {
+    "title": "Components/JsonTree",
+    "component": "JsonTree",
+    "description": "A structured JSON renderer for any surface that shows a payload: keys tint muted so the values carry the emphasis, containers indent with real JSON punctuation, and the text stays selectable. By default it renders statically with no focusable parts — what consent surfaces that must show everything want — and `collapsible` adds a disclosure toggle to every object and array, with `defaultExpandedDepth` choosing how much starts open. The surface is deliberately unopinionated (monospace, semantic tokens only), and every part carries a data-slot hook (`json-tree-key`, `-value`, `-count`, `-toggle`, `-row`, `-children`, `-overflow`) so hosts restyle it per surface. Rendering is bounded on every axis so an arbitrary host payload can never freeze or crash the surface: circular references render as a marker, containers past the depth cap render as their folded summary, and containers wider than the entry cap render their head plus an explicit overflow row.",
+    "stories": [
+      {
+        "name": "Static",
+        "note": "The default render: fully expanded, no toggles, no focusable parts — pure readable output. Keys tint muted while values keep the foreground color, and arrays print one item per line inside their brackets. The play test asserts the key/value color split from computed styles and that no buttons exist."
+      },
+      {
+        "name": "Collapsible",
+        "note": "With `collapsible`, every object and array leads with a disclosure chevron. Folding a branch replaces it with its brackets and an entry count, and the toggle reports state via aria-expanded. The play test folds the headers object and asserts its children leave the tree, the count appears, and the chevron's computed rotation settles back to none."
+      },
+      {
+        "name": "BoundedPayload",
+        "note": "The safety rails, all at once: a 600-item array truncates to its head with an explicit '…100 more items not shown' row (never a silent cut), nesting past the depth cap renders as a folded summary rather than a giant serialized dump, a self-referencing branch renders '[Circular]' instead of recursing forever, and exotic leaves (Date, bigint, function) degrade to readable text instead of throwing. Sparse array holes print as null, matching what the payload actually serializes to. The play test asserts every one of these bounds."
+      },
+      {
+        "name": "CollapsedByDefault",
+        "note": "`defaultExpandedDepth={1}` opens only the top level, so nested branches start folded to their entry counts — the shape a dense inspector wants, one click away from detail. The play test asserts the nested object starts collapsed and expands on demand."
+      }
+    ]
+  },
+  "kanban": {
+    "title": "Components/Kanban",
+    "component": "KanbanBoard",
+    "description": "Kanban is a composable board of columns and draggable cards. The board owns no card data: every settled move — a pointer drop or a keyboard drop — is reported once through onCardMove with the card, source column, target column, and insertion index, and the consumer renders the new order (applyKanbanMove performs the standard column-map transform). While a card moves, a drop indicator marks the insertion point in the hovered column and only the dragged card and that indicator re-render. Cards are fully keyboard-operable: Space or Enter lifts the focused card, the arrow keys walk it through positions and columns, Space drops it, Escape cancels, and every step is announced to screen readers through a live region (the wording is replaceable via getAnnouncement). Cards render any content; controls inside them, and anything marked data-kanban-no-drag, never start a drag.",
+    "stories": [
+      {
+        "name": "SprintBoardStory",
+        "note": null
+      },
+      {
+        "name": "DragBetweenColumns",
+        "note": "Dragging a card captures the pointer on the card itself; the card floats from its spot while the drop indicator marks the insertion point in the hovered column, and releasing reports the move once through onCardMove."
+      },
+      {
+        "name": "MoveWithKeyboard",
+        "note": "The mouse-free path: Space lifts the focused card, the arrow keys walk it through positions and columns while the drop indicator tracks the target, Space drops it through onCardMove, and focus follows the card into its new column. Every step lands in the board's live region."
+      },
+      {
+        "name": "MoveColumns",
+        "note": "Whole columns move too. Dragging a column's KanbanColumnHandle lifts the column clear of the board while its siblings slide to open the space, and releasing reports the new position through onColumnMove. The handle is keyboard-operable the same way cards are: Space lifts, the left and right arrows walk the column between positions, Space drops, Escape cancels."
+      },
+      {
+        "name": "SecondPointerCannotHijack",
+        "note": "One gesture owns the board at a time. A second pointer pressed on another card while a drag is in flight is refused outright, so a stray finger or palm can never redirect — or settle — someone else's drag."
+      },
+      {
+        "name": "EscapeCancels",
+        "note": "Escape abandons a keyboard lift: the indicator disappears, nothing is reported through onCardMove, and the cancellation is announced."
+      },
+      {
+        "name": "StressBoard",
+        "note": "Three hundred and twenty cards across four scrollable columns. The drag store notifies only the dragged card and the hovered column's indicator, so the rest of the board stays inert while a card moves — and a drop across columns lands at the exact insertion point."
+      }
+    ]
+  },
+  "math-block": {
+    "title": "Components/MathBlock",
+    "component": "MathBlock",
+    "description": "A TeX formula rendered through KaTeX, standalone or composed automatically by MessageMarkdown for $…$ and $$…$$ math. While a formula streams in, invalid intermediate TeX keeps the last successful render on screen instead of flashing KaTeX's error state — the fix for mid-stream jitter — and until the first successful parse the raw source shows muted. Display formulas carry a copy control that copies the TeX in markdown form ($$…$$).",
+    "stories": [
+      {
+        "name": "Display",
+        "note": null
+      },
+      {
+        "name": "StreamingSafety",
+        "note": null
+      }
+    ]
+  },
+  "mermaid-diagram": {
+    "title": "Components/MermaidDiagram",
+    "component": "MermaidDiagram",
+    "description": "A Mermaid diagram rendered to SVG — one component for every Mermaid grammar: flowcharts, sequence diagrams, state and class diagrams, gantt charts, and the rest. It follows the nearest CodeBlockProvider's mode so diagrams switch light and dark with the app, keeps the last successful render on screen while streaming source is momentarily invalid, and carries a copy control for the Mermaid source. MessageMarkdown composes it automatically for ```mermaid fences.",
+    "stories": [
+      {
+        "name": "Flowchart",
+        "note": null
+      },
+      {
+        "name": "FullscreenViewer",
+        "note": null
+      },
+      {
+        "name": "SequenceDiagram",
+        "note": null
+      },
+      {
+        "name": "InvalidSource",
+        "note": null
+      },
+      {
+        "name": "StreamingSource",
+        "note": null
+      }
+    ]
+  },
+  "message-markdown": {
+    "title": "Components/MessageMarkdown",
+    "component": "MessageMarkdown",
+    "description": "Rich assistant replies inside a message: MessageMarkdown renders GitHub-flavored markdown — headings, lists, tables, task lists, blockquotes, links — and routes special content to Nessa's dedicated surfaces: fenced code to CodeBlock (Shiki syntax highlighting, themed app-wide through CodeBlockProvider), TeX math to MathBlock (KaTeX, jitter-free while streaming), and ```mermaid fences to MermaidDiagram (flowcharts, sequence diagrams, and every other Mermaid grammar, with a fullscreen pan-and-zoom viewer). Code, tables, and display math each carry a hover copy control that copies their original markdown source. Compose it inside a plain MessageBubble; while a reply streams, keep passing the partial source with the streaming prop set — the latest complete blocks render and newly arrived prose fades in with the same animation MessageStreamText uses, so streamed markdown and streamed plain text feel identical. Individual element renderers can still be replaced through the components prop.",
+    "stories": [
+      {
+        "name": "RichResponse",
+        "note": "A full markdown reply in a plain assistant bubble: headings, emphasis, an ordered list, a table, a blockquote, fenced SQL, a link, and a rule — every element styled with semantic tokens."
+      },
+      {
+        "name": "MathResponse",
+        "note": "TeX math renders through KaTeX: $…$ for inline expressions and $$…$$ for display equations, which scroll horizontally instead of overflowing narrow bubbles."
+      }
+    ]
+  },
+  "message-scroller": {
+    "title": "Components/MessageScroller",
+    "component": "MessageScroller",
+    "description": "A stick-to-bottom transcript scroller for streamed conversations. MessageScroller owns the live-edge state and exposes it as data-pinned; MessageScrollerViewport opens scrolled to the end and follows content growth with a ResizeObserver while the reader stays within a few pixels of the bottom — any scroll away releases the follow so the transcript never moves underneath someone rereading, and returning to the bottom re-pins it. MessageScrollerContent is a polite log live region (hosts supply the accessible name), and MessageScrollerButton floats over the bottom edge, appearing only while unpinned, to smooth-scroll the reader back to the newest content. Hosts can read the same state through useMessageScroller, and autoScroll={false} turns the viewport into a plain scroll region.",
+    "stories": [
+      {
+        "name": "LiveTranscript",
+        "note": "A reply streams into the transcript forever: the viewport opens pinned to the live edge and follows each chunk. Scrolling up releases the follow — the recorded position stays put while the stream continues — and the floating button returns and re-pins the reader at the bottom."
+      },
+      {
+        "name": "ManualBrowse",
+        "note": "Without a stream the scroller is a saved-thread reader: it opens at the newest message, the control stays hidden and unfocusable while pinned, appears once the reader scrolls back through history, and hides again after returning to the end."
+      }
+    ]
+  },
+  "message": {
+    "title": "Components/Message",
+    "component": "Message",
+    "description": "A composable chat message kit. Message lays out one conversation row and aligns it from the sender — from=\"user\" end-aligns, from=\"assistant\" start-aligns, and align overrides either — while exposing data-from and data-align for host styling. Inside it, MessageAvatar is an optional slot that renders an image with an initials fallback by default and accepts arbitrary children for fully custom avatars; MessageContent columns the optional MessageHeader, a MessageBubble, and the optional MessageFooter. The bubble ships three variants: muted for received messages, primary for sent messages, and plain for unbubbled prose such as assistant responses. MessageGroup tightens spacing between consecutive messages from the same sender. Slack-style threading composes from MessageThread wrapping a parent row, MessageThreadSummary — a facepile-plus-count button whose meta text swaps to an action label on hover, with expansion state host-owned via onClick and aria-expanded — and MessageThreadReplies, which indents replies to the parent's content column behind a connector rule. MessageActions is a hover-revealed action row under a bubble — MessageAction icon buttons alongside meta text such as the sent time — that also reveals while an action holds keyboard focus and hides again once the pointer moves on; what each action does, including swapping the bubble for an edit composer, stays host-owned. Every piece is an ordinary styled element, so hosts compose their own user and response message components from these primitives — or replace any slot entirely — instead of configuring a monolith.",
+    "stories": [
+      {
+        "name": "Conversation",
+        "note": "The default two-sided design: assistant rows start-align with an avatar, sender header, and muted bubble; user rows end-align with a primary bubble and status footer, no avatar."
+      },
+      {
+        "name": "PlainResponse",
+        "note": "Assistant responses can drop the bubble entirely with variant=\"plain\", spanning the full row like a prose reply while the user side keeps its bubble."
+      },
+      {
+        "name": "ActionsAndEditing",
+        "note": "MessageActions puts an icon-action row under the bubble — here the sent time with copy and edit on the user side, reactions on the assistant side — that stays transparent until the message row is hovered or an action receives keyboard focus. Every behavior is host-owned through onClick: copy writes the clipboard and swaps its icon to a check, the reactions toggle aria-pressed, and edit swaps the bubble for a compact ChatComposer prefilled with the message — Send commits the new text, Cancel or Escape restores the bubble unchanged. Compose the same row with retry, share, or anything else your transcript needs."
+      },
+      {
+        "name": "WithAttachments",
+        "note": "Attachments present one at a time in a uniform square tile — images fill the tile as a thumbnail, every other kind shows an icon with the name and meta stacked beneath, so a PDF, spreadsheet, or anything else reads the same. With more than one attachment a pager steps through them with previous/next controls around a live position counter. Clicking a tile is entirely host-owned: pass onClick and the tile renders as a button running whatever open, preview, or download behavior you want — here it just reports the opened file in the footer. On end-aligned rows the tile and pager right-align."
+      },
+      {
+        "name": "Avatars",
+        "note": "MessageAvatar renders an image when src resolves, falls back to initials when the image is missing or fails to load, and accepts children for a completely custom avatar treatment."
+      },
+      {
+        "name": "GroupedMessages",
+        "note": "MessageGroup stacks consecutive messages from the same sender with tightened spacing, so multi-bubble turns read as one unit while separate turns keep the thread gap."
+      },
+      {
+        "name": "AlignedThread",
+        "note": "align overrides the side derived from from: this Slack-style thread start-aligns every row — including the user's — while data-from keeps identifying the sender for styling, here tinting the user bubble."
+      },
+      {
+        "name": "ThreadedReplies",
+        "note": "Slack-style threading in a channel: MessageThread wraps the parent row, MessageThreadSummary shows a reply facepile and count whose meta swaps to \"View thread\" on hover, and clicking it mounts MessageThreadReplies — replies indented to the parent's content column behind a connector rule. Expansion state lives in the host via onClick and aria-expanded."
+      },
+      {
+        "name": "ReplyingInThread",
+        "note": "The thread panel while replying: the parent message on top, a reply-count divider, the replies full-width beneath it, and a reply input at the bottom — the same primitives recomposed without indentation, like Slack's thread pane."
+      },
+      {
+        "name": "CustomMessageComponents",
+        "note": "Hosts own the final user and response components: this example wraps the primitives into SupportUserMessage and SupportResponseMessage with a right-side avatar, asymmetric bubble corners, and an outlined response surface, then composes the thread from those instead of the defaults."
+      }
+    ]
+  },
+  "model-capability-controls": {
+    "title": "Components/ModelCapabilityControls",
+    "component": "ModelThinkingControl",
+    "description": "Independent composer controls for model capabilities. Render Fast only for models that support it and Thinking only when the selected model declares ordered thinking levels.",
+    "stories": [
+      {
+        "name": "ComposerControls",
+        "note": "Fast is an immediate toggle. Thinking opens a compact, ordered slider without changing ModelPicker geometry."
+      },
+      {
+        "name": "ThinkingOnly",
+        "note": "Capability-aware composition omits Fast entirely when the selected model does not support it."
+      },
+      {
+        "name": "SliderPrimitive",
+        "note": "The thick slider is independently consumable. Pointer dragging remains continuous between soft checkpoint detents, while keyboard input stays discrete and the energy fill preserves a reduced-motion fallback."
+      },
+      {
+        "name": "LocalizedSliderValueText",
+        "note": "Consumers can localize both detent and between-detent slider announcements without changing the visual catalog labels."
+      },
+      {
+        "name": "SliderSizes",
+        "note": "The slider defaults to the proportional 30px small treatment, while size=\"md\" preserves the original 36px geometry."
+      },
+      {
+        "name": "RtlSoftDetents",
+        "note": "RTL mirrors pointer geometry and horizontal keyboard movement while retaining the same continuous drag and soft checkpoint contract."
+      },
+      {
+        "name": "RtlComposedControl",
+        "note": "The composed control forwards explicit RTL direction through its portaled content and into slider geometry and keyboard navigation."
+      },
+      {
+        "name": "CatalogChangesDuringDrag",
+        "note": "Changing the ordered levels catalog cancels an active pointer preview before stale positions, labels, or bounds can leak into the new catalog."
+      },
+      {
+        "name": "LightSlider",
+        "note": "The compact slider remains fully token-driven in explicit Light mode."
+      },
+      {
+        "name": "UltraStrength",
+        "note": "Ultra keeps a constant violet-to-cyan fill gradient while a restrained, reduced-motion-safe sheen moves continuously from right to left."
+      },
+      {
+        "name": "UltraStrengthWide",
+        "note": "The continuous Ultra energy stream covers the complete range even when the public slider is substantially wider than the compact composer treatment."
+      },
+      {
+        "name": "StreamSpeedBoundaries",
+        "note": "The reusable stream-speed input clamps extreme finite values and safely falls back for non-finite or non-positive values."
+      },
+      {
+        "name": "NonUltraLast",
+        "note": "A non-Ultra last level carries substantial ordinal tension but remains slower and quieter than an explicitly accented Ultra launch."
+      },
+      {
+        "name": "SingleUltra",
+        "note": "A single explicitly accented Ultra level still owns the Ultra stream even though it has no ordinal siblings."
+      },
+      {
+        "name": "LiveReducedMotionPreference",
+        "note": "An active Ultra stream stops immediately when reduced motion is enabled and resumes only when motion is allowed again."
+      },
+      {
+        "name": "EmptySlider",
+        "note": "An empty disabled slider cannot enter its dragging visual state."
+      },
+      {
+        "name": "FastOnly",
+        "note": "Fast remains available as a standalone fallback for models that support Fast but expose no thinking levels."
+      },
+      {
+        "name": "UnavailableThinking",
+        "note": "An empty thinking catalog stays closed even when a controlled host requests open state."
+      },
+      {
+        "name": "UncontrolledAvailabilityTransition",
+        "note": "An uncontrolled open control closes when its catalog becomes unavailable and stays closed when levels return."
+      }
+    ]
+  },
+  "model-picker": {
+    "title": "Components/ModelPicker",
+    "component": "ModelPicker",
+    "description": "A provider-aware, searchable chooser dedicated to model and provider selection.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use a controlled value when model selection must stay synchronized with application settings or an active agent."
+      },
+      {
+        "name": "Open",
+        "note": "The open state is dedicated to model discovery; capability controls never alter its layout."
+      },
+      {
+        "name": "KimiLightMode",
+        "note": "Kimi uses its dark K mark on light model-picker surfaces so the provider and model identity remain visible."
+      },
+      {
+        "name": "KimiDarkMode",
+        "note": "Kimi switches to its white K mark on dark model-picker surfaces while preserving the blue brand accent."
+      },
+      {
+        "name": "ProviderTabs",
+        "note": "The canonical picker shows one provider catalog at a time with the provider rail fixed to the bottom and explicit keyboard navigation."
+      },
+      {
+        "name": "RtlProviderNavigation",
+        "note": "RTL direction mirrors horizontal provider-tab navigation while preserving the same logical provider order."
+      },
+      {
+        "name": "SingleProvider",
+        "note": "A one-provider catalog retains the same bottom rail and explicit tab-to-panel relationship as larger catalogs."
+      },
+      {
+        "name": "DisabledProviderFallback",
+        "note": "Catalog refreshes keep the provider rail's roving tab stop on an enabled provider when the previously active provider becomes unavailable."
+      },
+      {
+        "name": "StablePointerPreview",
+        "note": null
+      },
+      {
+        "name": "ControlledProviderSync",
+        "note": "A controlled selection changed by the host reveals its provider while the picker is open without overriding deliberate provider browsing."
+      },
+      {
+        "name": "ControlledOpenSync",
+        "note": "When selection changes while a controlled picker is closed, the next open synchronizes the visible provider to that selected model."
+      },
+      {
+        "name": "ControlledAsyncCatalogSync",
+        "note": "A controlled value keeps its provider when an already-open picker receives its catalog asynchronously."
+      },
+      {
+        "name": "UncontrolledAsyncCatalogSync",
+        "note": "An uncontrolled default value keeps its provider when an already-open picker receives its catalog asynchronously."
+      },
+      {
+        "name": "ControlledDisabledProviderSync",
+        "note": "A controlled selection returns from its catalog fallback when its disabled provider becomes eligible."
+      },
+      {
+        "name": "UncontrolledDisabledProviderSync",
+        "note": "An uncontrolled selection returns from its catalog fallback when its disabled provider becomes eligible."
+      },
+      {
+        "name": "CollisionFreeIds",
+        "note": "Opaque provider and model IDs remain distinct in accessible relationships even when their punctuation would collide under lossy sanitization."
+      },
+      {
+        "name": "Loading",
+        "note": "Loading is explicit so applications can fetch a runtime catalog without inventing placeholder models."
+      },
+      {
+        "name": "Empty",
+        "note": "An empty catalog remains unselected and communicates that no models matched or were discovered."
+      }
+    ]
+  },
+  "nucleo-icons": {
+    "title": "Foundation/Icons/Nucleo",
+    "component": "Icon",
+    "description": "The licensed Nucleo icon inventory used by Nessa examples. The count is derived from this catalog and guarded by repository validation.",
+    "stories": [
+      {
+        "name": "Inventory",
+        "note": "The complete licensed Nucleo icon inventory used by Nessa examples, with the tracked count derived from the same source."
+      }
+    ]
+  },
+  "popover-surface": {
+    "title": "Components/PopoverSurface",
+    "component": "PopoverSurface",
+    "description": "The floating overlay surface underneath Nessa's popover-style chrome: popover tokens over a hairline border, with elevation (md/xl shadow) and radius (lg/xl/2xl) variants. Purely presentational — positioning, portals, and dismissal stay with the consumer — and asChild projects the surface classes onto another element, such as a positioning library's content node. The EventCalendar's built-in confirmation dialog and quick-create demos sit on this surface.",
+    "stories": [
+      {
+        "name": "InlineCard",
+        "note": "The default surface (xl radius, md elevation) dressed as a small inline confirmation, composed from Nessa Buttons. The play test proves the surface by computed style — an opaque popover background and a solid hairline border — rather than class names."
+      },
+      {
+        "name": "Elevations",
+        "note": "The elevation and radius variants side by side: md shadow with lg radius for tight inline popups, xl shadow with 2xl radius for larger floating panels such as picker popovers. The play test asserts the two surfaces resolve different computed shadows."
+      }
+    ]
+  },
+  "questionnaire": {
+    "title": "Components/Questionnaire",
+    "component": "Questionnaire",
+    "description": "A composable question-flow surface for agent onboarding, feedback asks, and structured intake. Hosts stack a QuestionnaireHeader — with the batteries-included QuestionnaireProgress step counter or progress bar, or any custom chrome — above QuestionnaireItems, and close with a QuestionnaireActions row holding navigation and the QuestionnaireSubmit button. Each item is a real fieldset titled by its legend; answers come from QuestionnaireChoices (native radios or checkboxes under custom check indicators, single or multiple selection) and QuestionnaireInput for freeform text, and a wrapping form receives every answer as FormData.",
+    "stories": [
+      {
+        "name": "SingleChoice",
+        "note": "A single-selection question under a 'Question 1 of 2' step counter, wrapped in a form and finished with a QuestionnaireActions row holding the submit button. The choices are native radios — arrow keys move within the group, and clicking anywhere on a row selects it — drawn as circular indicators that fill with a translucent primary wash and a check when selected. The play test proves selection is exclusive by computed check-glyph opacity, not class names."
+      },
+      {
+        "name": "MultipleChoice",
+        "note": "A multiple-selection question under the bar variant of QuestionnaireProgress, closed by the actions row's submit button. The multiple flag on QuestionnaireChoices switches the native inputs to checkboxes — indicators become rounded squares, matching the kit's check-in-a-box glyph — and every toggle reports the full selection through onValueChange. The play test toggles rows on and off and asserts the drawn check by computed opacity."
+      },
+      {
+        "name": "TextAnswer",
+        "note": "A freeform question answered through QuestionnaireInput — the library Input wired to the item's field name for form submission — and closed by the submit button in the actions row. The item legend names the group, so the input carries its own accessible name via aria-label. The play test types an answer, asserts the value and the input's questionnaire slot wiring, and submits without leaving the page."
+      },
+      {
+        "name": "ComposedFlow",
+        "note": "Two questions composed into a stepped flow — the host owns the step and answer state while the questionnaire renders the active question, exactly the composition contract of the kit. The choices are controlled (value + onValueChange lifted to the host) so navigating Back preserves the answer instead of remounting to the default, and the actions row swaps Continue for the submit button on the final step. The play test answers question one, advances, asserts the counter re-announces 'Question 2 of 2' and the submit appears, then returns to prove the answer survived."
+      }
+    ]
+  },
+  "reference": {
+    "title": "Stripe Investor Letter",
+    "component": "Reference",
+    "description": "Inline citation for agent answers and research surfaces: a chip embedded in flowing text reveals its supporting evidence in a floating card on hover, keyboard focus, or touch tap, and clicking follows the source. The card takes the batteries-included ReferenceCard — source title, quoted excerpt, locator chip, source link, and a pager when a claim cites several sources — or any custom node the host supplies. The card is a pointer-first affordance; the chip itself is a real link, so keyboard and screen reader users always have a direct path to the source.",
+    "stories": [
+      {
+        "name": "CitedAnswer",
+        "note": "An agent answer with citation chips inline in the prose. Hovering a chip floats the source card above it — title, quoted excerpt, page locator, and an explicit source link — while clicking the chip itself follows the citation directly. The chips are deliberately smaller than the usual 24px target size: they sit inside a sentence and rely on the WCAG 2.5.8 (Target Size, Minimum) inline exception, which the play test identifies explicitly."
+      },
+      {
+        "name": "MultipleSources",
+        "note": "One claim, several sources: the header grows a pager. Arrows step through the cited documents, the locale-neutral count announces politely for screen readers, and the ends disable instead of wrapping so paging never loops silently. While a pager is present the excerpt region holds a fixed height and scrolls its overflow, so stepping between long and short quotes never shifts the card; hosts retune the height through ReferenceCard's excerptClassName and localize the pager through previousLabel/nextLabel."
+      },
+      {
+        "name": "KeyboardAccess",
+        "note": "The chip is a real link in the tab order: focusing it opens the card without a pointer, and the citation stays followable because the chip itself carries the href — the card is a pointer-first affordance, so the chip link is the guaranteed keyboard and screen reader path to the source. Focus moved into the card holds it open (it no longer vanishes on trigger blur), and Escape dismisses it from either side."
+      },
+      {
+        "name": "TouchAccess",
+        "note": "Touch has no hover, so the tap's synthesized click does the revealing: the first tap opens the card instead of navigating, and a second tap — or the card's title and source links — follows the source. Scroll gestures never synthesize a click, so a drag that happens to end on a chip cannot pop the card open. Tapping outside dismisses through Radix's outside-press dismissal."
+      },
+      {
+        "name": "CustomHoverContent",
+        "note": "Hosts are not locked to ReferenceCard: any node dropped into ReferenceContent becomes the hover surface. Here a bespoke paper preview with authors and venue chrome replaces the standard card."
+      }
+    ]
+  },
+  "searchable-listbox": {
+    "title": "Components/SearchableListbox",
+    "component": "SearchableListbox",
+    "description": "A searchable single-select list that owns filtering, roving focus, selection semantics, and async states while consumers render domain-specific row content.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use item identity and keyword callbacks to adapt domain records without reshaping them into presentation-only data. The search field draws no box of its own — browsers apply :focus-visible to editable fields on pointer focus too, so an outline there would frame the row for as long as the surface is open. The caret plus the row's focus treatment indicate focus, and options keep their visible focus outlines."
+      },
+      {
+        "name": "TrailingHints",
+        "note": "Row content is fully custom, so a trailing hint column is a consumer-side layout choice. Hints longer than the row truncate instead of widening the list past its container — the item wrapper is a flex column rather than a grid, because grid tracks size to their content and would defeat truncate on every row."
+      },
+      {
+        "name": "DisabledItems",
+        "note": "Disabled records remain discoverable by keyboard but cannot be selected."
+      },
+      {
+        "name": "Loading",
+        "note": "Loading keeps the search surface stable while replacing options with an announced status."
+      },
+      {
+        "name": "Empty",
+        "note": "An empty data source communicates its state without exposing an empty listbox."
+      }
+    ]
+  },
+  "sectioned-listbox": {
+    "title": "Components/SectionedListbox",
+    "component": "SectionedListbox",
+    "description": "A single-select list of items grouped under sticky section headers, with roving keyboard focus that moves continuously across section boundaries. Unlike SearchableListbox, it has no built-in search field — pair it with an external filter input when one is needed.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Section headers stay pinned to the top of the scroll container as items scroll beneath them."
+      },
+      {
+        "name": "DisabledItems",
+        "note": "Disabled items remain discoverable but are skipped by keyboard navigation, excluded from the roving tabstop, and cannot be selected."
+      },
+      {
+        "name": "SelectedButDisabled",
+        "note": "When the controlled value points at an item that is also disabled, it stays visibly selected but is excluded from the roving tabstop — focus falls back to the first enabled item instead of landing on an item the user cannot activate."
+      },
+      {
+        "name": "TrailingHints",
+        "note": "Row content is fully custom, so a trailing hint column (e.g. a shortcut or current value) is a consumer-side layout choice rather than a prop."
+      },
+      {
+        "name": "KeyboardCrossesSections",
+        "note": "Arrow-key navigation treats the list as one continuous sequence, moving from the last item of one section straight into the first item of the next."
+      },
+      {
+        "name": "Loading",
+        "note": "Loading replaces the sections with an announced status while keeping the surrounding surface stable."
+      },
+      {
+        "name": "Empty",
+        "note": "An empty data source communicates its state without exposing an empty listbox."
+      }
+    ]
+  },
+  "segmented-control": {
+    "title": "Components/SegmentedControl",
+    "component": "SegmentedControl",
+    "description": "A compact single-choice switcher: a bordered pill of pressed/unpressed buttons, the pattern Nessa's toolbars use for view and scale toggles (the GanttChart toolbar composes it for Day/Week/Month). One option is always selected, choosing another moves the pressed state and fires onValueChange, and the group takes an aria-label naming the choice it controls.",
+    "stories": [
+      {
+        "name": "ViewSwitcher",
+        "note": "An uncontrolled switcher in its natural habitat: three view options with a default. The play test selects another option and proves the pressed state moved by aria-pressed and by computed background — the selected option paints the secondary surface while the rest stay transparent."
+      },
+      {
+        "name": "Controlled",
+        "note": "A controlled switcher whose host owns the value and mirrors it below. The play test clicks through both options and asserts the mirrored value tracks the selection."
+      }
+    ]
+  },
+  "selection-tooltip": {
+    "title": "Components/SelectionTooltip",
+    "component": "SelectionTooltip",
+    "description": "A floating selection-callout pill in the spirit of the iOS text-selection menu: labeled actions separated by hairline rules, a chevron toggle, and a chevron-revealed shelf that scrolls horizontally with its scrollbar hidden. The host positions the pill over the selection and owns what every action does; only the shelf reveal is managed by the component.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Comment and Add to chat sit in the pill; the chevron reveals a shelf of further icon actions that scrolls horizontally without showing a scrollbar."
+      },
+      {
+        "name": "CommentMode",
+        "note": "Action clicks stay host-owned: this host swaps the pill's children into a comment composer when Comment is clicked, and back once the comment is saved. The component itself only manages the shelf reveal."
+      },
+      {
+        "name": "ControlledShelf",
+        "note": "The shelf reveal can be controlled through expanded and onExpandedChange, and any shelf item can collapse it via useSelectionTooltip — focus returns to the chevron toggle so keyboard users never land on a hidden element."
+      },
+      {
+        "name": "BelowSelection",
+        "note": "side=\"bottom\" floats the pill under the selection with the arrow pointing up; the arrow can be dropped entirely with arrow={false}."
+      }
+    ]
+  },
+  "sidebar-compositions": {
+    "title": "Components/Sidebar/Compositions",
+    "component": "Sidebar",
+    "description": "Purposeful combinations of public Sidebar primitives. These patterns demonstrate assembly and behavior without introducing additional runtime components.",
+    "stories": [
+      {
+        "name": "RichChatRow",
+        "note": null
+      },
+      {
+        "name": "NestedNavigation",
+        "note": null
+      },
+      {
+        "name": "HoverActions",
+        "note": null
+      },
+      {
+        "name": "LogicalDirection",
+        "note": null
+      },
+      {
+        "name": "RailBehavior",
+        "note": null
+      },
+      {
+        "name": "InsetVariant",
+        "note": null
+      }
+    ]
+  },
+  "sidebar-menu": {
+    "title": "Components/Sidebar/Primitives/Menu",
+    "component": "SidebarMenu",
+    "description": "A deliberately small sidebar menu API: one list, one composite item, and one loading item. Badge and Button remain generic components passed through SidebarMenuItem slots.",
+    "stories": []
+  },
+  "sidebar-primitives": {
+    "title": "Components/Sidebar/Primitives",
+    "component": "Sidebar",
+    "description": "The public Sidebar building blocks in one structural catalog. Use the nested Menu catalog for isolated row primitives, then move to Compositions to see purposeful combinations.",
+    "stories": [
+      {
+        "name": "Header",
+        "note": null
+      },
+      {
+        "name": "Content",
+        "note": null
+      },
+      {
+        "name": "Group",
+        "note": null
+      },
+      {
+        "name": "Footer",
+        "note": null
+      },
+      {
+        "name": "Trigger",
+        "note": null
+      },
+      {
+        "name": "Rail",
+        "note": null
+      }
+    ]
+  },
+  "sidebar": {
+    "title": "Components/Sidebar/Examples",
+    "component": "Sidebar",
+    "description": "Complete Sidebar examples across application navigation, themes, collapsed states, mobile overlays, non-collapsible layouts, and performance. Use Primitives for component-level contracts and Compositions for reusable patterns.",
+    "stories": [
+      {
+        "name": "ChatNavigation",
+        "note": null
+      },
+      {
+        "name": "Light",
+        "note": null
+      },
+      {
+        "name": "IconCollapsed",
+        "note": null
+      },
+      {
+        "name": "MobileIconCollapsed",
+        "note": null
+      },
+      {
+        "name": "NonCollapsible",
+        "note": null
+      },
+      {
+        "name": "MobileOverlay",
+        "note": null
+      },
+      {
+        "name": "Stress500Rows",
+        "note": null
+      }
+    ]
+  },
+  "split-view": {
+    "title": "Components/SplitView",
+    "component": "SplitView",
+    "description": "SplitView arranges panels along one axis with accessible, keyboard-operable separators between them. The group is persistence-free: it renders the layout it is given (controlled) or keeps a transient one locally (uncontrolled), reports every change through onLayoutChange, and announces settled gestures through onLayoutCommit so applications can persist layouts without the components ever owning storage. Panel constraints accept percentages or pixels and are re-resolved whenever the group resizes.",
+    "stories": [
+      {
+        "name": "TwoPanels",
+        "note": "The minimal composition: two panels and one separator. Drag the separator, or focus it and press the arrow keys, Home, or End."
+      },
+      {
+        "name": "Vertical",
+        "note": "Stack panels with the vertical orientation; separators become horizontal rows and respond to the up and down arrow keys."
+      },
+      {
+        "name": "NestedGroups",
+        "note": "Nest a SplitView inside a panel to split in both axes. Each group owns its own layout, so nesting composes without configuration."
+      },
+      {
+        "name": "CollapsiblePanel",
+        "note": "A collapsible panel snaps closed once a drag passes the halfway point below its minimum size, and snaps open the same way. Press Enter on the separator to toggle the collapse from the keyboard."
+      },
+      {
+        "name": "Controlled",
+        "note": "The application owns the layout: state lives outside, every change flows through onLayoutChange, and onLayoutCommit marks moments worth persisting. This is the integration the design-system contract prescribes for durable layouts."
+      },
+      {
+        "name": "KeyboardResize",
+        "note": "Separators implement the ARIA window-splitter pattern: focus one and resize with the arrow keys. The reported value range accounts for every neighboring constraint."
+      },
+      {
+        "name": "PointerResize",
+        "note": "Pointer resizing captures the pointer on the separator itself and measures every move against the gesture's starting layout, so clamped drags never drift."
+      }
+    ]
+  },
+  "tool-approval": {
+    "title": "Components/ToolApproval",
+    "component": "ToolApproval",
+    "description": "A tool-permission request card: an agent wants to run something and the person decides before it does. One composable request — ToolApprovalHeader with an icon and a heading stack of title plus description, a ToolApprovalCommand payload showing exactly what the tool is about to run (wrapping long commands, scrolling past a built-in height cap, and pretty-printing structured inputs via its `json` prop), and a ToolApprovalActions row of ToolApprovalAction buttons — renders on three surfaces chosen by `variant`: `docked` sits full-width directly above the chat composer, `floating` is a compact free-standing panel that also serves narrow viewports, and `notch` drops from the top display edge with a square top and rounded bottom corners. The card mounts with a token-driven entrance animation and is announced to assistive tech as a named group. Resolution is host-driven: set `resolution` (allowed or denied) when a choice is made — the card goes inert and plays the variant's exit motion — and unmount it from `onExited`, swapping in whatever follows.",
+    "stories": [
+      {
+        "name": "ComposerDocked",
+        "note": "The primary surface: the approval card docked directly above the composer, so the decision happens where the conversation already is, with the command panel showing exactly what the tool wants to run. Deny is the quiet ghost action and Allow once the primary; Always allow opens the scope menu — always, or just this session — each choice carrying a description that makes the grant's reach explicit before it is given. Every action shares one geometry, so weight is read from variant alone. This story deliberately leaves the request live so it can be clicked through by hand: its play test inspects the pending presentation, the size parity, and the scope menu. AllowFlow and DeniedFlow carry the resolution outcomes."
+      },
+      {
+        "name": "AllowFlow",
+        "note": null
+      },
+      {
+        "name": "DeniedFlow",
+        "note": null
+      },
+      {
+        "name": "ResolvedHistory",
+        "note": null
+      },
+      {
+        "name": "ExitFrameHold",
+        "note": null
+      },
+      {
+        "name": "FloatingPanel",
+        "note": "The compact free-standing panel for hosts that surface approvals as a floating window rather than in the transcript. It is deliberately tighter than a desktop permission dialog — capped at 24rem, one command line, three actions — so it reads as a card, not a modal takeover. The play test pins the width cap and the panel's elevation shadow with computed styles."
+      },
+      {
+        "name": "LinkAction",
+        "note": "An action rendered as something other than a button: `asChild` hands the styling to the child element, so a request that should link somewhere — the policy behind the permission, a doc — keeps the row's shape without pretending to be a button. The child owns the whole content, and no stray `type` attribute lands on the anchor. The play test asserts the rendered anchor, its href, the absent type, and that it matches its button sibling's height."
+      },
+      {
+        "name": "MobileSheet",
+        "note": "The floating variant answering a phone viewport, carrying a full structured tool input: the payload scrolls inside its height cap instead of pushing the actions off screen, and the actions restack into a full-width column — plain className overrides on ToolApprovalActions, no separate mobile component. The choice set stays at three so it never overwhelms: Allow once on top, Always allow opening the two scopes (always versus this session) as a trigger-width sheet-like menu, Deny last. The play test asserts the column restack, opens the scope menu, and checks the payload's scroll overflow from computed styles."
+      },
+      {
+        "name": "LongCommand",
+        "note": "Agents rarely ask to run one tidy line. Past the built-in height cap the command panel scrolls instead of stretching the card, lines keep wrapping so nothing hides off the right edge, and the region gains a tab stop with an inset focus outline only while it actually overflows — a short payload never mints one. The play test asserts the cap, the live scroll overflow, the keyboard reachability, and the wrapped lines from computed styles."
+      },
+      {
+        "name": "StructuredJsonInput",
+        "note": "A structured tool input passed through the `json` prop: objects (or JSON strings, parsed first) render through the JsonTree component — muted keys, emphasized values, real JSON punctuation — so the person can actually read what the tool is about to receive. Fold toggles stay off here (`jsonCollapsible` opts in) because an approval surface owes the person the whole payload. The play test asserts the JsonTree render, the key/value color split, and that no toggles exist."
+      },
+      {
+        "name": "NotchDrop",
+        "note": null
+      }
+    ]
+  },
+  "tool-call": {
+    "title": "Components/ToolCall",
+    "component": "ToolCall",
+    "description": "One tool invocation in an agent transcript: a compact disclosure row that names the tool — shimmering while it runs — and expands into the call's details. Compose the body from ToolCallTabs (input and output payloads), ToolCallDiff (an edit as a unified diff), and ToolCallFile (clickable chips for touched files). Hosts map their own tool names to icons and pass the match to the trigger.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "The default body is ToolCallTabs: the call's input and output as a small tab pair. The trigger toggles the disclosure and carries the expanded state on `aria-expanded`."
+      },
+      {
+        "name": "Running",
+        "note": "While `status` is `running` the row is `aria-busy` and the label sweeps a foreground highlight across otherwise muted text. The shimmer is painted with theme tokens and clipped to the glyphs, so the label stays real, selectable text, and reduced motion renders it static."
+      },
+      {
+        "name": "EditDiff",
+        "note": "An Edit call expands into ToolCallDiff: a unified diff computed from the before and after contents, syntax-highlighted and themed through the same CodeBlockProvider configuration as every other code surface."
+      },
+      {
+        "name": "FileActions",
+        "note": "ToolCallFile chips list the files a call touched. With `onClick` a chip renders as a button and the host wires the action — opening the file, revealing it in a tree — while without one it is a plain reference."
+      },
+      {
+        "name": "ErrorStatus",
+        "note": "A failed call tints the trigger destructive and keeps the payload inspectable — the output pane carries the error the tool returned."
+      },
+      {
+        "name": "AgentTranscript",
+        "note": "The intended composition: a run of tool calls in an assistant turn, each row a collapsed summary until the reader digs in. Icons are host-supplied per tool — collect your own set and map tool names to glyphs at the call site."
+      }
+    ]
+  },
+  "workflow-canvas": {
+    "title": "Components/WorkflowCanvas",
+    "component": "WorkflowCanvas",
+    "description": "WorkflowCanvas is a pannable, zoomable window onto a plane of nodes and edges. The canvas is infinite by default or confined by bounds; the viewport is controlled or uncontrolled and reported through onViewportChange. Nodes are plain containers that render any content — cards, forms, even a whole nested canvas — drag with the pointer, move with arrow keys, and anchor edges by id. Handles on node sides reveal on hover and focus (the default dot swaps for any custom indicator passed as children) and draw live connections that settle through onConnect. Edges auto-align by default — each one leaves and enters whichever facing sides connect its nodes most directly, re-routing live as nodes move; pin sides with sourceSide/targetSide or disable with autoAlign={false}. An edge with onClick becomes a focusable button with a generous hit area for selection; its line restyles through className, the pending line through the connectionLine slot, and useWorkflowCanvasEdgeGeometry backs fully custom edge components. Delete or Backspace on a focused node or edge reports through its onDelete; a connection released over empty canvas reports its drop point through onConnectEnd, ready for follow-up UI like a node palette; and WorkflowCanvasNodeToggle with WorkflowCanvasNodeBody folds any node — a whole nested subflow included — down to its header until it is wanted. A canvas nested inside another canvas' node presents read-only by default (pan, zoom, resize, and collapse only — no dragging, connecting, or deleting; readOnly={false} opts back in), and nesting is meant to stop at one level: represent deeper workflows as plain nodes whose open control navigates to that flow. Geometry lives in a per-node subscription store, so moving one node re-renders only that node and the edges attached to it; panning and zooming touch a single transform. That keeps interactions smooth with thousands of nodes on the plane.",
+    "stories": [
+      {
+        "name": "WorkflowBoard",
+        "note": "A small automation board at app fidelity: job cards as nodes over the dotted grid, auto-aligned edges taking the most direct route between cards, and handles revealing on hover and focus. Edges are selectable — click or focus one and press Enter — dragging from a handle onto another card records a new connection through onConnect, and Delete or Backspace on a focused node or edge removes it through onDelete."
+      },
+      {
+        "name": "DragNode",
+        "note": "Dragging a node captures the pointer on the node itself and measures every move against the gesture's starting position, converted through the current zoom. The settled position is reported once through onPositionCommit, and the click that ends a drag never fires as an activation."
+      },
+      {
+        "name": "ConnectWithKeyboard",
+        "note": "The mouse-free path to the same connection gesture, for keyboard users: Tab to a node's handle and press Enter to arm a connection from it — the handle presses in, every handle on the canvas reveals, and no line is drawn yet because the free end has nowhere to be. Then Tab to a handle on another node and press Enter to complete it through onConnect, or press Escape (or click the background) to abandon it. Armed connections also cancel themselves if their source node is deleted, so nothing is ever left dangling."
+      },
+      {
+        "name": "ConnectWithPointer",
+        "note": "Dragging from a handle draws a live dashed connection line; releasing over another node settles the connection onto that node's nearest side and reports it through onConnect."
+      },
+      {
+        "name": "PanAndZoom",
+        "note": "The focused canvas pans with the arrow keys and zooms with + and -; the whole plane moves through a single transform on the surface, so nodes never re-render while navigating."
+      },
+      {
+        "name": "BoundedCanvas",
+        "note": "Bounds confine the canvas to a finite region: panning clamps so the window never leaves it, and dragged nodes stop at its edges. Omit bounds and the same canvas is infinite."
+      },
+      {
+        "name": "NestedWorkflow",
+        "note": "Nodes host complete nested canvases, and nesting deliberately stops at one level: only one subflow canvas renders at a time, and anything deeper appears as a plain node whose maximize control navigates to that flow instead of recursing. A nested canvas detects its nesting and turns readOnly on by default; this demo passes readOnly={false} so the enrichment preview is fully editable — its inner nodes drag and connect in place. Every subflow carries a maximize control: the enrichment header's opens it as its own workflow, and the dedupe node inside does the same one level further, each view returning with a back button. The preview canvas is bounded to the stretch of plane its nodes occupy — panning and zooming can never wander into empty space — and a small reset control at its foot sends the view home. The title stretch of the header is the collapse toggle, so pressing the title folds the subflow, and the card itself carries a native resize grip — a press on the grip corner resizes instead of dragging, and the preview fills the card, growing in proportion as the card grows."
+      },
+      {
+        "name": "CustomEdgesAndHandles",
+        "note": "Every visual is replaceable: the edge line restyles through className, the pending connection line through the connectionLine slot on WorkflowCanvasEdges, the handle dot swaps for any custom indicator passed as children, and useWorkflowCanvasEdgeGeometry powers fully custom edge components — here, a midpoint label riding its edge."
+      },
+      {
+        "name": "AutoAlignedEdges",
+        "note": "Edges auto-align by default: each one leaves and enters whichever facing sides connect its nodes most directly, so a target moved to the other flank re-routes cleanly instead of looping the long way around. The second edge pins the static right-to-left routing with autoAlign={false} for comparison; explicit sourceSide/targetSide pins a single side the same way."
+      },
+      {
+        "name": "ConnectDropPalette",
+        "note": "Releasing a drawn connection over empty canvas reports the drop point through onConnectEnd, and what happens next is entirely the consumer's — here an Add-job palette lands just past the released line end, visibly distinct from real nodes (dashed accent border, raised popover surface, a dismiss control) so it reads as a chooser rather than a job. A dashed preview edge shows where the chosen node will attach; the palette itself drags like any node, and choosing an option creates the node wherever the palette sits and wires the connection to it. Walking away closes it: the canvas' onDismiss fires on a background press or on a dismiss shortcut — Escape by default, configurable through dismissKeys. Any component works in that role: a menu, a search field, a form."
+      },
+      {
+        "name": "StressThousandNodes",
+        "note": "One thousand nodes and a hub carrying 250 edges. Geometry subscriptions keep the graph honest at this scale: dragging the hub re-renders the hub and its edges while the other 999 nodes stay untouched, and every edge keeps tracking its endpoints."
+      }
+    ]
+  }
+}

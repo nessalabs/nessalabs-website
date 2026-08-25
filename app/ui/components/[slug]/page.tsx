@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, CodeBlock, PropTable } from "@/components/nessa-ui";
+import { CodeBlock } from "@nessa-ui/react";
 import { ComponentPreview } from "@/components/site/component-preview";
 import { getComponent, registry } from "@/registry";
 
@@ -29,61 +29,78 @@ export default async function ComponentPage({
   const doc = getComponent(slug);
   if (!doc) notFound();
 
-  // Composites need the full column width to read properly.
-  const wide = doc.group === "Composites";
-
   const index = registry.findIndex((c) => c.slug === slug);
   const prev = registry[index - 1];
   const next = registry[index + 1];
+  const wide = doc.group === "Composites";
 
   return (
     <div className={wide ? "max-w-5xl" : "max-w-3xl"}>
-      <div className="mb-2 text-sm font-medium text-dim">{doc.group}</div>
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-fg">
-          {doc.name}
-        </h1>
-        {doc.status === "beta" ? <Badge tone="warn">beta</Badge> : null}
+      <div className="mb-2 text-sm font-medium text-muted-foreground">
+        {doc.group}
       </div>
-      <p className="mt-4 text-base leading-7 text-muted">{doc.description}</p>
+      <h1 className="text-3xl font-semibold tracking-tight">{doc.name}</h1>
+      <p className="mt-4 text-base leading-7 text-muted-foreground">
+        {doc.description}
+      </p>
 
       <div className="mt-10">
-        <ComponentPreview previewId={doc.slug} code={doc.usage} />
+        <ComponentPreview previewId={doc.slug} />
       </div>
 
-      <h2 className="mt-12 mb-4 text-lg font-semibold text-fg">Installation</h2>
+      <h2 className="mt-12 mb-4 text-lg font-semibold">Installation</h2>
       <CodeBlock
-        lang="bash"
-        filename="Terminal"
-        code={`npx nessa-ui@latest add ${doc.slug}`}
+        language="bash"
+        code={`npx shadcn@latest add https://nessalabs.ai/r/${doc.slug}.json`}
       />
 
       {doc.examples?.length ? (
         <>
-          <h2 className="mt-12 mb-4 text-lg font-semibold text-fg">Examples</h2>
+          <h2 className="mt-12 mb-4 text-lg font-semibold">Examples</h2>
           <div className="space-y-8">
-            {doc.examples.map((ex) => (
-              <div key={ex.id}>
-                <div className="mb-3 text-sm font-medium text-dim">
-                  {ex.title}
+            {doc.examples.map((example) => (
+              <div key={example.id}>
+                <div className="mb-3 text-sm font-medium text-muted-foreground">
+                  {example.title}
                 </div>
-                <ComponentPreview previewId={ex.id} code={ex.code ?? doc.usage} />
+                <ComponentPreview previewId={example.id} />
               </div>
             ))}
           </div>
         </>
       ) : null}
 
-      <h2 className="mt-12 mb-4 text-lg font-semibold text-fg">
-        API reference
-      </h2>
-      <PropTable rows={doc.props} />
+      {doc.stories?.length ? (
+        <>
+          <h2 className="mt-12 mb-2 text-lg font-semibold">
+            Behaviours in the library
+          </h2>
+          <p className="mb-4 text-sm leading-6 text-muted-foreground">
+            Every behaviour the component ships with, as covered by its
+            storybook. The previews above show a subset.
+          </p>
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {doc.stories.map((story) => (
+              <li key={story.name} className="p-4">
+                <div className="text-sm font-medium">
+                  {story.name.replace(/([a-z])([A-Z])/g, "$1 $2")}
+                </div>
+                {story.note ? (
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {story.note}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
-      <nav className="mt-16 flex items-center justify-between gap-4 border-t border-line pt-6">
+      <nav className="mt-16 flex items-center justify-between gap-4 border-t border-border pt-6">
         {prev ? (
           <Link
             href={`/ui/components/${prev.slug}`}
-            className="text-sm text-dim hover:text-fg"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← {prev.name}
           </Link>
@@ -93,7 +110,7 @@ export default async function ComponentPage({
         {next ? (
           <Link
             href={`/ui/components/${next.slug}`}
-            className="text-sm text-dim hover:text-fg"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             {next.name} →
           </Link>

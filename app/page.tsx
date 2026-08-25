@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/nessa-ui";
+import { Button } from "@nessa-ui/react";
 import { Announce } from "@/components/site/announce";
 import { AsciiArt } from "@/components/site/ascii-art";
 
@@ -23,13 +23,13 @@ export default function HomePage() {
           </Announce>
         </div>
 
-        <h1 className="animate-fade-up mt-8 text-4xl font-semibold leading-[1.1] tracking-tight text-fg sm:text-6xl">
+        <h1 className="animate-fade-up mt-8 text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl">
           Research for systems
           <br />
           that think.
         </h1>
 
-        <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-base text-muted">
+        <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-base text-muted-foreground">
           Research, agents, and the interfaces between them.
         </p>
 

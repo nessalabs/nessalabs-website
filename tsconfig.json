@@ -25,6 +25,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@nessa-ui/react": [
+        "./nessa-ui/index.ts"
       ]
     }
   },

@@ -1,44 +1,24 @@
 "use client";
 
-import { CodeBlock, Tabs } from "@/components/nessa-ui";
+import { CodeBlock } from "@nessa-ui/react";
 import { previews } from "@/registry/previews";
 import { previewSource } from "@/registry/preview-source.generated";
 
-export function ComponentPreview({
-  previewId,
-  code,
-}: {
-  previewId: string;
-  /** Fallback when a preview has no generated source. */
-  code: string;
-}) {
+export function ComponentPreview({ previewId }: { previewId: string }) {
   const preview = previews[previewId];
-  // The code tab shows what actually renders above it, extracted from
-  // registry/previews.tsx at build time.
-  const source = previewSource[previewId] ?? code;
+  // The code tab shows what renders above it, extracted from the demo source.
+  const source = previewSource[previewId];
 
   return (
-    <Tabs
-      items={[
-        {
-          value: "preview",
-          label: "Preview",
-          content: (
-            <div className="flex min-h-52 items-center justify-center rounded-xl border border-line bg-surface p-8">
-              {preview ?? (
-                <span className="text-sm text-dim">
-                  no preview registered
-                </span>
-              )}
-            </div>
-          ),
-        },
-        {
-          value: "code",
-          label: "Code",
-          content: <CodeBlock code={source} showLineNumbers />,
-        },
-      ]}
-    />
+    <div className="space-y-3">
+      <div className="flex min-h-52 items-center justify-center overflow-x-auto rounded-xl border border-border bg-card p-6">
+        {preview ?? (
+          <span className="text-sm text-muted-foreground">
+            No preview registered
+          </span>
+        )}
+      </div>
+      {source ? <CodeBlock language="tsx" code={source} /> : null}
+    </div>
   );
 }

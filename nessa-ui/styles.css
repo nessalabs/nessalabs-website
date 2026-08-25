@@ -1,0 +1,10 @@
+@layer theme, base, nessa-components, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "./theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(nessa-components);
+
+@source "./components";
+@source "./composites";
+
+@custom-variant dark (&:is(.dark *));

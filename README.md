@@ -21,15 +21,18 @@ exists only for this site — the hero ASCII field, the announcement pill, the
 marketing nav — lives in `components/site` and is deliberately not in the
 registry.
 
-## Stack
+## The library
 
-- Next.js (App Router) + React 19
-- TypeScript
-- Tailwind CSS v4 — semantic tokens in `app/globals.css`; light is the `@theme`
-  default and dark swaps the same variables via `prefers-color-scheme` or
-  `data-theme` on `<html>`
-- JetBrains Mono / Inter via `next/font`
-- Deployed on Vercel
+The site documents **@nessa-ui/react**, the real package from the nessa-ui
+repo. Its source is vendored into `nessa-ui/` by `npm run sync:ui`, which
+copies `packages/react/src` and rewrites the package's own `@/…` imports.
+Nothing in this repo re-implements a component.
+
+Publishing `@nessa-ui/react` to npm would replace the vendoring with a plain
+dependency — that is the intended end state, and the only reason it is vendored
+today is that the package is unpublished and this app deploys standalone.
+
+## Stack
 
 ## Getting started
 

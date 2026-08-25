@@ -1,0 +1,137 @@
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  /* Darker than stock shadcn (0.556): the gate requires 4.5:1 on --muted. */
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.235 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.556 0 0);
+  --radius: 0.625rem;
+  --nessa-font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --nessa-font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
+  --nessa-motion-duration-instant: 0ms;
+  --nessa-motion-duration-fast: 120ms;
+  --nessa-motion-duration-normal: 200ms;
+  --nessa-motion-duration-slow: 300ms;
+  --nessa-motion-duration-ambient: 3.2s;
+  --nessa-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --nessa-motion-easing-emphasized: cubic-bezier(0.4, 0, 0.2, 1);
+  --nessa-thinking-fill-base: oklch(0.56 0.2 265);
+  --nessa-thinking-fill-current: oklch(0.68 0.2 304);
+  --nessa-thinking-fill-highlight: oklch(0.86 0.11 214);
+  --nessa-fast-mode-active: oklch(0.57 0.22 300);
+  --nessa-diff-addition: oklch(0.5 0.137 150);
+  --nessa-diff-deletion: oklch(0.55 0.19 27);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.187 22.216);
+  --destructive-foreground: oklch(0.145 0 0);
+  /* 12% instead of stock shadcn 10%: the gate requires 3:1 on --background. */
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.141 0.005 285.823);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.274 0.006 286.033);
+  --sidebar-ring: oklch(0.708 0 0);
+  --nessa-thinking-fill-base: oklch(0.54 0.19 264);
+  --nessa-thinking-fill-current: oklch(0.67 0.2 306);
+  --nessa-thinking-fill-highlight: oklch(0.82 0.12 210);
+  --nessa-fast-mode-active: oklch(0.72 0.185 306);
+  --nessa-diff-addition: oklch(0.77 0.17 152);
+  --nessa-diff-deletion: oklch(0.7 0.19 25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  :where([data-nessa-root], [data-nessa-theme], [data-nessa-scale]) {
+    --nessa-motion-duration-fast: 0ms;
+    --nessa-motion-duration-normal: 0ms;
+    --nessa-motion-duration-slow: 0ms;
+    --nessa-motion-duration-ambient: 0ms;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--nessa-font-sans);
+  --font-mono: var(--nessa-font-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-xs: calc(var(--radius) * 0.5);
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: calc(var(--radius) * 0.875);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --animate-nessa-enter: nessa-enter var(--nessa-motion-duration-normal)
+    var(--nessa-motion-easing-standard) both;
+
+  /* Entrance for content that appears in place (palettes, callouts):
+     opacity plus the individual scale property, never transform, so a
+     positioned element's own translate stays untouched. The duration
+     token collapses to 0ms under reduced motion. */
+  @keyframes nessa-enter {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+}

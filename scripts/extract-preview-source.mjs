@@ -7,17 +7,27 @@
  * module-level helper it references, transitively, and an import line for the
  * nessa-ui components it uses.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const source = readFileSync(join(root, "registry/previews.tsx"), "utf8");
+
+/** The previews map, plus the demo modules its entries render. */
+const previewsFile = readFileSync(join(root, "registry/previews.tsx"), "utf8");
+const demoDir = join(root, "registry/demos");
+const demoFiles = readdirSync(demoDir)
+  .filter((name) => name.endsWith(".tsx"))
+  .map((name) => readFileSync(join(demoDir, name), "utf8"));
+
+const source = [previewsFile, ...demoFiles].join("\n\n");
 
 /** Everything exported by the library, so we can build the import line. */
-const importedNames = (
-  source.match(/import \{([\s\S]*?)\} from "@\/components\/nessa-ui";/)?.[1] ?? ""
-)
+const importedNames = [
+  ...source.matchAll(/import \{([\s\S]*?)\} from "@nessa-ui\/react";/g),
+]
+  .map((m) => m[1])
+  .join(",")
   .split(",")
   .map((name) => name.trim())
   .filter(Boolean);
@@ -64,18 +74,48 @@ function readBalanced(text, start, open, close) {
   return -1;
 }
 
+/**
+ * Blanks out template-literal contents while preserving offsets, so code inside
+ * a demo's sample string is never mistaken for a declaration.
+ */
+function maskTemplates(text) {
+  let out = "";
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "`") {
+      let j = i + 1;
+      while (j < text.length && !(text[j] === "`" && text[j - 1] !== "\\")) j++;
+      out += "`" + " ".repeat(Math.max(0, j - i - 1)) + "`";
+      i = j + 1;
+      continue;
+    }
+    out += text[i];
+    i++;
+  }
+  return out;
+}
+
 /** Module-level `const NAME = …` and `function Name(…) {…}` declarations. */
 function collectDeclarations() {
   const declarations = new Map();
 
-  const constRe = /^const ([A-Za-z_$][\w$]*)(?::[^=]+)?\s*=/gm;
+  const masked = maskTemplates(source);
+  const constRe = /^(?:export )?const ([A-Za-z_$][\w$]*)(?::[^=]+)?\s*=/gm;
   let match;
-  while ((match = constRe.exec(source))) {
+  while ((match = constRe.exec(masked))) {
     const startOfLine = match.index;
     const valueStart = match.index + match[0].length;
-    const opener = source.slice(valueStart).match(/[[{(]/);
+    const opener = source.slice(valueStart).match(/[[{(`]/);
     let end;
-    if (opener && source.slice(valueStart, valueStart + opener.index).trim() === "") {
+    const leading = opener
+      ? source.slice(valueStart, valueStart + opener.index).trim()
+      : "x";
+    if (opener && leading === "" && opener[0] === "`") {
+      // Template literal: run to the matching unescaped backtick.
+      let i = valueStart + opener.index + 1;
+      while (i < source.length && !(source[i] === "`" && source[i - 1] !== "\\")) i++;
+      end = i + 1;
+    } else if (opener && leading === "") {
       const openIndex = valueStart + opener.index;
       const pairs = { "[": "]", "{": "}", "(": ")" };
       end = readBalanced(source, openIndex, opener[0], pairs[opener[0]]) + 1;
@@ -86,8 +126,8 @@ function collectDeclarations() {
     declarations.set(match[1], `${text}${text.endsWith(";") ? "" : ";"}`);
   }
 
-  const fnRe = /^function ([A-Za-z_$][\w$]*)\s*\(/gm;
-  while ((match = fnRe.exec(source))) {
+  const fnRe = /^(?:export )?function ([A-Za-z_$][\w$]*)\s*\(/gm;
+  while ((match = fnRe.exec(masked))) {
     // Close the parameter list first — destructured params contain braces of
     // their own, so the body starts after the balanced ")".
     const parenStart = match.index + match[0].length - 1;
@@ -104,12 +144,12 @@ const declarations = collectDeclarations();
 
 /** Entries of the `previews` object literal, in order. */
 function collectPreviews() {
-  const objectStart = source.indexOf(
+  const objectStart = previewsFile.indexOf(
     "export const previews: Record<string, React.ReactNode> = {"
   );
-  const braceStart = source.indexOf("{", objectStart);
-  const braceEnd = readBalanced(source, braceStart, "{", "}");
-  const body = source.slice(braceStart + 1, braceEnd);
+  const braceStart = previewsFile.indexOf("{", objectStart);
+  const braceEnd = readBalanced(previewsFile, braceStart, "{", "}");
+  const body = previewsFile.slice(braceStart + 1, braceEnd);
 
   const entries = [];
   let i = 0;
@@ -185,13 +225,14 @@ function importLine(blocks) {
   const used = new Set();
   const text = blocks.join("\n");
   for (const name of text.match(/\b[A-Z][\w$]*\b/g) ?? []) {
-    if (libraryExports.has(name)) used.add(name);
+    // Locally declared demos are printed inline; only library names import.
+    if (libraryExports.has(name) && !declarations.has(name)) used.add(name);
   }
   if (!used.size) return null;
   const names = [...used]
     .sort()
     .map((name) => (typeOnly.has(name) ? `type ${name}` : name));
-  return `import { ${names.join(", ")} } from "@/components/nessa-ui"`;
+  return `import { ${names.join(", ")} } from "@nessa-ui/react"`;
 }
 
 const output = [];

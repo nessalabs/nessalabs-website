@@ -1,136 +1,87 @@
 @import "tailwindcss";
 
+/* The library's own tokens and component sources. */
+@import "../nessa-ui/theme.css";
+@source "../nessa-ui";
+
 /*
- * Semantic tokens. @theme holds the light values; the blocks below swap the
- * same variables for dark, either from the OS (when no explicit choice has been
- * made) or from data-theme on <html> once the user picks.
+ * nessa-ui ships light tokens on :root and dark under `.dark`. This app also
+ * stamps data-theme for its own toggle, so both selectors drive the variant.
  */
-@theme {
-  --color-ink: #ffffff;
-  --color-surface: #fafafa;
-  --color-raised: #f4f4f5;
-  --color-line: #e4e4e7;
-  --color-line-soft: #efeff1;
-  --color-fg: #18181b;
-  --color-muted: #52525b;
-  --color-dim: #8a8a93;
-  --color-success: #047857;
-  --color-warn: #b45309;
-  --color-danger: #b91c1c;
+@custom-variant dark (&:is(.dark, [data-theme="dark"], .dark *, [data-theme="dark"] *));
 
-  /* syntax */
-  --color-code-keyword: #7c3aed;
-  --color-code-string: #047857;
-  --color-code-number: #b45309;
-  --color-code-tag: #be123c;
-  --color-code-attr: #1d4ed8;
-  --color-code-fn: #0369a1;
+/*
+ * Site chrome is written against these semantic aliases, mapped onto the
+ * library's tokens so the marketing pages and the components share one palette.
+ */
+@theme inline {
+  --color-ink: var(--background);
+  --color-surface: var(--card);
+  --color-raised: var(--secondary);
+  --color-line: var(--border);
+  --color-fg: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-dim: var(--muted-foreground);
+  --color-success: var(--nessa-status-success, oklch(0.6 0.13 160));
+  --color-warn: var(--nessa-status-warning, oklch(0.68 0.15 75));
+  --color-danger: var(--destructive);
 
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-ink: #08080a;
-    --color-surface: #101013;
-    --color-raised: #17171b;
-    --color-line: #26262b;
-    --color-line-soft: #1a1a1e;
-    --color-fg: #f4f4f5;
-    --color-muted: #a1a1aa;
-    --color-dim: #71717a;
-    --color-success: #34d399;
-    --color-warn: #fbbf24;
-    --color-danger: #f87171;
-    --color-code-keyword: #c4b5fd;
-    --color-code-string: #86efac;
-    --color-code-number: #fcd34d;
-    --color-code-tag: #fda4af;
-    --color-code-attr: #93c5fd;
-    --color-code-fn: #7dd3fc;
-  }
-}
-
-:root[data-theme="dark"] {
-  --color-ink: #08080a;
-  --color-surface: #101013;
-  --color-raised: #17171b;
-  --color-line: #26262b;
-  --color-line-soft: #1a1a1e;
-  --color-fg: #f4f4f5;
-  --color-muted: #a1a1aa;
-  --color-dim: #71717a;
-  --color-success: #34d399;
-  --color-warn: #fbbf24;
-  --color-danger: #f87171;
-  --color-code-keyword: #c4b5fd;
-  --color-code-string: #86efac;
-  --color-code-number: #fcd34d;
-  --color-code-tag: #fda4af;
-  --color-code-attr: #93c5fd;
-  --color-code-fn: #7dd3fc;
+  --font-sans: var(--nessa-font-sans);
+  --font-mono: var(--nessa-font-mono);
 }
 
 * {
-  border-color: var(--color-line);
+  border-color: var(--border);
 }
 
 body {
-  background: var(--color-ink);
-  color: var(--color-fg);
-  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--nessa-font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 code,
 pre {
-  font-family: var(--font-mono);
+  font-family: var(--nessa-font-mono);
 }
 
 ::selection {
-  background: var(--color-fg);
-  color: var(--color-ink);
+  background: var(--foreground);
+  color: var(--background);
 }
 
-/* Themed scrollbars: overlay-style, follows the palette in both themes. */
+/* Themed scrollbars: overlay-style, following the palette in both themes. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-line) transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-line);
+  background: var(--border);
   background-clip: padding-box;
   border: 3px solid transparent;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-dim);
+  background: var(--muted-foreground);
   background-clip: padding-box;
 }
 
 @utility bg-radial-fade {
   background: radial-gradient(
     ellipse 70% 60% at 50% 45%,
-    color-mix(in srgb, var(--color-ink) 65%, transparent) 0%,
-    var(--color-ink) 80%
+    color-mix(in srgb, var(--background) 65%, transparent) 0%,
+    var(--background) 80%
   );
-}
-
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
 }
 
 @keyframes fade-up {
@@ -138,12 +89,8 @@ pre {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-blink { animation: blink 1.1s steps(1) infinite; }
 .animate-fade-up { animation: fade-up 0.6s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-blink,
-  .animate-fade-up {
-    animation: none;
-  }
+  .animate-fade-up { animation: none; }
 }

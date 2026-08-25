@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { themeScript } from "@/components/nessa-ui";
+import { themeScript } from "@/components/site/theme-toggle";
 import { SiteNav } from "@/components/site/site-nav";
 import "./globals.css";
 
