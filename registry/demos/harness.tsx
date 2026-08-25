@@ -4,6 +4,11 @@ import * as React from "react";
 import {
   Calendar,
   Columns2,
+  Database,
+  FileCode,
+  FileJson,
+  FileSearch,
+  FileText,
   KanbanSquare,
   LogOut,
   Maximize2,
@@ -13,7 +18,9 @@ import {
   Plus,
   Rows2,
   Mic,
+  Rocket,
   Settings,
+  Sparkles,
   Terminal as TerminalIcon,
   Workflow,
   X,
@@ -26,7 +33,6 @@ import {
   AppShellBody,
   AppShellDock,
   AppShellDockSide,
-  AppShellHeader,
   AppShellMain,
   AppShellPaneDragHandle,
   AppShellWorkspace,
@@ -53,6 +59,7 @@ import {
   ModelPicker,
   ModelThinkingControl,
   PaneSplitDirection,
+  SectionedListbox,
   ToolCall,
   ToolCallTrigger,
   createAppShellLayout,
@@ -61,7 +68,9 @@ import {
   type ComposerAccessModeValue,
   type ModelPickerGroup,
   type ModelPickerValue,
+  type AppShellLayout,
   type PaneNode,
+  type SectionedListboxSection,
 } from "@nessa-ui/react";
 import {
   EventCalendarDemo,
@@ -97,7 +106,48 @@ const openingTurns: Record<string, Turn[]> = {
   ],
 };
 
-const skills = ["Eval suite", "Trace reader", "Warehouse SQL", "Deploy"];
+interface SlashItem {
+  id: string;
+  kind: "skill" | "plugin";
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const slashSections: SectionedListboxSection<SlashItem>[] = [
+  {
+    id: "skills",
+    label: "Skills",
+    items: [
+      { id: "eval", kind: "skill", label: "Eval suite", description: "run the harness", icon: <Sparkles /> },
+      { id: "trace", kind: "skill", label: "Trace reader", description: "inspect a run", icon: <FileSearch /> },
+    ],
+  },
+  {
+    id: "plugins",
+    label: "Plugins",
+    items: [
+      { id: "sql", kind: "plugin", label: "Warehouse SQL", description: "query metrics", icon: <Database /> },
+      { id: "deploy", kind: "plugin", label: "Deploy", description: "ship a build", icon: <Rocket /> },
+    ],
+  },
+];
+
+const fileIcons: Record<string, React.ReactNode> = {
+  ts: <FileCode className="text-sky-500" />,
+  tsx: <FileCode className="text-sky-500" />,
+  md: <FileText className="text-muted-foreground" />,
+  json: <FileJson className="text-amber-500" />,
+};
+
+function fileIcon(path: string) {
+  return fileIcons[path.split(".").pop() ?? ""] ?? <FileText />;
+}
+
+function matches(query: string, values: string[]) {
+  const q = query.trim().toLowerCase();
+  return !q || values.some((value) => value.toLowerCase().includes(q));
+}
 
 const thinkingLevels = [
   { value: "off", label: "Off" },
@@ -265,60 +315,92 @@ function ChatPane({ viewId }: { viewId: string }) {
             onContentChange={(content) => setDraft(content.text)}
           />
 
-          <ChatComposerTrigger trigger="/" label="Skills">
+          <ChatComposerTrigger trigger="/" label="Skills and plugins">
             {({ query, clearTrigger }) => (
-              <div className="p-1">
-                {skills
-                  .filter((s) => s.toLowerCase().includes(query.toLowerCase()))
-                  .map((skill) => (
-                    <button
-                      key={skill}
-                      type="button"
-                      role="option"
-                      aria-selected={false}
-                      onClick={() => {
-                        clearTrigger();
-                        editorRef.current?.insertChip({
-                          id: skill,
-                          label: skill,
-                          kind: "skill",
-                        });
-                      }}
-                      className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
+              <SectionedListbox
+                listLabel="Skills and plugins"
+                sections={slashSections.map((section) => ({
+                  ...section,
+                  items: section.items.filter((item) =>
+                    matches(query, [item.label, item.description])
+                  ),
+                }))}
+                getItemId={(item) => item.id}
+                emptyMessage="Nothing matches."
+                onValueChange={(_value, item) => {
+                  clearTrigger();
+                  editorRef.current?.insertChip({
+                    id: item.id,
+                    label: item.label,
+                    kind: item.kind,
+                  });
+                }}
+                renderItem={(item) => (
+                  <span className="grid min-h-11 w-full grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2.5 px-2">
+                    <span
+                      aria-hidden="true"
+                      className="flex size-6 items-center justify-center text-muted-foreground [&_svg]:size-4"
                     >
-                      {skill}
-                    </button>
-                  ))}
-              </div>
+                      {item.icon}
+                    </span>
+                    <span className="min-w-0 truncate text-sm">
+                      <span className="font-medium text-foreground">
+                        {item.label}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        {item.description}
+                      </span>
+                    </span>
+                  </span>
+                )}
+              />
             )}
           </ChatComposerTrigger>
 
           <ChatComposerTrigger trigger="@" label="Files">
             {({ query, clearTrigger }) => (
-              <div className="p-1">
-                {files
-                  .filter((f) => f.toLowerCase().includes(query.toLowerCase()))
-                  .map((file) => (
-                    <button
-                      key={file}
-                      type="button"
-                      role="option"
-                      aria-selected={false}
-                      onClick={() => {
-                        clearTrigger();
-                        editorRef.current?.insertChip({
-                          id: file,
-                          label: file.split("/").pop() ?? file,
-                          kind: "mention",
-                          textValue: file,
-                        });
-                      }}
-                      className="block w-full truncate rounded-md px-2 py-1.5 text-left font-mono text-xs hover:bg-accent"
+              <SectionedListbox
+                listLabel="Files"
+                sections={[
+                  {
+                    id: "files",
+                    label: "Files",
+                    items: files.filter((file) => matches(query, [file])),
+                  },
+                ]}
+                getItemId={(file) => file}
+                emptyMessage="No files match."
+                onValueChange={(_value, file) => {
+                  clearTrigger();
+                  editorRef.current?.insertChip({
+                    id: file,
+                    label: file.split("/").pop() ?? file,
+                    kind: "mention",
+                    textValue: file,
+                    icon: fileIcon(file),
+                  });
+                }}
+                renderItem={(file) => (
+                  <span className="grid min-h-10 w-full grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2.5 px-2">
+                    <span
+                      aria-hidden="true"
+                      className="flex size-6 items-center justify-center [&_svg]:size-4"
                     >
-                      {file}
-                    </button>
-                  ))}
-              </div>
+                      {fileIcon(file)}
+                    </span>
+                    <span className="min-w-0 truncate font-mono text-xs">
+                      <span className="text-foreground">
+                        {file.split("/").pop()}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        {file.split("/").slice(0, -1).join("/")}
+                      </span>
+                    </span>
+                  </span>
+                )}
+              />
             )}
           </ChatComposerTrigger>
 
@@ -471,8 +553,16 @@ function usePaneActions(pane: PaneNode, maximized: boolean): PaneActionItem[] {
   ];
 }
 
+/** Leftmost, topmost leaf: where the reveal control belongs. */
+function firstPaneId(node: AppShellLayout["workspace"]["root"]): string {
+  return node.type === "pane" ? node.id : firstPaneId(node.children[0]);
+}
+
 function Pane({ pane }: { pane: PaneNode }) {
-  const { layout } = useAppShell();
+  const { layout, toggleDock } = useAppShell();
+  const sidebarOpen = layout.docks[AppShellDockSide.Left].open;
+  const showReveal =
+    !sidebarOpen && firstPaneId(layout.workspace.root) === pane.id;
   const viewId = pane.views[0];
   const view = views.find((entry) => entry.id === viewId);
   const maximized = layout.workspace.maximizedPaneId === pane.id;
@@ -483,6 +573,16 @@ function Pane({ pane }: { pane: PaneNode }) {
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div className="group/pane-bar flex h-8 items-center pe-1">
+            {showReveal ? (
+              <span className="ps-1.5">
+                <PaneAction
+                  label="Show sidebar"
+                  onClick={() => toggleDock({ side: AppShellDockSide.Left })}
+                >
+                  <PanelLeft aria-hidden className="size-3.5" />
+                </PaneAction>
+              </span>
+            ) : null}
             <AppShellPaneDragHandle
               paneId={pane.id}
               className="flex h-full min-w-0 items-center gap-1.5 ps-2"
@@ -564,12 +664,30 @@ function Pane({ pane }: { pane: PaneNode }) {
 
 /* ── docks ─────────────────────────────────────────────────────────────── */
 
-function Sidebar() {
-  const { openView, layout } = useAppShell();
+const SIDEBAR_WIDTH = 232;
+
+/** Closing hides the sidebar outright; the toggle moves into the pane bar. */
+function Sidebar({ actions }: { actions?: React.ReactNode }) {
+  const { openView, layout, toggleDock } = useAppShell();
   const active = layout.workspace.activePaneId;
 
   return (
     <div className="flex h-full flex-col">
+      <div className="flex h-11 shrink-0 items-center justify-between ps-3 pe-1.5">
+        <span className="text-sm font-semibold tracking-tight">
+          <span aria-hidden className="me-1.5 text-muted-foreground">
+            ◼
+          </span>
+          nessa<span className="font-normal text-muted-foreground">agent</span>
+        </span>
+        <PaneAction
+          label="Hide sidebar"
+          onClick={() => toggleDock({ side: AppShellDockSide.Left })}
+        >
+          <PanelLeft aria-hidden className="size-3.5" />
+        </PaneAction>
+      </div>
+
       <nav className="min-h-0 flex-1 overflow-auto p-2">
         <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
           Chats
@@ -590,14 +708,30 @@ function Sidebar() {
           ))}
       </nav>
 
-      <div className="border-t border-border p-2">
+      <div className="flex items-center gap-0.5 border-t border-border p-2">
         <button
           type="button"
-          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Settings aria-hidden className="size-4" />
           Settings
         </button>
+
+        <PaneAction
+          label="Toggle terminal (⌘J)"
+          onClick={() => toggleDock({ side: AppShellDockSide.Bottom })}
+        >
+          <TerminalIcon aria-hidden className="size-3.5" />
+        </PaneAction>
+        {actions}
+        <a
+          href="/ui/components"
+          aria-label="Leave the harness"
+          title="Leave the harness"
+          className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <LogOut aria-hidden className="size-3.5" />
+        </a>
       </div>
     </div>
   );
@@ -625,40 +759,76 @@ function SidebarItem({
   );
 }
 
-/** Sits with the brand: the sidebar toggle belongs beside what it toggles. */
-function SidebarToggle() {
-  const { toggleDock } = useAppShell();
-  return (
-    <PaneAction
-      label="Toggle sidebar"
-      onClick={() => toggleDock({ side: AppShellDockSide.Left })}
-    >
-      <PanelLeft aria-hidden className="size-3.5" />
-    </PaneAction>
-  );
-}
+/**
+ * Pane focus by keyboard. The shell owns splitting and maximizing; moving
+ * between panes is the host's, so this walks the rendered pane rects and picks
+ * the nearest one in the requested direction.
+ */
+function useHarnessShortcuts() {
+  const { toggleDock, focusPane, layout } = useAppShell();
+  const activePaneId = layout.workspace.activePaneId;
 
-function HeaderControls({ actions }: { actions?: React.ReactNode }) {
-  const { toggleDock } = useAppShell();
-  return (
-    <div className="ms-auto flex items-center gap-0.5">
-      <PaneAction
-        label="Toggle terminal"
-        onClick={() => toggleDock({ side: AppShellDockSide.Bottom })}
-      >
-        <TerminalIcon aria-hidden className="size-3.5" />
-      </PaneAction>
-      {actions}
-      <a
-        href="/ui/components"
-        aria-label="Leave the harness"
-        title="Leave the harness"
-        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-      >
-        <LogOut aria-hidden className="size-3.5" />
-      </a>
-    </div>
-  );
+  React.useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const mod = event.metaKey || event.ctrlKey;
+      if (!mod) return;
+
+      // Cmd/Ctrl+J toggles the terminal.
+      if (!event.shiftKey && event.key.toLowerCase() === "j") {
+        event.preventDefault();
+        toggleDock({ side: AppShellDockSide.Bottom });
+        return;
+      }
+
+      if (!event.shiftKey) return;
+      const direction = { h: "left", j: "down", k: "up", l: "right" }[
+        event.key.toLowerCase()
+      ];
+      if (!direction) return;
+      event.preventDefault();
+
+      const panes = [
+        ...document.querySelectorAll<HTMLElement>("[data-slot='app-shell-pane']"),
+      ].map((element) => ({
+        id: element.dataset.paneId!,
+        rect: element.getBoundingClientRect(),
+      }));
+      const current = panes.find((pane) => pane.id === activePaneId);
+      if (!current) return;
+
+      const candidates = panes.filter((pane) => {
+        if (pane.id === current.id) return false;
+        if (direction === "left") return pane.rect.right <= current.rect.left + 1;
+        if (direction === "right") return pane.rect.left >= current.rect.right - 1;
+        if (direction === "up") return pane.rect.bottom <= current.rect.top + 1;
+        return pane.rect.top >= current.rect.bottom - 1;
+      });
+      if (!candidates.length) return;
+
+      // Nearest by centre distance, so stacked splits pick the neighbour.
+      const centre = (rect: DOMRect) => ({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      });
+      const from = centre(current.rect);
+      const next = candidates.sort((a, b) => {
+        const pa = centre(a.rect);
+        const pb = centre(b.rect);
+        return (
+          Math.hypot(pa.x - from.x, pa.y - from.y) -
+          Math.hypot(pb.x - from.x, pb.y - from.y)
+        );
+      })[0];
+
+      focusPane({ paneId: next.id });
+      document
+        .querySelector<HTMLElement>(`[data-pane-id="${next.id}"]`)
+        ?.focus({ preventScroll: true });
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [toggleDock, focusPane, activePaneId]);
 }
 
 /* ── terminal dock ─────────────────────────────────────────────────────── */
@@ -701,10 +871,23 @@ function TerminalDock() {
 
 /* ── the harness ───────────────────────────────────────────────────────── */
 
+function Shortcuts() {
+  useHarnessShortcuts();
+  return null;
+}
+
+function SidebarDock({ actions }: { actions?: React.ReactNode }) {
+  return (
+    <AppShellDock side={AppShellDockSide.Left} minSize={180} maxSize={380}>
+      <Sidebar actions={actions} />
+    </AppShellDock>
+  );
+}
+
 export function AgentHarness({
   headerActions,
 }: {
-  /** Rendered in the header, before the exit control. */
+  /** Rendered in the sidebar footer, before the exit control. */
   headerActions?: React.ReactNode;
 } = {}) {
   return (
@@ -713,24 +896,13 @@ export function AgentHarness({
       defaultLayout={createAppShellLayout({
         views: ["chat:retrieval"],
         openDocks: [AppShellDockSide.Left],
+        dockSizes: { [AppShellDockSide.Left]: SIDEBAR_WIDTH },
       })}
     >
-      <AppShellHeader className="bg-sidebar">
-        <SidebarToggle />
-        <span className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight">
-          <span aria-hidden className="text-muted-foreground">
-            ◼
-          </span>
-          nessa<span className="font-normal text-muted-foreground">agent</span>
-        </span>
-        <HeaderControls actions={headerActions} />
-      </AppShellHeader>
-
-      <AppShellBody>
-        <AppShellDock side={AppShellDockSide.Left} minSize={200} maxSize={380}>
-          <Sidebar />
-        </AppShellDock>
-        <AppShellMain>
+      <Shortcuts />
+      <AppShellBody className="relative">
+        <SidebarDock actions={headerActions} />
+        <AppShellMain className="relative">
           <AppShellWorkspace renderPane={(pane) => <Pane pane={pane} />} />
           <AppShellDock side={AppShellDockSide.Bottom} minSize={120} maxSize={360}>
             <TerminalDock />
