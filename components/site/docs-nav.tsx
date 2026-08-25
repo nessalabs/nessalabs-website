@@ -7,8 +7,17 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { groups, registry } from "@/registry";
 
-const sections = [
-  { label: "Getting started", items: [{ slug: "", name: "Overview" }] },
+const sections: {
+  label: string;
+  items: { slug?: string; href?: string; name: string }[];
+}[] = [
+  {
+    label: "Getting started",
+    items: [
+      { slug: "", name: "Overview" },
+      { href: "/ui/harness", name: "Agent harness" },
+    ],
+  },
   ...groups.map((group) => ({
     label: group,
     items: registry.filter((c) => c.group === group),
@@ -78,9 +87,8 @@ function Tree({ pathname }: { pathname: string }) {
           </div>
           <div className="flex flex-col gap-0.5">
             {section.items.map((item) => {
-              const href = item.slug
-                ? `/ui/components/${item.slug}`
-                : "/ui/components";
+              const href =
+                item.href ?? (item.slug ? `/ui/components/${item.slug}` : "/ui/components");
               return (
                 <Link
                   key={href}
