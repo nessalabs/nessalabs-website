@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { highlight, type TokenKind } from "@/lib/highlight";
 
@@ -29,16 +30,47 @@ export function SourceBlock({
   code,
   lang = "tsx",
   className,
+  foldable = false,
 }: {
   code: string;
   lang?: string;
   className?: string;
+  /** Editor-style folding, for long files where most blocks are noise. */
+  foldable?: boolean;
 }) {
   const [copied, setCopied] = React.useState(false);
   const lines = React.useMemo(
     () => code.replace(/\n$/, "").split("\n"),
     [code]
   );
+  const regions = React.useMemo(
+    () => (foldable ? findRegions(lines) : new Map<number, Region>()),
+    [foldable, lines]
+  );
+  const [collapsed, setCollapsed] = React.useState<Set<number>>(() =>
+    foldable ? defaultCollapsed(regions) : new Set()
+  );
+
+  // Whichever collapsed region a line falls inside, it stays out of the flow.
+  const hidden = React.useMemo(() => {
+    const set = new Set<number>();
+    for (const start of collapsed) {
+      const region = regions.get(start);
+      if (!region) continue;
+      for (let i = start + 1; i <= region.end; i += 1) set.add(i);
+    }
+    return set;
+  }, [collapsed, regions]);
+
+  const allCollapsed = collapsed.size >= regions.size && regions.size > 0;
+
+  function toggle(start: number) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(start)) next.add(start);
+      return next;
+    });
+  }
 
   async function copy() {
     try {
@@ -57,21 +89,72 @@ export function SourceBlock({
         className
       )}
     >
+      <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
+      {foldable && regions.size > 0 ? (
+        <button
+          type="button"
+          onClick={() =>
+            setCollapsed(allCollapsed ? new Set() : new Set(regions.keys()))
+          }
+          className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
+        >
+          {allCollapsed ? "Expand all" : "Collapse all"}
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={copy}
         aria-label="Copy code"
-        className="absolute right-2 top-2 z-10 rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground opacity-0 backdrop-blur transition hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+        className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
       >
         {copied ? "Copied" : "Copy"}
       </button>
+      </div>
       <pre className="overflow-x-auto p-4 text-[0.8125rem] leading-6">
         <code>
-          {lines.map((line, i) => (
-            <span key={i} className="block">
-              {line ? <Line line={line} lang={lang} /> : " "}
-            </span>
-          ))}
+          {lines.map((line, i) => {
+            if (hidden.has(i)) return null;
+            const region = regions.get(i);
+            const isCollapsed = collapsed.has(i);
+            return (
+              <span key={i} className="flex">
+                {foldable ? (
+                  <span className="sticky left-0 w-4 shrink-0 select-none bg-card">
+                    {region ? (
+                      <button
+                        type="button"
+                        onClick={() => toggle(i)}
+                        aria-expanded={!isCollapsed}
+                        aria-label={
+                          isCollapsed ? "Expand block" : "Collapse block"
+                        }
+                        className="flex size-4 translate-y-1 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight aria-hidden className="size-3" />
+                        ) : (
+                          <ChevronDown aria-hidden className="size-3" />
+                        )}
+                      </button>
+                    ) : null}
+                  </span>
+                ) : null}
+                <span className="min-w-0">
+                  {line ? <Line line={line} lang={lang} /> : " "}
+                  {isCollapsed ? (
+                    <button
+                      type="button"
+                      onClick={() => toggle(i)}
+                      className="ms-2 rounded bg-muted px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                      aria-label="Expand block"
+                    >
+                      {region ? `${region.end - i} lines` : "\u2026"}
+                    </button>
+                  ) : null}
+                </span>
+              </span>
+            );
+          })}
         </code>
       </pre>
     </div>
@@ -89,4 +172,41 @@ function Line({ line, lang }: { line: string; lang: string }) {
       ))}
     </>
   );
+}
+
+type Region = { end: number; indent: number };
+
+const indentOf = (line: string) => line.match(/^\s*/)![0].length;
+
+/**
+ * Indentation folding, the way an editor does it: a line opens a region when
+ * the next non-blank line is deeper, and the region runs to the last line that
+ * stays deeper.
+ */
+function findRegions(lines: string[]): Map<number, Region> {
+  const regions = new Map<number, Region>();
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!lines[i].trim()) continue;
+    const indent = indentOf(lines[i]);
+    let next = i + 1;
+    while (next < lines.length && !lines[next].trim()) next += 1;
+    if (next >= lines.length || indentOf(lines[next]) <= indent) continue;
+    let end = i;
+    for (let j = next; j < lines.length; j += 1) {
+      if (!lines[j].trim()) continue;
+      if (indentOf(lines[j]) <= indent) break;
+      end = j;
+    }
+    if (end > i) regions.set(i, { end, indent });
+  }
+  return regions;
+}
+
+/** Long top-level blocks start folded: the shape of the file first, detail on demand. */
+function defaultCollapsed(regions: Map<number, Region>) {
+  const collapsed = new Set<number>();
+  for (const [start, region] of regions) {
+    if (region.indent === 0 && region.end - start > 12) collapsed.add(start);
+  }
+  return collapsed;
 }

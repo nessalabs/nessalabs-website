@@ -109,6 +109,12 @@ const documented: {
   },
 
   {
+    slug: "conversation-rail",
+    group: "Agent surfaces",
+    description:
+      "Turn navigator beside a transcript. Markers widen toward the pointer; hover or focus opens a preview.",
+  },
+  {
     slug: "message",
     group: "Agent surfaces",
     description: "Transcript row. Assistant and user sides, with avatar, bubble and footer parts.",

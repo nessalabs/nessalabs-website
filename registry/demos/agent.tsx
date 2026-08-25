@@ -32,6 +32,11 @@ import {
   ChatComposerAttachments,
   ChatComposerEditor,
   ChatComposerTrigger,
+  ConversationRail,
+  ConversationRailItem,
+  ConversationRailMarker,
+  ConversationRailPreview,
+  ConversationRailTrigger,
   ChatComposerFooter,
   ChatComposerInput,
   ChatComposerSubmit,
@@ -941,6 +946,50 @@ export function ChatComposerFullDemo() {
           </ChatComposerActions>
         </ChatComposerFooter>
       </ChatComposer>
+    </div>
+  );
+}
+
+/* ── ConversationRail ──────────────────────────────────────────────────── */
+
+const railTurns = [
+  { id: "t1", title: "Retrieval recall drop", preview: "92% to 87% after the rebuild" },
+  { id: "t2", title: "Encoder mismatch", preview: "index 4188, encoder 4189" },
+  { id: "t3", title: "Chunk size", preview: "512 against v2.2" },
+  { id: "t4", title: "Re-run plan", preview: "three cases, matched index" },
+];
+
+/**
+ * A turn navigator beside a transcript. Markers widen as the pointer
+ * approaches, and hover or focus opens the turn's preview.
+ */
+export function ConversationRailDemo() {
+  const [activeId, setActiveId] = React.useState(railTurns[0].id);
+  const active = railTurns.find((turn) => turn.id === activeId)!;
+
+  return (
+    <div className="flex min-h-64 w-full items-center gap-6 rounded-2xl border border-border bg-card p-6">
+      <ConversationRail>
+        {railTurns.map((turn) => (
+          <ConversationRailItem key={turn.id} active={turn.id === activeId}>
+            <ConversationRailTrigger
+              aria-label={turn.title}
+              onClick={() => setActiveId(turn.id)}
+            >
+              <ConversationRailMarker />
+            </ConversationRailTrigger>
+            <ConversationRailPreview>
+              <p className="m-0 font-medium text-foreground">{turn.title}</p>
+              <p className="m-0 mt-1 text-muted-foreground">{turn.preview}</p>
+            </ConversationRailPreview>
+          </ConversationRailItem>
+        ))}
+      </ConversationRail>
+
+      <div className="min-w-0">
+        <div className="text-sm font-medium">{active.title}</div>
+        <p className="mt-1 text-sm text-muted-foreground">{active.preview}</p>
+      </div>
     </div>
   );
 }

@@ -57,6 +57,11 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
   ComposerAccessMode,
+  ConversationRail,
+  ConversationRailItem,
+  ConversationRailMarker,
+  ConversationRailPreview,
+  ConversationRailTrigger,
   EventCalendar,
   EventCalendarGrid,
   EventCalendarToolbar,
@@ -417,6 +422,57 @@ const views: {
   { id: "view:workflow", label: "Workflow", icon: Workflow },
 ];
 
+/**
+ * The edit field takes the shape of the message it replaces: full column width,
+ * and tall enough for the text without scrolling.
+ */
+function AutosizeTextarea({
+  value,
+  onValueChange,
+  onSubmit,
+  onCancel,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [value]);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.focus();
+    // Caret at the end, so editing continues from where the sentence stopped.
+    element.setSelectionRange(element.value.length, element.value.length);
+  }, []);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(event) => onValueChange(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onCancel();
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          onSubmit();
+        }
+      }}
+      aria-label="Edit message"
+      rows={1}
+      className="max-h-64 w-full resize-none overflow-y-auto rounded-2xl border border-border bg-background px-3.5 py-2.5 text-sm leading-6 outline-none focus:border-ring"
+    />
+  );
+}
+
 /** Copy swaps to a check for a moment, the way copy controls usually do. */
 function CopyAction({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false);
@@ -468,6 +524,8 @@ function ChatPane({ viewId }: { viewId: string }) {
   const editorRef = React.useRef<ChatComposerEditorHandle>(null);
   const [editing, setEditing] = React.useState<number | null>(null);
   const [editDraft, setEditDraft] = React.useState("");
+  const [activeTurn, setActiveTurn] = React.useState(0);
+  const turnRefs = React.useRef<Array<HTMLDivElement | null>>([]);
 
   React.useEffect(() => setTurns(thread.turns), [thread]);
 
@@ -502,11 +560,42 @@ function ChatPane({ viewId }: { viewId: string }) {
 
   return (
     <>
+      {/* A size container: the rail appears only when the pane is wide enough
+          for it, and the transcript stops stretching past a comfortable
+          measure instead of running the full width of a maximised pane. */}
+      <div className="@container relative flex min-h-0 flex-1">
+        <ConversationRail className="absolute left-2 top-1/2 z-10 hidden -translate-y-1/2 @[34rem]:flex">
+          {turns
+            .map((turn, index) => ({ turn, index }))
+            .filter(({ turn }) => turn.role === "user")
+            .map(({ turn, index }) => (
+              <ConversationRailItem key={index} active={index === activeTurn}>
+                <ConversationRailTrigger
+                  aria-label={turn.text ?? `Turn ${index + 1}`}
+                  onClick={() => {
+                    setActiveTurn(index);
+                    turnRefs.current[index]?.scrollIntoView({
+                      block: "center",
+                      behavior: "smooth",
+                    });
+                  }}
+                >
+                  <ConversationRailMarker />
+                </ConversationRailTrigger>
+                <ConversationRailPreview>
+                  <p className="m-0 line-clamp-2 text-muted-foreground">
+                    {turn.text}
+                  </p>
+                </ConversationRailPreview>
+              </ConversationRailItem>
+            ))}
+        </ConversationRail>
+
       <div
         role="log"
         aria-label={thread.title}
         tabIndex={0}
-        className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3 outline-none"
+        className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 overflow-auto p-3 outline-none @[34rem]:ps-10"
       >
         {turns.map((turn, index) => {
           if (turn.role === "tool") {
@@ -555,26 +644,19 @@ function ChatPane({ viewId }: { viewId: string }) {
               <Message key={index} from="user">
                 <MessageContent>
                   <form
-                    className="flex w-full max-w-md flex-col gap-2"
+                    // MessageContent is items-end, so a child only fills the
+                    // column when it asks for the width.
+                    className="flex w-[32rem] max-w-full flex-col gap-2 self-stretch"
                     onSubmit={(event) => {
                       event.preventDefault();
                       resend(index);
                     }}
                   >
-                    <textarea
-                      autoFocus
-                      rows={2}
+                    <AutosizeTextarea
                       value={editDraft}
-                      onChange={(event) => setEditDraft(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") setEditing(null);
-                        if (event.key === "Enter" && !event.shiftKey) {
-                          event.preventDefault();
-                          resend(index);
-                        }
-                      }}
-                      aria-label="Edit message"
-                      className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+                      onValueChange={setEditDraft}
+                      onSubmit={() => resend(index)}
+                      onCancel={() => setEditing(null)}
                     />
                     <div className="flex justify-end gap-2">
                       <Button
@@ -596,7 +678,13 @@ function ChatPane({ viewId }: { viewId: string }) {
           }
 
           return (
-            <Message key={index} from="user">
+            <Message
+              key={index}
+              from="user"
+              ref={(element: HTMLDivElement | null) => {
+                turnRefs.current[index] = element;
+              }}
+            >
               <MessageContent>
                 <MessageBubble variant="primary">{turn.text}</MessageBubble>
                 <MessageFooter className="justify-end">
@@ -621,9 +709,10 @@ function ChatPane({ viewId }: { viewId: string }) {
             </Message>
           );
         })}
+        </div>
       </div>
 
-      <div className="p-2">
+      <div className="mx-auto w-full max-w-3xl p-2">
         <ChatComposer
           size="compact"
           onSubmit={(event) => {
@@ -1546,7 +1635,7 @@ function Pane({ pane }: { pane: PaneNode }) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div className="group/pane-bar flex h-8 items-center pe-1">
+          <div className="group/pane-bar flex h-9 items-center pe-1">
             {showReveal ? (
               <PaneAction
                 label="Show sidebar"
@@ -1564,7 +1653,7 @@ function Pane({ pane }: { pane: PaneNode }) {
               )}
               title="Drag to move this pane"
             >
-              <span className="truncate text-xs font-medium">
+              <span className="truncate px-0.5 py-0.5 text-[0.8125rem] font-medium">
                 {view?.label ?? "Empty pane"}
               </span>
             </AppShellPaneDragHandle>

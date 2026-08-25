@@ -12,6 +12,7 @@ import {
 } from "./demos/composites";
 import {
   ChatComposerDemo,
+  ConversationRailDemo,
   ChatComposerFullDemo,
   ComposerQueueDemo,
   MessageDemo,
@@ -68,6 +69,7 @@ export const previews: Record<string, React.ReactNode> = {
   "mermaid-diagram": <MermaidDiagramDemo />,
 
   // agent surfaces
+  "conversation-rail": <ConversationRailDemo />,
   message: <MessageDemo />,
   "message-streaming": <MessageStreamDemo />,
   "message-rich-streaming": <MessageRichStreamDemo />,

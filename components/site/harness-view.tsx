@@ -60,7 +60,7 @@ export function HarnessView() {
           <div className="min-h-0 flex-1 overflow-auto p-4">
             <div className="mx-auto w-full max-w-4xl">
               {source ? (
-                <SourceBlock code={source} />
+                <SourceBlock code={source} foldable />
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Source unavailable.
