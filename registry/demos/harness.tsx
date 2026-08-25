@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { cn } from "@/lib/cn";
+import { SourceBlock } from "@/components/site/source-block";
 import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
   AppShell,
@@ -57,6 +58,22 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
   ComposerAccessMode,
+  DiffStat,
+  FileDiffCard,
+  FileDiffCardHeader,
+  FileDiffCardHeading,
+  FileDiffCardTitle,
+  FileDiffList,
+  FileDiffListItem,
+  FileDiffListToggle,
+  FileDiffPath,
+  MathBlock,
+  MermaidDiagram,
+  MessageMarkdown,
+  Reference,
+  ReferenceCard,
+  ReferenceContent,
+  ReferenceTrigger,
   ConversationRail,
   ConversationRailItem,
   ConversationRailMarker,
@@ -109,8 +126,27 @@ import {
 
 /* ── data ──────────────────────────────────────────────────────────────── */
 
+/**
+ * Rich reply content. An assistant turn is either plain prose or a sequence of
+ * these, so one thread can show markdown, code, diagrams, formulas, citations
+ * and diffs without a bespoke renderer per thread.
+ */
+type Block =
+  | { kind: "markdown"; value: string }
+  | { kind: "code"; lang: string; value: string }
+  | { kind: "mermaid"; value: string }
+  | { kind: "math"; value: string }
+  | { kind: "diff"; files: { path: string; additions: number; deletions: number }[] }
+  | {
+      kind: "reference";
+      before: string;
+      after: string;
+      source: { title: string; excerpt: string; meta: string };
+    };
+
 interface Turn {
   role: "user" | "assistant" | "tool";
+  blocks?: Block[];
   text?: string;
   name?: string;
   meta?: string;
@@ -126,6 +162,217 @@ interface Thread {
 }
 
 const threads: Thread[] = [
+  {
+    id: "chat:tour",
+    title: "What nessa-ui covers",
+    turns: [
+      {
+        role: "user",
+        text: "Give me the tour. What does @nessa-ui/react actually cover, and what am I still expected to write myself?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Three layers, and only the first two are ours.",
+              "",
+              "| Layer | Ships in the package | You own |",
+              "| --- | --- | --- |",
+              "| Primitives | Button, Input, Badge, Card, SegmentedControl | palette, radius, density |",
+              "| Agent surfaces | Message, ToolCall, ToolApproval, ChatComposer, ConversationRail | copy, model list, policy |",
+              "| Workspaces | AppShell, SplitView, Kanban, EventCalendar, WorkflowCanvas | data, persistence |",
+              "",
+              "Every surface is a compound component with `data-slot` attributes, so",
+              "restyling is a class away and nothing is locked behind a variant prop.",
+            ].join("\n"),
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Show me the smallest chat surface I can ship.",
+      },
+      {
+        role: "tool",
+        name: "read_file",
+        meta: "path=packages/react/src/components/message.tsx",
+        status: "complete",
+        output:
+          "export function Message({ from, ...props })\nexport function MessageContent(props)\nexport function MessageBubble({ variant, streaming, ...props })\nexport function MessageFooter(props)\nexport function MessageActions(props)",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          { kind: "markdown", value: "Five components, no provider, no context:" },
+          {
+            kind: "code",
+            lang: "tsx",
+            value: [
+              'import { Message, MessageBubble, MessageContent } from "@nessa-ui/react";',
+              "",
+              "export function Transcript({ turns }: { turns: Turn[] }) {",
+              "  return (",
+              '    <div role="log" className="flex flex-col gap-3">',
+              "      {turns.map((turn, i) => (",
+              "        <Message key={i} from={turn.role}>",
+              "          <MessageContent>",
+              '            <MessageBubble variant={turn.role === "user" ? "primary" : "plain"}>',
+              "              {turn.text}",
+              "            </MessageBubble>",
+              "          </MessageContent>",
+              "        </Message>",
+              "      ))}",
+              "    </div>",
+              "  );",
+              "}",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "Alignment, bubble shape, hover actions and the streaming fade come from the slots. Swap `variant` and it is still your palette.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "How does streaming text land? Does the whole transcript re-render per token?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "No. New text mounts inside per-word spans that fade from transparent; already-painted words keep their DOM nodes, so the work per token is proportional to the tail, not the transcript:",
+          },
+          {
+            kind: "math",
+            value: String.raw`\text{work}(t) \;=\; O\!\left(w_{\text{new}}(t)\right) \quad\text{not}\quad O\!\left(\sum_{i=1}^{n} w_i\right)`,
+          },
+          {
+            kind: "markdown",
+            value:
+              "Code, math and diagram nodes are excluded from the fade wrapper, so a half-parsed fence never animates character by character.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Draw me the render pipeline for a streamed markdown reply.",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "mermaid",
+            value: [
+              "flowchart LR",
+              "  A[Token stream] --> B[MessageMarkdown]",
+              "  B --> C{Node type}",
+              "  C -- prose --> D[Word spans fade in]",
+              "  C -- fence --> E[CodeBlock]",
+              "  C -- $$ --> F[MathBlock]",
+              "  C -- mermaid --> G[MermaidDiagram]",
+              "  D --> H[MessageBubble]",
+              "  E --> H",
+              "  F --> H",
+              "  G --> H",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "`MathBlock` holds the last valid render while intermediate TeX is unparseable, which is why formulas grow instead of flashing an error.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Our retrieval answers cite sources. Can the transcript carry citations and the scoring maths together?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "reference",
+            before: "Ranking is plain cosine similarity over normalised embeddings",
+            after: "so a citation is just a hover target inside the sentence it supports.",
+            source: {
+              title: "retrieval/rerank.ts",
+              excerpt: "score = dot(q, d) / (norm(q) * norm(d)) // cross-encoder applied above 0.4",
+              meta: "lines 41-58",
+            },
+          },
+          {
+            kind: "math",
+            value: String.raw`\text{sim}(q, d) = \frac{q \cdot d}{\lVert q \rVert \, \lVert d \rVert}, \qquad p_i = \frac{e^{s_i / \tau}}{\sum_j e^{s_j / \tau}}`,
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Show me what landed in the last release.",
+      },
+      {
+        role: "tool",
+        name: "git_diff",
+        meta: "range=v0.8.2..v0.9.0",
+        status: "complete",
+        output:
+          "9 files changed\n+284 -137\nconversation-rail.tsx (new)\nworkflow-canvas/node.tsx\nevent-calendar.tsx",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "diff",
+            files: [
+              { path: "packages/react/src/components/conversation-rail.tsx", additions: 148, deletions: 0 },
+              { path: "packages/react/src/components/workflow-canvas/node.tsx", additions: 62, deletions: 41 },
+              { path: "packages/react/src/components/event-calendar.tsx", additions: 34, deletions: 58 },
+              { path: "packages/react/src/components/message.tsx", additions: 21, deletions: 12 },
+              { path: "packages/react/src/index.ts", additions: 6, deletions: 1 },
+              { path: "docs/agent-surfaces.md", additions: 13, deletions: 25 },
+            ],
+          },
+          {
+            kind: "markdown",
+            value:
+              "`ConversationRail` is the headline: turn markers beside the transcript that widen toward the pointer and preview on hover. It is in this pane, to the left, once the pane is wide enough for it.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "So what is left for me to build?",
+      },
+      {
+        role: "assistant",
+        streaming: true,
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Your product. We hand you interaction and state:",
+              "",
+              "- keyboard and focus behaviour, including roving focus in lists and canvases",
+              "- drag, drop and resize with commit semantics you can veto",
+              "- streaming, queueing and cancellation in the composer",
+              "- layout persistence for panes, docks and splits",
+              "",
+              "What we deliberately do not hand you is opinion. There is no brand colour,",
+              "no mandated font, no copy. Tokens sit on `--nessa-*` variables, and every",
+              "themed surface in this harness, including the eleven presets in Settings,",
+              "is a variable swap rather than a fork.",
+            ].join("\n"),
+          },
+        ],
+      },
+    ],
+  },
   {
     "id": "chat:retrieval",
     "title": "Retrieval recall drop",
@@ -507,6 +754,89 @@ function CopyAction({ text }: { text: string }) {
 
 /* ── chat pane ─────────────────────────────────────────────────────────── */
 
+/**
+ * Rich reply content.
+ *
+ * Markdown, math and diagrams come straight from the library. Fenced code is
+ * the one exception: nessa-ui's CodeBlock renders through Pierre's worker
+ * engine, which does not paint inside this app yet, so the docs' own
+ * highlighter stands in until it does.
+ */
+function TurnBlocks({
+  blocks,
+  streaming,
+}: {
+  blocks: Block[];
+  streaming?: boolean;
+}) {
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      {blocks.map((block, index) => {
+        switch (block.kind) {
+          case "markdown":
+            return (
+              <MessageMarkdown key={index} streaming={streaming}>
+                {block.value}
+              </MessageMarkdown>
+            );
+          case "code":
+            return (
+              <SourceBlock
+                key={index}
+                code={block.value}
+                lang={block.lang}
+                className="bg-background"
+              />
+            );
+          case "mermaid":
+            return <MermaidDiagram key={index} chart={block.value} />;
+          case "math":
+            return <MathBlock key={index} tex={block.value} />;
+          case "reference":
+            return (
+              <p key={index} className="text-sm leading-6">
+                {block.before}{" "}
+                <Reference>
+                  <ReferenceTrigger>1</ReferenceTrigger>
+                  <ReferenceContent>
+                    <ReferenceCard sources={[block.source]} />
+                  </ReferenceContent>
+                </Reference>{" "}
+                {block.after}
+              </p>
+            );
+          case "diff":
+            return (
+              <FileDiffCard key={index} itemCount={block.files.length}>
+                <FileDiffCardHeader>
+                  <FileDiffCardHeading>
+                    <FileDiffCardTitle>Changes</FileDiffCardTitle>
+                  </FileDiffCardHeading>
+                  <DiffStat
+                    additions={block.files.reduce((n, f) => n + f.additions, 0)}
+                    deletions={block.files.reduce((n, f) => n + f.deletions, 0)}
+                  />
+                  <FileDiffListToggle />
+                </FileDiffCardHeader>
+                <FileDiffList>
+                  {block.files.map((file) => (
+                    <FileDiffListItem key={file.path}>
+                      <FileDiffPath path={file.path} />
+                      <DiffStat
+                        additions={file.additions}
+                        deletions={file.deletions}
+                      />
+                    </FileDiffListItem>
+                  ))}
+                </FileDiffList>
+              </FileDiffCard>
+            );
+        }
+      })}
+    </div>
+  );
+}
+
 function ChatPane({ viewId }: { viewId: string }) {
   const thread = threads.find((entry) => entry.id === viewId) ?? threads[0];
   const [turns, setTurns] = React.useState<Turn[]>(thread.turns);
@@ -615,8 +945,14 @@ function ChatPane({ viewId }: { viewId: string }) {
             return (
               <Message key={index} from="assistant">
                 <MessageContent>
-                  <MessageBubble variant="plain" streaming={turn.streaming}>
-                    {turn.streaming ? (
+                  <MessageBubble
+                    variant="plain"
+                    streaming={turn.streaming}
+                    className={turn.blocks ? "w-full" : undefined}
+                  >
+                    {turn.blocks ? (
+                      <TurnBlocks blocks={turn.blocks} streaming={turn.streaming} />
+                    ) : turn.streaming ? (
                       <MessageStreamText text={turn.text ?? ""} />
                     ) : (
                       turn.text
