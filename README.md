@@ -60,6 +60,18 @@ registry/
   previews.tsx                  live preview node for each slug and example id
 ```
 
+## Known issue: CodeBlock
+
+nessa-ui renders code through Pierre's worker-backed engine. Inside this app the
+`<diffs-container>` mounts but never paints — no highlighter work is requested,
+under both Turbopack and webpack, with and without an explicit
+`WorkerPoolContextProvider`. Storybook renders it fine, so it is an integration
+gap worth chasing in the library.
+
+Until it is fixed, documentation chrome uses `components/site/source-block.tsx`,
+a small local renderer, so install commands and preview code stay readable. The
+CodeBlock page still demos the real component.
+
 ## Docs code blocks are generated
 
 Each component page shows the code that actually renders the preview above it.

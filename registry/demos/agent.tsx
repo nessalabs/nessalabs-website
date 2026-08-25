@@ -1,7 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { FileSearch, Mic, Plus, Shield, Terminal } from "lucide-react";
+import {
+  Copy,
+  FileSearch,
+  HelpCircle,
+  MessageSquare,
+  MessageSquarePlus,
+  Mic,
+  Plus,
+  Shield,
+  Sparkles,
+  Terminal,
+  TextQuote,
+} from "lucide-react";
 import {
   ChatComposer,
   ChatComposerAction,
@@ -32,8 +44,15 @@ import {
   ToolCallFile,
   ToolCallTabs,
   ToolCallTrigger,
+  SelectionTooltip,
+  SelectionTooltipAction,
+  SelectionTooltipLabel,
+  SelectionTooltipSeparator,
+  SelectionTooltipShelf,
+  type ModelPickerGroup,
   type ModelPickerValue,
 } from "@nessa-ui/react";
+import { KimiModelIcon } from "../story-support/icons/model/kimi-model-icon";
 
 const readInput = `{
   "file_path": "packages/react/src/lib/utils.ts",
@@ -131,14 +150,73 @@ export function ToolApprovalDemo() {
   );
 }
 
-const modelGroups = [
+/** Provider marks, served from public/model-icons. */
+function ModelAsset({ name, invert = false }: { name: string; invert?: boolean }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/model-icons/${name}.svg`}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className={invert ? "size-4 dark:invert" : "size-4"}
+    />
+  );
+}
+
+const modelGroups: ModelPickerGroup[] = [
   {
-    id: "nessa",
-    label: "Nessa",
+    id: "anthropic",
+    label: "Anthropic",
+    shortLabel: "Claude",
+    icon: <ModelAsset name="claude-color" />,
     models: [
-      { id: "large", label: "nessa-1-large", description: "Best for reasoning" },
-      { id: "base", label: "nessa-1-base", description: "Balanced" },
-      { id: "mini", label: "nessa-1-mini", description: "Fastest" },
+      {
+        id: "opus",
+        label: "Opus 5",
+        description: "Deep reasoning and long tasks",
+        icon: <ModelAsset name="claude-color" />,
+      },
+      {
+        id: "sonnet",
+        label: "Sonnet 5",
+        description: "Balanced everyday work",
+        icon: <ModelAsset name="claude-color" />,
+      },
+    ],
+  },
+  {
+    id: "openai",
+    label: "OpenAI",
+    shortLabel: "GPT",
+    icon: <ModelAsset name="openai" invert />,
+    models: [
+      {
+        id: "gpt-5.6-sol",
+        label: "GPT-5.6 Sol",
+        description: "Planning and code review",
+        icon: <ModelAsset name="openai" invert />,
+      },
+      {
+        id: "codex",
+        label: "Codex",
+        description: "Agentic implementation",
+        icon: <ModelAsset name="openai" invert />,
+      },
+    ],
+  },
+  {
+    id: "moonshot",
+    label: "Moonshot AI",
+    shortLabel: "Kimi",
+    icon: <KimiModelIcon />,
+    models: [
+      {
+        id: "kimi-k3",
+        label: "Kimi K3",
+        description: "Connected reasoning",
+        icon: <KimiModelIcon />,
+      },
     ],
   },
 ];
@@ -147,8 +225,8 @@ export function ChatComposerDemo() {
   const [message, setMessage] = React.useState("");
   const [submitted, setSubmitted] = React.useState("");
   const [model, setModel] = React.useState<ModelPickerValue>({
-    providerId: "nessa",
-    modelId: "large",
+    providerId: "anthropic",
+    modelId: "opus",
   });
 
   return (
@@ -197,14 +275,21 @@ export function ChatComposerDemo() {
   );
 }
 
+/**
+ * A turn is running, so what you type queues instead of sending. Each pending
+ * message can be steered, opened through its "…" menu, or dropped — press Send
+ * below to add another and watch it land at the end of the queue.
+ */
 export function ComposerQueueDemo() {
   const [items, setItems] = React.useState([
     { id: "q1", text: "Also compare against checkpoint 4188" },
     { id: "q2", text: "Then open a PR with the fix" },
   ]);
+  const [message, setMessage] = React.useState("");
+  const [note, setNote] = React.useState("");
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="flex w-full max-w-2xl flex-col gap-3">
       <ComposerQueue
         itemIds={items.map((item) => item.id)}
         onReorder={(ids) =>
@@ -218,12 +303,53 @@ export function ComposerQueueDemo() {
             key={item.id}
             id={item.id}
             itemLabel={item.text}
-            onRemove={() =>
-              setItems((current) => current.filter((q) => q.id !== item.id))
-            }
-          />
+            onSteer={() => setNote(`Steering: ${item.text}`)}
+            onMore={() => setNote(`More actions for: ${item.text}`)}
+            onRemove={() => {
+              setItems((current) => current.filter((q) => q.id !== item.id));
+              setNote(`Removed: ${item.text}`);
+            }}
+          >
+            {item.text}
+          </ComposerQueueItem>
         ))}
       </ComposerQueue>
+
+      <ChatComposer
+        onSubmit={(event) => {
+          event.preventDefault();
+          const text = message.trim();
+          if (!text) return;
+          setItems((current) => [
+            ...current,
+            { id: `q${current.length + 1}-${text.length}`, text },
+          ]);
+          setMessage("");
+          setNote(`Queued: ${text}`);
+        }}
+      >
+        <ChatComposerInput
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          placeholder="Queue a follow-up…"
+        />
+        <ChatComposerFooter>
+          <ChatComposerActions>
+            <ChatComposerAction aria-label="Add attachment" title="Add attachment">
+              <Plus aria-hidden="true" />
+            </ChatComposerAction>
+          </ChatComposerActions>
+          <ChatComposerActions className="justify-end">
+            <ChatComposerSubmit disabled={!message.trim()} />
+          </ChatComposerActions>
+        </ChatComposerFooter>
+      </ChatComposer>
+
+      {note ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {note}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -249,6 +375,61 @@ export function MessageDemo() {
           <MessageFooter>Sent</MessageFooter>
         </MessageContent>
       </Message>
+    </div>
+  );
+}
+
+/* ── SelectionTooltip ──────────────────────────────────────────────────── */
+
+export function SelectionTooltipDemo() {
+  return (
+    <div className="relative w-full max-w-2xl">
+      <p className="rounded-xl border border-border bg-card p-6 text-sm leading-7 text-muted-foreground">
+        Select any of this text to see where the tooltip anchors. The rebuild
+        pinned the encoder to checkpoint 4188 while the query encoder moved to
+        4189, so nearest-neighbour lookups drifted on long-tail queries.
+      </p>
+      <SelectionTooltip className="absolute left-8 top-16">
+        <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
+          <MessageSquare aria-hidden="true" />
+          <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
+        </SelectionTooltipAction>
+        <SelectionTooltipSeparator />
+        <SelectionTooltipAction aria-label="Add to chat" tooltip="Add to chat">
+          <MessageSquarePlus aria-hidden="true" />
+          <SelectionTooltipLabel>Add to chat</SelectionTooltipLabel>
+        </SelectionTooltipAction>
+        <SelectionTooltipSeparator />
+        <SelectionTooltipShelf>
+          <SelectionTooltipAction aria-label="Copy" tooltip="Copy">
+            <Copy aria-hidden="true" />
+          </SelectionTooltipAction>
+          <SelectionTooltipAction aria-label="Quote" tooltip="Quote">
+            <TextQuote aria-hidden="true" />
+          </SelectionTooltipAction>
+          <SelectionTooltipAction aria-label="Improve" tooltip="Improve">
+            <Sparkles aria-hidden="true" />
+          </SelectionTooltipAction>
+          <SelectionTooltipAction aria-label="Explain" tooltip="Explain">
+            <HelpCircle aria-hidden="true" />
+          </SelectionTooltipAction>
+        </SelectionTooltipShelf>
+      </SelectionTooltip>
+    </div>
+  );
+}
+
+/* ── ModelPicker ───────────────────────────────────────────────────────── */
+
+export function ModelPickerDemo() {
+  const [value, setValue] = React.useState<ModelPickerValue>({
+    providerId: "anthropic",
+    modelId: "opus",
+  });
+
+  return (
+    <div className="flex min-h-72 w-full items-end justify-end rounded-2xl border border-border bg-card p-6">
+      <ModelPicker groups={modelGroups} value={value} onValueChange={setValue} />
     </div>
   );
 }

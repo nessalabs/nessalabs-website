@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { themeScript } from "@/components/site/theme-toggle";
+import { ThemeProvider, themeScript } from "@/components/site/theme";
 import { SiteNav } from "@/components/site/site-nav";
 import "./globals.css";
 
@@ -50,8 +50,10 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeScript }}
         />
-        <SiteNav />
-        <main>{children}</main>
+        <ThemeProvider>
+          <SiteNav />
+          <main>{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );

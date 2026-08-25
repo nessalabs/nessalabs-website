@@ -37,6 +37,7 @@ const documented: { slug: string; group: Group; examples?: { id: string; title: 
   { slug: "math-block", group: "Content" },
   { slug: "message-markdown", group: "Content" },
   { slug: "reference", group: "Content" },
+  { slug: "selection-tooltip", group: "Content" },
   { slug: "file-diff-list", group: "Content" },
 
   { slug: "message", group: "Agent surfaces" },

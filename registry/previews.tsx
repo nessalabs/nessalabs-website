@@ -14,6 +14,8 @@ import {
   ToolApprovalDemo,
   ToolCallDemo,
   ToolCallStatesDemo,
+  ModelPickerDemo,
+  SelectionTooltipDemo,
 } from "./demos/agent";
 import {
   BadgeDemo,
@@ -57,7 +59,8 @@ export const previews: Record<string, React.ReactNode> = {
   "tool-approval": <ToolApprovalDemo />,
   "chat-composer": <ChatComposerDemo />,
   "composer-queue": <ComposerQueueDemo />,
-  "model-picker": <ChatComposerDemo />,
+  "model-picker": <ModelPickerDemo />,
+  "selection-tooltip": <SelectionTooltipDemo />,
 
   // composites
   "event-calendar": <EventCalendarDemo />,

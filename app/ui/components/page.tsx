@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CodeBlock } from "@nessa-ui/react";
+import { SourceBlock } from "@/components/site/source-block";
 import { groups, registry } from "@/registry";
 
 export const metadata: Metadata = {
@@ -64,8 +64,8 @@ export default function ComponentsOverviewPage() {
       </div>
 
       <h2 className="mt-12 mb-4 text-lg font-semibold">Installation</h2>
-      <CodeBlock
-        language="bash"
+      <SourceBlock
+        lang="bash"
         code={`npm install @nessa-ui/react
 
 # or take the source, shadcn-style
@@ -73,8 +73,8 @@ npx shadcn@latest add https://nessalabs.ai/r/tool-call.json`}
       />
 
       <h2 className="mt-10 mb-4 text-lg font-semibold">Usage</h2>
-      <CodeBlock
-        language="tsx"
+      <SourceBlock
+        lang="tsx"
         code={`import "@nessa-ui/react/styles.css"
 import { ToolCall, ToolCallTabs, ToolCallTrigger } from "@nessa-ui/react"
 

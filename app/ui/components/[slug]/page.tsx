@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CodeBlock } from "@nessa-ui/react";
+import { SourceBlock } from "@/components/site/source-block";
 import { ComponentPreview } from "@/components/site/component-preview";
 import { getComponent, registry } from "@/registry";
 
@@ -49,8 +49,8 @@ export default async function ComponentPage({
       </div>
 
       <h2 className="mt-12 mb-4 text-lg font-semibold">Installation</h2>
-      <CodeBlock
-        language="bash"
+      <SourceBlock
+        lang="bash"
         code={`npx shadcn@latest add https://nessalabs.ai/r/${doc.slug}.json`}
       />
 

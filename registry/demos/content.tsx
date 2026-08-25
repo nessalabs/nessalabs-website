@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { RotateCcw } from "lucide-react";
 import {
   Badge,
   Button,
@@ -118,8 +119,40 @@ export function JsonTreeDemo({ collapsible }: { collapsible?: boolean }) {
   );
 }
 
+/**
+ * A formula arriving as a token stream. MathBlock keeps the last successful
+ * render on screen while intermediate TeX is invalid, so the block never
+ * flashes KaTeX's error state mid-stream — press Replay to watch it again.
+ */
 export function MathBlockDemo() {
-  return <MathBlock tex="\\text{sim}(q, d) = \\frac{q \\cdot d}{\\lVert q \\rVert \\lVert d \\rVert}" />;
+  const tex = String.raw`\text{sim}(q, d) = \frac{q \cdot d}{\lVert q \rVert \, \lVert d \rVert}`;
+  const [shown, setShown] = React.useState(tex);
+  const [run, setRun] = React.useState(0);
+
+  React.useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(tex);
+      return;
+    }
+    let i = 0;
+    setShown("");
+    const id = window.setInterval(() => {
+      i += 2;
+      setShown(tex.slice(0, i));
+      if (i >= tex.length) window.clearInterval(id);
+    }, 45);
+    return () => window.clearInterval(id);
+  }, [tex, run]);
+
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <MathBlock tex={shown} />
+      <Button variant="outline" size="sm" onClick={() => setRun((n) => n + 1)}>
+        <RotateCcw aria-hidden="true" />
+        Replay
+      </Button>
+    </div>
+  );
 }
 
 export function MessageMarkdownDemo() {

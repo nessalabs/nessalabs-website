@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@nessa-ui/react";
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeToggle } from "./theme";
 import { NavBar } from "./nav-bar";
 import { Brand } from "./brand";
 
