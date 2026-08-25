@@ -95,6 +95,19 @@ export default function ComponentsOverviewPage() {
       </Link>
 
       <h2 className="mt-12 mb-4 text-lg font-semibold">Installation</h2>
+      <p className="mb-4 text-sm leading-6 text-muted-foreground">
+        Install the package, or take the source the shadcn way. Either path is
+        the same code, and it lives at{" "}
+        <a
+          href="https://github.com/nessalabs/nessa_ui"
+          target="_blank"
+          rel="noreferrer"
+          className="text-foreground underline-offset-4 hover:underline"
+        >
+          github.com/nessalabs/nessa_ui
+        </a>
+        .
+      </p>
       <SourceBlock
         lang="bash"
         code={`npm install @nessa-ui/react

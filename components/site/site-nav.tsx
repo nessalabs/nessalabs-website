@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { Github } from "lucide-react";
 import { Button } from "@nessa-ui/react";
 import { ThemeToggle } from "./theme";
 import { NavBar } from "./nav-bar";
@@ -25,7 +26,17 @@ export function SiteNav() {
       links={links}
       activeHref={pathname}
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <a
+            href="https://github.com/nessalabs/nessa_ui"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="nessa-ui on GitHub"
+            title="nessa-ui on GitHub"
+            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Github aria-hidden className="size-4" />
+          </a>
           <ThemeToggle />
           <Link href="/ui/components">
             <Button size="sm" variant="secondary">
