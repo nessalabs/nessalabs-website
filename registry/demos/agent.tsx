@@ -27,6 +27,9 @@ import {
   ChatComposer,
   ChatComposerAction,
   ChatComposerActions,
+  ChatComposerAttachment,
+  ChatComposerAttachments,
+  ChatComposerTrigger,
   ChatComposerFooter,
   ChatComposerInput,
   ChatComposerSubmit,
@@ -38,10 +41,19 @@ import {
   MessageContent,
   MessageFooter,
   MessageHeader,
+  MessageMarkdown,
   MessageStreamText,
+  MermaidDiagram,
   ModelPicker,
+  ModelThinkingControl,
+  Reference,
+  ReferenceCard,
+  ReferenceContent,
+  ReferenceTrigger,
   ToolApproval,
   ToolApprovalAction,
+  ToolApprovalActionMenu,
+  ToolApprovalActionMenuItem,
   ToolApprovalActions,
   ToolApprovalCommand,
   ToolApprovalDescription,
@@ -532,6 +544,395 @@ export function ModelPickerDemo() {
   return (
     <div className="flex min-h-72 w-full items-end justify-end rounded-2xl border border-border bg-card p-6">
       <ModelPicker groups={modelGroups} value={value} onValueChange={setValue} />
+    </div>
+  );
+}
+
+const richReply = `The drift is a **similarity mismatch**, not a ranking bug.
+
+Cosine similarity between a query and a document is
+
+$$\\text{sim}(q, d) = \\frac{q \\cdot d}{\\lVert q \\rVert \\, \\lVert d \\rVert}$$
+
+Both vectors have to come from the same encoder for that quantity to mean anything. After the rebuild they did not, so the numerator drifted while both norms stayed stable, and the ordering moved for candidates that were already close.`;
+
+/** Streaming markdown: prose, math, a citation and a diagram in one turn. */
+export function MessageRichStreamDemo() {
+  const [received, setReceived] = React.useState("");
+  const [run, setRun] = React.useState(0);
+  const done = received.length >= richReply.length;
+
+  React.useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setReceived(richReply);
+      return;
+    }
+    let i = 0;
+    setReceived("");
+    const id = window.setInterval(() => {
+      i += 9 + ((i * 5) % 17);
+      setReceived(richReply.slice(0, i));
+      if (i >= richReply.length) window.clearInterval(id);
+    }, 80);
+    return () => window.clearInterval(id);
+  }, [run]);
+
+  return (
+    <div className="flex w-full max-w-2xl flex-col gap-4">
+      <Message from="assistant">
+        <MessageAvatar fallback="N" alt="Nessa" />
+        <MessageContent>
+          <MessageHeader>Nessa</MessageHeader>
+          <MessageBubble>
+            <MessageMarkdown>{received}</MessageMarkdown>
+            {done ? (
+              <>
+                <p className="mt-3 text-sm">
+                  Traced through the rebuild log
+                  <Reference>
+                    <ReferenceTrigger>1</ReferenceTrigger>
+                    <ReferenceContent>
+                      <ReferenceCard
+                        sources={[
+                          {
+                            title: "run-4189.json",
+                            excerpt:
+                              "step 7: index.rebuild(checkpoint=4188) — step 8: encoder=4189",
+                            meta: "step 7-8",
+                          },
+                        ]}
+                      />
+                    </ReferenceContent>
+                  </Reference>
+                  , which pins the mismatch to 02:14.
+                </p>
+                <MermaidDiagram
+                  className="mt-3"
+                  chart={`flowchart LR
+  Q[Query] --> E1[Encoder 4189]
+  D[(Index)] --> E2[Encoder 4188]
+  E1 --> S{Compare}
+  E2 --> S
+  S --> R[Drifted ranking]`}
+                />
+              </>
+            ) : null}
+          </MessageBubble>
+        </MessageContent>
+      </Message>
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setRun((n) => n + 1)}>
+          <RotateCcw aria-hidden="true" />
+          Replay
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+const approvalPayload = {
+  command: "npx nessa eval --suite retrieval --run 4192",
+  cwd: "/srv/nessa",
+  timeout_ms: 900000,
+  env: { NESSA_TOKEN: "***" },
+};
+
+function ApprovalHeader() {
+  return (
+    <ToolApprovalHeader>
+      <ToolApprovalIcon>
+        <Terminal aria-hidden="true" />
+      </ToolApprovalIcon>
+      <ToolApprovalHeading>
+        <ToolApprovalTitle>Run a shell command</ToolApprovalTitle>
+        <ToolApprovalDescription>
+          The agent wants to run the eval harness against run 4192.
+        </ToolApprovalDescription>
+      </ToolApprovalHeading>
+    </ToolApprovalHeader>
+  );
+}
+
+/**
+ * Granting end to end: choosing a scope sets `resolution`, the card goes inert
+ * and plays its exit, and `onExited` hands off to the running ToolCall row.
+ */
+export function ToolApprovalFlowDemo() {
+  const [resolution, setResolution] = React.useState<
+    "allowed" | "denied" | null
+  >(null);
+  const [handedOff, setHandedOff] = React.useState(false);
+
+  if (handedOff) {
+    return (
+      <div className="flex w-full max-w-2xl flex-col gap-3">
+        <ToolCall status={resolution === "denied" ? "error" : "running"}>
+          <ToolCallTrigger icon={<Terminal />} meta="run 4192">
+            {resolution === "denied" ? "Denied by you" : "Running the eval harness"}
+          </ToolCallTrigger>
+        </ToolCall>
+        <p className="text-sm text-muted-foreground">
+          {resolution === "denied"
+            ? "Nothing ran."
+            : "Bash is allowed for the rest of this session."}
+        </p>
+        <div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setHandedOff(false);
+              setResolution(null);
+            }}
+          >
+            <RotateCcw aria-hidden="true" />
+            Reset
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-2xl">
+      <ToolApproval
+        resolution={resolution}
+        onExited={() => setHandedOff(true)}
+      >
+        <ApprovalHeader />
+        <ToolApprovalCommand>
+          npx nessa eval --suite retrieval --run 4192
+        </ToolApprovalCommand>
+        <ToolApprovalActions>
+          <ToolApprovalAction
+            variant="ghost"
+            onClick={() => setResolution("denied")}
+          >
+            Deny
+          </ToolApprovalAction>
+          <ToolApprovalActionMenu label="Always allow">
+            <ToolApprovalActionMenuItem onSelect={() => setResolution("allowed")}>
+              Allow for this session
+            </ToolApprovalActionMenuItem>
+            <ToolApprovalActionMenuItem onSelect={() => setResolution("allowed")}>
+              Always allow
+            </ToolApprovalActionMenuItem>
+          </ToolApprovalActionMenu>
+          <ToolApprovalAction onClick={() => setResolution("allowed")}>
+            Allow once
+          </ToolApprovalAction>
+        </ToolApprovalActions>
+      </ToolApproval>
+    </div>
+  );
+}
+
+/** The notch variant, hanging from the display's camera housing. */
+export function ToolApprovalNotchDemo() {
+  return (
+    <div className="dark w-full max-w-2xl overflow-hidden rounded-2xl bg-black p-0">
+      <div className="relative flex justify-center pb-8">
+        <div className="absolute inset-x-0 top-0 z-10 h-7 bg-black" />
+        <div className="absolute left-1/2 top-0 z-20 h-7 w-40 -translate-x-1/2 rounded-b-2xl bg-black" />
+        <ToolApproval variant="notch" className="w-[26rem] max-w-full">
+          <ApprovalHeader />
+          <ToolApprovalCommand json={approvalPayload} label="Tool input" />
+          <ToolApprovalActions>
+            <ToolApprovalAction variant="ghost">Deny</ToolApprovalAction>
+            <ToolApprovalAction>Allow once</ToolApprovalAction>
+          </ToolApprovalActions>
+        </ToolApproval>
+      </div>
+    </div>
+  );
+}
+
+/** A phone viewport: the payload scrolls and the actions restack. */
+export function ToolApprovalMobileDemo() {
+  return (
+    <div className="flex w-[23.4375rem] max-w-full flex-col justify-end gap-3 rounded-[2.5rem] border border-border bg-background p-3 pt-24">
+      <ToolApproval variant="floating" className="w-full">
+        <ApprovalHeader />
+        <ToolApprovalCommand json={approvalPayload} label="Tool input" />
+        <ToolApprovalActions className="flex-col-reverse items-stretch">
+          <ToolApprovalAction variant="ghost" size="default">
+            Deny
+          </ToolApprovalAction>
+          <ToolApprovalActionMenu label="Always allow" size="default">
+            <ToolApprovalActionMenuItem>
+              Allow for this session
+            </ToolApprovalActionMenuItem>
+            <ToolApprovalActionMenuItem>Always allow</ToolApprovalActionMenuItem>
+          </ToolApprovalActionMenu>
+          <ToolApprovalAction size="default">Allow once</ToolApprovalAction>
+        </ToolApprovalActions>
+      </ToolApproval>
+    </div>
+  );
+}
+
+/* ── ChatComposer, full surface ────────────────────────────────────────── */
+
+const thinkingLevels = [
+  { value: "off", label: "Off" },
+  { value: "light", label: "Light" },
+  { value: "standard", label: "Standard" },
+  { value: "deep", label: "Deep" },
+];
+
+interface Attachment {
+  id: string;
+  name: string;
+  kind: "file" | "skill" | "mention" | "pasted-text";
+}
+
+/**
+ * Everything the composer offers at once: attachment pills, a "/" menu for
+ * skills, "@" for people and files, model and thinking controls, and submit.
+ */
+export function ChatComposerFullDemo() {
+  const [message, setMessage] = React.useState("");
+  const [sent, setSent] = React.useState("");
+  const [model, setModel] = React.useState<ModelPickerValue>({
+    providerId: "anthropic",
+    modelId: "opus",
+  });
+  const [thinking, setThinking] = React.useState("standard");
+  const [attachments, setAttachments] = React.useState<Attachment[]>([
+    { id: "a1", name: "run-4192.json", kind: "file" },
+    { id: "a2", name: "Eval suite", kind: "skill" },
+    { id: "a3", name: "Ada Lovelace", kind: "mention" },
+    { id: "a4", name: "Pasted stack trace", kind: "pasted-text" },
+  ]);
+
+  return (
+    <div className="grid w-full min-w-0 gap-3">
+      {sent ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Sent: {sent}
+        </p>
+      ) : null}
+
+      <ChatComposer
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!message.trim()) return;
+          setSent(message.trim());
+          setMessage("");
+        }}
+      >
+        {attachments.length ? (
+          <ChatComposerAttachments>
+            {attachments.map((file) => (
+              <ChatComposerAttachment
+                key={file.id}
+                itemLabel={file.name}
+                kind={file.kind}
+                onRemove={() =>
+                  setAttachments((current) =>
+                    current.filter((item) => item.id !== file.id)
+                  )
+                }
+              >
+                {file.name}
+              </ChatComposerAttachment>
+            ))}
+          </ChatComposerAttachments>
+        ) : null}
+
+        <ChatComposerInput
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          placeholder="Type / for skills, @ to mention"
+        />
+
+        <ChatComposerTrigger trigger="/" label="Skills and commands">
+          {({ query, clearTrigger }) => (
+            <div className="p-1">
+              {["Eval suite", "Trace reader", "Warehouse SQL", "Diff"]
+                .filter((item) =>
+                  item.toLowerCase().includes(query.toLowerCase())
+                )
+                .map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    onClick={() => clearTrigger(`/${item} `)}
+                    className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  >
+                    {item}
+                  </button>
+                ))}
+            </div>
+          )}
+        </ChatComposerTrigger>
+
+        <ChatComposerTrigger trigger="@" label="Mentions">
+          {({ query, clearTrigger }) => (
+            <div className="p-1">
+              {["run-4192", "encoder.ts", "Ada Lovelace"]
+                .filter((item) =>
+                  item.toLowerCase().includes(query.toLowerCase())
+                )
+                .map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    onClick={() => clearTrigger(`@${item} `)}
+                    className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  >
+                    {item}
+                  </button>
+                ))}
+            </div>
+          )}
+        </ChatComposerTrigger>
+
+        <ChatComposerFooter>
+          <ChatComposerActions>
+            <ChatComposerAction
+              aria-label="Add attachment"
+              title="Add attachment"
+              onClick={() =>
+                setAttachments((current) => [
+                  ...current,
+                  {
+                    id: `a${current.length + 1}`,
+                    name: `trace-${current.length + 1}.log`,
+                    kind: "file",
+                  },
+                ])
+              }
+            >
+              <Plus aria-hidden="true" />
+            </ChatComposerAction>
+            <ChatComposerAction aria-label="Configure access" title="Configure access">
+              <Shield aria-hidden="true" />
+            </ChatComposerAction>
+          </ChatComposerActions>
+
+          <ChatComposerActions className="justify-end">
+            <ModelPicker
+              groups={modelGroups}
+              value={model}
+              onValueChange={setModel}
+            />
+            <ModelThinkingControl
+              levels={thinkingLevels}
+              value={thinking}
+              onValueChange={setThinking}
+            />
+            <ChatComposerAction aria-label="Start voice input" title="Start voice input">
+              <Mic aria-hidden="true" />
+            </ChatComposerAction>
+            <ChatComposerSubmit disabled={!message.trim()} />
+          </ChatComposerActions>
+        </ChatComposerFooter>
+      </ChatComposer>
     </div>
   );
 }

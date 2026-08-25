@@ -18,10 +18,12 @@ import {
   FileDiffCardTitle,
   FileDiffList,
   FileDiffListItem,
+  FileDiffListToggle,
   FileDiffPath,
   Input,
   JsonTree,
   MathBlock,
+  MermaidDiagram,
   MessageMarkdown,
   Reference,
   ReferenceCard,
@@ -195,6 +197,47 @@ export function ReferenceDemo() {
   );
 }
 
+const manyFiles = [
+  { path: "packages/react/src/retrieval/index.ts", additions: 84, deletions: 12 },
+  { path: "packages/react/src/retrieval/encoder.ts", additions: 31, deletions: 0 },
+  { path: "packages/react/src/retrieval/rerank.ts", additions: 18, deletions: 6 },
+  { path: "packages/react/src/retrieval/legacy.ts", additions: 0, deletions: 96 },
+  { path: "packages/react/src/index.ts", additions: 4, deletions: 1 },
+  { path: "apps/api/routes/search.ts", additions: 12, deletions: 4 },
+  { path: "apps/api/routes/embed.ts", additions: 22, deletions: 9 },
+  { path: "apps/api/lib/client.ts", additions: 7, deletions: 3 },
+  { path: "apps/worker/jobs/reindex.ts", additions: 41, deletions: 15 },
+  { path: "apps/worker/jobs/backfill.ts", additions: 9, deletions: 2 },
+  { path: "docs/retrieval.md", additions: 27, deletions: 3 },
+  { path: "docs/changelog.md", additions: 6, deletions: 0 },
+];
+
+/** Collapsed to three rows; expanding scrolls the rest under a height cap. */
+export function FileDiffScrollDemo() {
+  return (
+    <FileDiffCard className="w-full max-w-2xl" itemCount={manyFiles.length}>
+      <FileDiffCardHeader>
+        <FileDiffCardHeading>
+          <FileDiffCardTitle>Changes</FileDiffCardTitle>
+        </FileDiffCardHeading>
+        <DiffStat
+          additions={manyFiles.reduce((n, f) => n + f.additions, 0)}
+          deletions={manyFiles.reduce((n, f) => n + f.deletions, 0)}
+        />
+      </FileDiffCardHeader>
+      <FileDiffList>
+        {manyFiles.map((file) => (
+          <FileDiffListItem key={file.path}>
+            <FileDiffPath path={file.path} />
+            <DiffStat additions={file.additions} deletions={file.deletions} />
+          </FileDiffListItem>
+        ))}
+      </FileDiffList>
+      <FileDiffListToggle />
+    </FileDiffCard>
+  );
+}
+
 export function FileDiffDemo() {
   const files = [
     { path: "packages/react/src/retrieval/index.ts", additions: 84, deletions: 12 },
@@ -223,5 +266,21 @@ export function FileDiffDemo() {
         ))}
       </FileDiffList>
     </FileDiffCard>
+  );
+}
+
+export function MermaidDiagramDemo() {
+  return (
+    <MermaidDiagram
+      className="w-full max-w-2xl"
+      chart={`flowchart LR
+  A[Corpus] --> B[Chunk]
+  B --> C[Embed]
+  C --> D[(Vector store)]
+  D --> E{Rerank?}
+  E -- yes --> F[Cross-encoder]
+  E -- no --> G[Serve]
+  F --> G`}
+    />
   );
 }

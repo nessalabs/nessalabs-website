@@ -84,6 +84,9 @@ export function EventCalendarDemo({
       defaultView={defaultView}
       now={NOW}
       locale="en-US"
+      // Business hours only, so the grid stays compact.
+      minHour={9}
+      maxHour={17}
     >
       <EventCalendarToolbar />
       <EventCalendarGrid />
@@ -326,6 +329,8 @@ export function WorkflowCanvasDemo() {
     <WorkflowCanvas
       aria-label="Automation workflow"
       className="h-96 w-full"
+      // Panning stays over the stretch of plane the nodes occupy.
+      bounds={{ minX: -40, minY: -40, maxX: 840, maxY: 400 }}
       onConnect={(connection) =>
         setEdges((current) => [
           ...current,
@@ -345,6 +350,7 @@ export function WorkflowCanvasDemo() {
               key={edge.id}
               source={edge.source}
               target={edge.target}
+              className="stroke-[3.5] stroke-muted-foreground/70"
               selected={selectedEdgeId === edge.id}
               aria-label={`Edge from ${edge.source} to ${edge.target}`}
               onClick={() =>
@@ -385,13 +391,18 @@ export function WorkflowCanvasNestedDemo() {
   ];
 
   return (
-    <WorkflowCanvas aria-label="Enrichment workflow" className="h-96 w-full">
+    <WorkflowCanvas
+      aria-label="Enrichment workflow"
+      className="h-96 w-full"
+      bounds={{ minX: -20, minY: -20, maxX: 700, maxY: 380 }}
+    >
       <WorkflowCanvasGrid />
       <WorkflowCanvasSurface>
         <WorkflowCanvasEdges>
           <WorkflowCanvasEdge
             source="ingest"
             target="enrichment"
+            className="stroke-[3.5] stroke-muted-foreground/70"
             aria-label="Edge from ingest to enrichment"
           />
         </WorkflowCanvasEdges>
@@ -435,6 +446,7 @@ export function WorkflowCanvasNestedDemo() {
                   <WorkflowCanvasEdge
                     source="dedupe"
                     target="chunk"
+                    className="stroke-[3.5] stroke-muted-foreground/70"
                     aria-label="Edge from dedupe to chunk"
                   />
                 </WorkflowCanvasEdges>
@@ -456,5 +468,129 @@ export function WorkflowCanvasNestedDemo() {
         </WorkflowCanvasNode>
       </WorkflowCanvasSurface>
     </WorkflowCanvas>
+  );
+}
+
+const paletteOptions = [
+  { id: "filter", title: "Filter", detail: "drop rows", tone: "transform" as const, icon: Filter },
+  { id: "embed", title: "Embed", detail: "nessa-embed-1", tone: "model" as const, icon: Sparkles },
+  { id: "notify", title: "Notify", detail: "slack", tone: "output" as const, icon: Bell },
+];
+
+/**
+ * Drag from a node's handle and release over empty canvas: the drop point
+ * comes back through onConnectEnd, and the host decides what happens. Here a
+ * palette lands at the released end and wires the chosen node into place.
+ */
+export function WorkflowCanvasPaletteDemo() {
+  const [nodes, setNodes] = React.useState<Job[]>([
+    { id: "fetch", title: "Fetch corpus", detail: "every 15m", tone: "source", icon: Database, position: { x: 60, y: 120 } },
+  ]);
+  const [edges, setEdges] = React.useState<BoardEdge[]>([]);
+  const [palette, setPalette] = React.useState<{
+    source: string;
+    point: { x: number; y: number };
+  } | null>(null);
+
+  function addNode(option: (typeof paletteOptions)[number]) {
+    if (!palette) return;
+    const id = `${option.id}-${nodes.length}`;
+    setNodes((current) => [
+      ...current,
+      { ...option, id, position: palette.point },
+    ]);
+    setEdges((current) => [
+      ...current,
+      { id: `${palette.source}-${id}`, source: palette.source, target: id },
+    ]);
+    setPalette(null);
+  }
+
+  return (
+    <div className="w-full space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Drag from a handle on the edge of Fetch corpus and let go over empty
+        space.
+      </p>
+      <WorkflowCanvas
+        aria-label="Job builder"
+        className="h-96 w-full"
+        bounds={{ minX: -40, minY: -40, maxX: 760, maxY: 400 }}
+        onConnect={(connection) =>
+          setEdges((current) => [
+            ...current,
+            {
+              id: `${connection.source}-${connection.target}-${current.length}`,
+              source: connection.source,
+              target: connection.target,
+            },
+          ])
+        }
+        onConnectEnd={(end) =>
+          setPalette({ source: end.source, point: end.point })
+        }
+        onDismiss={() => setPalette(null)}
+      >
+        <WorkflowCanvasGrid />
+        <WorkflowCanvasSurface>
+          <WorkflowCanvasEdges>
+            {edges.map((edge) => (
+              <WorkflowCanvasEdge
+                key={edge.id}
+                source={edge.source}
+                target={edge.target}
+                className="stroke-[3.5] stroke-muted-foreground/70"
+                aria-label={`Edge from ${edge.source} to ${edge.target}`}
+              />
+            ))}
+          </WorkflowCanvasEdges>
+
+          {nodes.map((job) => (
+            <WorkflowCanvasNode
+              key={job.id}
+              nodeId={job.id}
+              defaultPosition={job.position}
+              aria-label={`${job.title} job`}
+            >
+              <JobCard job={job} />
+              <AllHandles />
+            </WorkflowCanvasNode>
+          ))}
+
+          {palette ? (
+            <WorkflowCanvasNode
+              nodeId="palette"
+              defaultPosition={palette.point}
+              aria-label="Add a job"
+            >
+              <div className="w-56 rounded-2xl border border-dashed border-primary/60 bg-popover p-2 shadow-lg">
+                <div className="flex items-center justify-between px-1 pb-1">
+                  <span className="text-xs font-medium">Add a job</span>
+                  <button
+                    type="button"
+                    aria-label="Dismiss"
+                    onClick={() => setPalette(null)}
+                    className="rounded px-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    ×
+                  </button>
+                </div>
+                {paletteOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => addNode(option)}
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  >
+                    <option.icon className="size-4 text-muted-foreground" aria-hidden />
+                    {option.title}
+                  </button>
+                ))}
+              </div>
+            </WorkflowCanvasNode>
+          ) : null}
+        </WorkflowCanvasSurface>
+      </WorkflowCanvas>
+    </div>
   );
 }

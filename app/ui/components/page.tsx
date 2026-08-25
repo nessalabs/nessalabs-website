@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SourceBlock } from "@/components/site/source-block";
+import { CardArt } from "@/components/site/card-art";
 import { groups, registry } from "@/registry";
 
 export const metadata: Metadata = {
@@ -104,10 +105,11 @@ export function Row() {
                   <Link
                     key={item.slug}
                     href={`/ui/components/${item.slug}`}
-                    className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
+                    className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
                   >
-                    <div className="font-medium">{item.name}</div>
-                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                    <CardArt slug={item.slug} />
+                    <div className="relative font-medium">{item.name}</div>
+                    <p className="relative mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
                       {item.description}
                     </p>
                   </Link>

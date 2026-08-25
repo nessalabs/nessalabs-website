@@ -74,6 +74,11 @@ const documented: {
     description: "KaTeX formula. Holds the last valid render while TeX streams in.",
   },
   {
+    slug: "mermaid-diagram",
+    group: "Content",
+    description: "Mermaid source rendered to a diagram. Follows the app's color mode.",
+  },
+  {
     slug: "message-markdown",
     group: "Content",
     description: "Markdown for message bodies. Composes CodeBlock and MathBlock.",
@@ -95,13 +100,22 @@ const documented: {
     slug: "file-diff-list",
     group: "Content",
     description: "Changed-file summary with per-file stats and a collapse toggle.",
+    examples: [
+      { id: "file-diff-scroll", title: "Twelve files, collapsed and scrollable" },
+    ],
   },
 
   {
     slug: "message",
     group: "Agent surfaces",
     description: "Transcript row. Assistant and user sides, with avatar, bubble and footer parts.",
-    examples: [{ id: "message-streaming", title: "Streaming a long reply" }],
+    examples: [
+      { id: "message-streaming", title: "Streaming a long reply" },
+      {
+        id: "message-rich-streaming",
+        title: "Streaming markdown, math, a citation and a diagram",
+      },
+    ],
   },
   {
     slug: "tool-call",
@@ -116,11 +130,22 @@ const documented: {
     slug: "tool-approval",
     group: "Agent surfaces",
     description: "Permission request for a tool run. Setting `resolution` makes the card inert.",
+    examples: [
+      { id: "tool-approval-flow", title: "Granting hands off to the running call" },
+      { id: "tool-approval-notch", title: "Notch variant" },
+      { id: "tool-approval-mobile", title: "Phone viewport" },
+    ],
   },
   {
     slug: "chat-composer",
     group: "Agent surfaces",
     description: "Chat entry surface. Input, footer actions, attachments, submit.",
+    examples: [
+      {
+        id: "chat-composer-full",
+        title: "Attachments, / and @ menus, model and thinking controls",
+      },
+    ],
   },
   {
     slug: "composer-queue",
@@ -156,6 +181,10 @@ const documented: {
     description: "Pan-and-zoom node graph. Drag nodes, draw edges, delete with the keyboard.",
     examples: [
       { id: "workflow-canvas-nested", title: "A node hosting a subflow" },
+      {
+        id: "workflow-canvas-palette",
+        title: "Drop a connection on empty canvas to add a node",
+      },
     ],
   },
 ];
