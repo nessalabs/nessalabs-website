@@ -72,27 +72,20 @@ export default async function ComponentPage({
 
       {doc.stories?.length ? (
         <>
-          <h2 className="mt-12 mb-2 text-lg font-semibold">
-            Behaviours in the library
-          </h2>
-          <p className="mb-4 text-sm leading-6 text-muted-foreground">
-            Every behaviour the component ships with, as covered by its
-            storybook. The previews above show a subset.
+          <h2 className="mt-12 mb-3 text-lg font-semibold">Behaviours</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Covered by the component&apos;s storybook.
           </p>
-          <ul className="divide-y divide-border rounded-xl border border-border">
+          <div className="flex flex-wrap gap-1.5">
             {doc.stories.map((story) => (
-              <li key={story.name} className="p-4">
-                <div className="text-sm font-medium">
-                  {story.name.replace(/([a-z])([A-Z])/g, "$1 $2")}
-                </div>
-                {story.note ? (
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {story.note}
-                  </p>
-                ) : null}
-              </li>
+              <span
+                key={story.name}
+                className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground"
+              >
+                {story.name.replace(/([a-z])([A-Z])/g, "$1 $2")}
+              </span>
             ))}
-          </ul>
+          </div>
         </>
       ) : null}
 

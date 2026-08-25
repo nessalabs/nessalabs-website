@@ -22,9 +22,8 @@ const tokenClass: Record<TokenKind, string> = {
  *
  * nessa-ui's CodeBlock renders through Pierre's worker-backed engine, which
  * does not paint inside this app yet (tracked with the library team). Until it
- * does, documentation chrome — install commands and the code behind each
- * preview — uses this small local renderer so the docs stay readable. The
- * CodeBlock page still demos the real component.
+ * does, docs chrome (install commands, preview source) uses this local
+ * renderer. The CodeBlock page still demos the real component.
  */
 export function SourceBlock({
   code,

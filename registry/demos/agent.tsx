@@ -2,17 +2,25 @@
 
 import * as React from "react";
 import {
+  Bookmark,
   Copy,
   FileSearch,
+  Flag,
   HelpCircle,
+  Languages,
+  ListTree,
   MessageSquare,
   MessageSquarePlus,
   Mic,
   Plus,
   Shield,
+  Quote,
+  Search,
+  Share2,
   Sparkles,
   Terminal,
   TextQuote,
+  Wand2,
 } from "lucide-react";
 import {
   ChatComposer,
@@ -47,6 +55,7 @@ import {
   SelectionTooltip,
   SelectionTooltipAction,
   SelectionTooltipLabel,
+  SelectionTooltipMore,
   SelectionTooltipSeparator,
   SelectionTooltipShelf,
   type ModelPickerGroup,
@@ -383,39 +392,69 @@ export function MessageDemo() {
 
 export function SelectionTooltipDemo() {
   return (
-    <div className="relative w-full max-w-2xl">
-      <p className="rounded-xl border border-border bg-card p-6 text-sm leading-7 text-muted-foreground">
-        Select any of this text to see where the tooltip anchors. The rebuild
-        pinned the encoder to checkpoint 4188 while the query encoder moved to
-        4189, so nearest-neighbour lookups drifted on long-tail queries.
-      </p>
-      <SelectionTooltip className="absolute left-8 top-16">
-        <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
-          <MessageSquare aria-hidden="true" />
-          <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
+    <SelectionTooltip>
+      <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
+        <MessageSquare aria-hidden="true" />
+        <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
+      </SelectionTooltipAction>
+      <SelectionTooltipSeparator />
+      <SelectionTooltipAction aria-label="Add to chat" tooltip="Add to chat">
+        <MessageSquarePlus aria-hidden="true" />
+        <SelectionTooltipLabel>Add to chat</SelectionTooltipLabel>
+      </SelectionTooltipAction>
+      <SelectionTooltipSeparator />
+      <SelectionTooltipMore />
+      <SelectionTooltipShelf>
+        <SelectionTooltipAction aria-label="Copy" tooltip="Copy">
+          <Copy aria-hidden="true" />
         </SelectionTooltipAction>
-        <SelectionTooltipSeparator />
-        <SelectionTooltipAction aria-label="Add to chat" tooltip="Add to chat">
-          <MessageSquarePlus aria-hidden="true" />
-          <SelectionTooltipLabel>Add to chat</SelectionTooltipLabel>
+        <SelectionTooltipAction aria-label="Quote" tooltip="Quote">
+          <TextQuote aria-hidden="true" />
         </SelectionTooltipAction>
-        <SelectionTooltipSeparator />
-        <SelectionTooltipShelf>
-          <SelectionTooltipAction aria-label="Copy" tooltip="Copy">
-            <Copy aria-hidden="true" />
+        <SelectionTooltipAction aria-label="Improve" tooltip="Improve">
+          <Sparkles aria-hidden="true" />
+        </SelectionTooltipAction>
+        <SelectionTooltipAction aria-label="Explain" tooltip="Explain">
+          <HelpCircle aria-hidden="true" />
+        </SelectionTooltipAction>
+      </SelectionTooltipShelf>
+    </SelectionTooltip>
+  );
+}
+
+const shelfActions = [
+  { label: "Copy", icon: Copy },
+  { label: "Quote", icon: TextQuote },
+  { label: "Improve", icon: Sparkles },
+  { label: "Explain", icon: HelpCircle },
+  { label: "Translate", icon: Languages },
+  { label: "Summarize", icon: ListTree },
+  { label: "Find similar", icon: Search },
+  { label: "Cite", icon: Quote },
+  { label: "Rewrite", icon: Wand2 },
+  { label: "Share", icon: Share2 },
+  { label: "Bookmark", icon: Bookmark },
+  { label: "Report", icon: Flag },
+];
+
+/** The shelf takes any number of actions and scrolls, without a scrollbar. */
+export function SelectionTooltipShelfDemo() {
+  return (
+    <SelectionTooltip defaultExpanded>
+      <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
+        <MessageSquare aria-hidden="true" />
+        <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
+      </SelectionTooltipAction>
+      <SelectionTooltipSeparator />
+      <SelectionTooltipMore />
+      <SelectionTooltipShelf>
+        {shelfActions.map(({ label, icon: Icon }) => (
+          <SelectionTooltipAction key={label} aria-label={label} tooltip={label}>
+            <Icon aria-hidden="true" />
           </SelectionTooltipAction>
-          <SelectionTooltipAction aria-label="Quote" tooltip="Quote">
-            <TextQuote aria-hidden="true" />
-          </SelectionTooltipAction>
-          <SelectionTooltipAction aria-label="Improve" tooltip="Improve">
-            <Sparkles aria-hidden="true" />
-          </SelectionTooltipAction>
-          <SelectionTooltipAction aria-label="Explain" tooltip="Explain">
-            <HelpCircle aria-hidden="true" />
-          </SelectionTooltipAction>
-        </SelectionTooltipShelf>
-      </SelectionTooltip>
-    </div>
+        ))}
+      </SelectionTooltipShelf>
+    </SelectionTooltip>
   );
 }
 

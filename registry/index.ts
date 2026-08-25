@@ -12,6 +12,7 @@ export type Group = (typeof groups)[number];
 export interface ComponentDoc {
   slug: string;
   name: string;
+  /** One line. What it is, and the behaviour worth knowing. */
   description: string;
   group: Group;
   /** Extra previews, keyed by preview id. */
@@ -20,42 +21,122 @@ export interface ComponentDoc {
   stories?: { name: string; note: string | null }[];
 }
 
-/** Slugs the site currently documents, in sidebar order. */
-const documented: { slug: string; group: Group; examples?: { id: string; title: string }[] }[] = [
-  { slug: "button", group: "Primitives" },
-  { slug: "badge", group: "Primitives" },
-  { slug: "card", group: "Primitives" },
-  { slug: "input", group: "Primitives" },
-  { slug: "segmented-control", group: "Primitives" },
+/**
+ * Slugs the site documents, in sidebar order. Descriptions are written here
+ * rather than lifted from the storybook, which writes at essay length.
+ */
+const documented: {
+  slug: string;
+  group: Group;
+  description: string;
+  examples?: { id: string; title: string }[];
+}[] = [
+  {
+    slug: "button",
+    group: "Primitives",
+    description: "Action button. Six variants, four sizes, icon-aware spacing.",
+  },
+  {
+    slug: "badge",
+    group: "Primitives",
+    description: "Compact status marker in four variants.",
+  },
+  {
+    slug: "card",
+    group: "Primitives",
+    description: "Bordered surface with header, content, footer and action slots.",
+  },
+  {
+    slug: "input",
+    group: "Primitives",
+    description: "Single-line text field.",
+  },
+  {
+    slug: "segmented-control",
+    group: "Primitives",
+    description: "Exclusive option row. Arrow keys move between options.",
+  },
 
-  { slug: "code-block", group: "Content" },
+  {
+    slug: "code-block",
+    group: "Content",
+    description: "Syntax-highlighted code with copy. Themed through CodeBlockProvider.",
+  },
   {
     slug: "json-tree",
     group: "Content",
+    description: "Structured JSON view. Optional per-branch collapse.",
     examples: [{ id: "json-tree-collapsible", title: "Collapsible branches" }],
   },
-  { slug: "math-block", group: "Content" },
-  { slug: "message-markdown", group: "Content" },
-  { slug: "reference", group: "Content" },
-  { slug: "selection-tooltip", group: "Content" },
-  { slug: "file-diff-list", group: "Content" },
+  {
+    slug: "math-block",
+    group: "Content",
+    description: "KaTeX formula. Holds the last valid render while TeX streams in.",
+  },
+  {
+    slug: "message-markdown",
+    group: "Content",
+    description: "Markdown for message bodies. Composes CodeBlock and MathBlock.",
+  },
+  {
+    slug: "reference",
+    group: "Content",
+    description: "Inline citation. Hover or focus opens the source card.",
+  },
+  {
+    slug: "selection-tooltip",
+    group: "Content",
+    description: "Action pill for selected text. Overflow actions live in a scrolling shelf.",
+    examples: [
+      { id: "selection-tooltip-shelf", title: "Shelf expanded, twelve actions" },
+    ],
+  },
+  {
+    slug: "file-diff-list",
+    group: "Content",
+    description: "Changed-file summary with per-file stats and a collapse toggle.",
+  },
 
-  { slug: "message", group: "Agent surfaces" },
+  {
+    slug: "message",
+    group: "Agent surfaces",
+    description: "Transcript row. Assistant and user sides, with avatar, bubble and footer parts.",
+  },
   {
     slug: "tool-call",
     group: "Agent surfaces",
+    description:
+      "One tool invocation. Expands into input, output and touched files; the label shimmers while running.",
     examples: [
       { id: "tool-call-states", title: "Running, complete and error" },
     ],
   },
-  { slug: "tool-approval", group: "Agent surfaces" },
-  { slug: "chat-composer", group: "Agent surfaces" },
-  { slug: "composer-queue", group: "Agent surfaces" },
-  { slug: "model-picker", group: "Agent surfaces" },
+  {
+    slug: "tool-approval",
+    group: "Agent surfaces",
+    description: "Permission request for a tool run. Setting `resolution` makes the card inert.",
+  },
+  {
+    slug: "chat-composer",
+    group: "Agent surfaces",
+    description: "Chat entry surface. Input, footer actions, attachments, submit.",
+  },
+  {
+    slug: "composer-queue",
+    group: "Agent surfaces",
+    description: "Pending messages for a running turn. Reorderable, steerable, removable.",
+  },
+  {
+    slug: "model-picker",
+    group: "Agent surfaces",
+    description: "Provider-grouped model chooser with search.",
+  },
 
   {
     slug: "event-calendar",
     group: "Composites",
+    description:
+      "Day, week and month scheduling. Drag to create, move and resize events.",
     examples: [
       { id: "event-calendar-day", title: "Day view" },
       { id: "event-calendar-month", title: "Month view" },
@@ -64,23 +145,33 @@ const documented: { slug: string; group: Group; examples?: { id: string; title: 
   {
     slug: "gantt-chart",
     group: "Composites",
+    description:
+      "Project timeline with summary roll-ups, milestones and dependency arrows. Bars reschedule by drag or keyboard.",
     examples: [
       { id: "gantt-chart-day", title: "Day scale" },
       { id: "gantt-chart-month", title: "Month scale" },
     ],
   },
-  { slug: "kanban", group: "Composites" },
-  { slug: "workflow-canvas", group: "Composites" },
+  {
+    slug: "kanban",
+    group: "Composites",
+    description: "Board of columns and draggable cards. Moves report through onCardMove.",
+  },
+  {
+    slug: "workflow-canvas",
+    group: "Composites",
+    description: "Pan-and-zoom node graph. Drag nodes, draw edges, delete with the keyboard.",
+  },
 ];
 
 export const registry: ComponentDoc[] = documented.map(
-  ({ slug, group, examples }) => {
+  ({ slug, group, description, examples }) => {
     const entry = catalog.find((item) => item.slug === slug);
     if (!entry) throw new Error(`No catalog entry for ${slug}`);
     return {
       slug,
       name: entry.name,
-      description: entry.description,
+      description,
       group,
       examples,
       stories: entry.stories,

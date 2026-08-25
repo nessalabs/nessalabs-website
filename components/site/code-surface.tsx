@@ -7,8 +7,8 @@ import { WorkerPoolContextProvider } from "@pierre/diffs/react";
 /**
  * nessa-ui renders code through Pierre's engine, which highlights in a worker
  * pool. Storybook's bundler wires that up implicitly; in this app the pool is
- * declared here, once, so every CodeBlock — including the ones inside
- * MessageMarkdown and ToolCall — has somewhere to highlight.
+ * declared here, once, so every CodeBlock, including those inside
+ * MessageMarkdown and ToolCall, has somewhere to highlight.
  */
 export function CodeSurfaceProvider({
   mode,

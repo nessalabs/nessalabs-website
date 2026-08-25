@@ -20,11 +20,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://nessalabs.ai"),
   title: {
-    default: "Nessa Labs — the AI stack for modern humans",
-    template: "%s — Nessa Labs",
+    default: "Nessa Labs",
+    template: "%s · Nessa Labs",
   },
   description:
-    "An applied AI lab building research, agents, and nessa-ui: the component layer everything we ship is made of.",
+    "An applied AI lab. Research, agents, and nessa-ui.",
   openGraph: {
     title: "Nessa Labs",
     description: "The AI stack for modern humans.",

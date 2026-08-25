@@ -16,6 +16,7 @@ import {
   ToolCallStatesDemo,
   ModelPickerDemo,
   SelectionTooltipDemo,
+  SelectionTooltipShelfDemo,
 } from "./demos/agent";
 import {
   BadgeDemo,
@@ -61,6 +62,7 @@ export const previews: Record<string, React.ReactNode> = {
   "composer-queue": <ComposerQueueDemo />,
   "model-picker": <ModelPickerDemo />,
   "selection-tooltip": <SelectionTooltipDemo />,
+  "selection-tooltip-shelf": <SelectionTooltipShelfDemo />,
 
   // composites
   "event-calendar": <EventCalendarDemo />,
