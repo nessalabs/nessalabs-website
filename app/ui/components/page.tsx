@@ -7,7 +7,7 @@ import { groups, registry } from "@/registry";
 export const metadata: Metadata = {
   title: "Components",
   description:
-    "nessa-ui: React components and tokens for Nessa products.",
+    "nessa-ui: accessible React components and tokens for building AI products.",
 };
 
 const principles = [
@@ -48,8 +48,9 @@ export default function ComponentsOverviewPage() {
       </div>
       <h1 className="text-3xl font-semibold tracking-tight">Components</h1>
       <p className="mt-4 text-base leading-7 text-muted-foreground">
-        Accessible React components and tokens for Nessa products: primitives,
-        agent surfaces, and composites.
+        Accessible React components and tokens for people building AI products:
+        primitives, agent surfaces, and composites. Built for Nessa, published
+        for anyone who wants to ship these surfaces without rebuilding them.
       </p>
       <p className="mt-3 text-base leading-7 text-muted-foreground">
         Closer to Radix than to a theme. Components own the behaviour and hand

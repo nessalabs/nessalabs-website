@@ -56,6 +56,16 @@ pre {
   background-clip: padding-box;
 }
 
+/*
+ * Workaround: FileDiffList scrolls with `overflow-y-auto` but is not a
+ * containing block, so the `sr-only` (position: absolute) diff labels inside it
+ * escape the scroller, land past the fold and stretch the page. Making the list
+ * positioned keeps them inside. Belongs upstream in @nessa-ui/react.
+ */
+[data-slot="file-diff-list"] {
+  position: relative;
+}
+
 @utility bg-radial-fade {
   background: radial-gradient(
     ellipse 70% 60% at 50% 45%,

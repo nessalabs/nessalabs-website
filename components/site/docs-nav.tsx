@@ -59,7 +59,7 @@ export function DocsNav() {
       </div>
 
       {/* desktop */}
-      <aside className="hidden h-full w-60 shrink-0 overflow-y-auto border-r border-border lg:block">
+      <aside className="hidden h-full w-60 shrink-0 overflow-y-auto overscroll-contain border-r border-border lg:block">
         <div className="py-8 pl-6 pr-4">
           <Tree pathname={pathname} />
         </div>

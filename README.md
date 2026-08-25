@@ -60,6 +60,13 @@ registry/
   previews.tsx                  live preview node for each slug and example id
 ```
 
+## Known issue: FileDiffList escapes its scroller
+
+`FileDiffList` scrolls with `overflow-y-auto` but is not a containing block, so
+the `sr-only` diff labels inside it (position: absolute) escape the scroller,
+land past the fold and stretch the page. `app/globals.css` patches it with
+`[data-slot="file-diff-list"] { position: relative }`. The fix belongs upstream.
+
 ## Known issue: CodeBlock
 
 nessa-ui renders code through Pierre's worker-backed engine. Inside this app the
