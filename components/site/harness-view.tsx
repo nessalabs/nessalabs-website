@@ -5,7 +5,11 @@ import { Code2, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { AgentHarness } from "@/registry/demos/harness";
 import { previewSource } from "@/registry/preview-source.generated";
-import { SourceBlock } from "./source-block";
+import {
+  CodeFoldingControls,
+  SourceBlock,
+  useCodeFolding,
+} from "./source-block";
 
 /**
  * The harness at full size, with its own source a click away. The code is the
@@ -14,6 +18,7 @@ import { SourceBlock } from "./source-block";
 export function HarnessView() {
   const [showCode, setShowCode] = React.useState(false);
   const source = previewSource["agent-harness"];
+  const folding = useCodeFolding(source ?? "");
 
   return (
     <div className="relative h-dvh overflow-hidden">
@@ -26,7 +31,7 @@ export function HarnessView() {
             title={showCode ? "Hide source" : "View source"}
             className={cn(
               "inline-flex size-6 items-center justify-center rounded-md",
-              "text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              "text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
             )}
           >
             {showCode ? (
@@ -47,20 +52,23 @@ export function HarnessView() {
                 Everything on this page, assembled from @nessa-ui/react.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowCode(false)}
-              aria-label="Close source"
-              className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <X className="size-3.5" />
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <CodeFoldingControls folding={folding} />
+              <button
+                type="button"
+                onClick={() => setShowCode(false)}
+                aria-label="Close source"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-auto p-4">
             <div className="mx-auto w-full max-w-4xl">
               {source ? (
-                <SourceBlock code={source} foldable />
+                <SourceBlock code={source} folding={folding} />
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Source unavailable.

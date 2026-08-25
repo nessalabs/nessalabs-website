@@ -18,40 +18,34 @@ const tokenClass: Record<TokenKind, string> = {
   punct: "text-muted-foreground",
 };
 
+export interface CodeFolding {
+  lines: string[];
+  regions: Map<number, Region>;
+  collapsed: Set<number>;
+  hidden: Set<number>;
+  allCollapsed: boolean;
+  atDefault: boolean;
+  toggle: (start: number) => void;
+  toggleAll: () => void;
+  reset: () => void;
+}
+
 /**
- * The docs' own code surface.
- *
- * nessa-ui's CodeBlock renders through Pierre's worker-backed engine, which
- * does not paint inside this app yet (tracked with the library team). Until it
- * does, docs chrome (install commands, preview source) uses this local
- * renderer. The CodeBlock page still demos the real component.
+ * Folding state for one block of code. It lives outside SourceBlock so a host
+ * can put the controls wherever they belong, which for the harness is the
+ * overlay header rather than a corner of the code.
  */
-export function SourceBlock({
-  code,
-  lang = "tsx",
-  className,
-  foldable = false,
-}: {
-  code: string;
-  lang?: string;
-  className?: string;
-  /** Editor-style folding, for long files where most blocks are noise. */
-  foldable?: boolean;
-}) {
-  const [copied, setCopied] = React.useState(false);
+export function useCodeFolding(code: string): CodeFolding {
   const lines = React.useMemo(
     () => code.replace(/\n$/, "").split("\n"),
-    [code]
+    [code],
   );
-  const regions = React.useMemo(
-    () => (foldable ? findRegions(lines) : new Map<number, Region>()),
-    [foldable, lines]
+  const regions = React.useMemo(() => findRegions(lines), [lines]);
+  const initial = React.useMemo(
+    () => defaultCollapsed(regions, lines),
+    [lines, regions],
   );
-  const initialCollapsed = React.useMemo(
-    () => (foldable ? defaultCollapsed(regions, lines) : new Set<number>()),
-    [foldable, lines, regions]
-  );
-  const [collapsed, setCollapsed] = React.useState<Set<number>>(initialCollapsed);
+  const [collapsed, setCollapsed] = React.useState<Set<number>>(initial);
 
   // Whichever collapsed region a line falls inside, it stays out of the flow.
   const hidden = React.useMemo(() => {
@@ -65,17 +59,89 @@ export function SourceBlock({
   }, [collapsed, regions]);
 
   const allCollapsed = collapsed.size >= regions.size && regions.size > 0;
-  const atDefault =
-    collapsed.size === initialCollapsed.size &&
-    [...collapsed].every((start) => initialCollapsed.has(start));
 
-  function toggle(start: number) {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(start)) next.add(start);
-      return next;
-    });
-  }
+  return {
+    lines,
+    regions,
+    collapsed,
+    hidden,
+    allCollapsed,
+    atDefault:
+      collapsed.size === initial.size &&
+      [...collapsed].every((start) => initial.has(start)),
+    toggle: (start) =>
+      setCollapsed((prev) => {
+        const next = new Set(prev);
+        if (!next.delete(start)) next.add(start);
+        return next;
+      }),
+    toggleAll: () =>
+      setCollapsed(allCollapsed ? new Set() : new Set(regions.keys())),
+    reset: () => setCollapsed(new Set(initial)),
+  };
+}
+
+/** The fold controls, for a host that renders them outside the block. */
+export function CodeFoldingControls({
+  folding,
+  className,
+}: {
+  folding: CodeFolding;
+  className?: string;
+}) {
+  if (folding.regions.size === 0) return null;
+  return (
+    <div className={cn("flex items-center gap-1", className)}>
+      {folding.atDefault ? null : (
+        <button
+          type="button"
+          onClick={folding.reset}
+          className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition hover:bg-accent hover:text-foreground"
+        >
+          Reset
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={folding.toggleAll}
+        className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition hover:bg-accent hover:text-foreground"
+      >
+        {folding.allCollapsed ? "Expand all" : "Collapse all"}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The docs' own code surface.
+ *
+ * nessa-ui's CodeBlock renders through Pierre's worker-backed engine, which
+ * does not paint inside this app yet (tracked with the library team). Until it
+ * does, docs chrome (install commands, preview source) uses this local
+ * renderer. The CodeBlock page still demos the real component.
+ */
+export function SourceBlock({
+  code,
+  lang = "tsx",
+  className,
+  folding,
+}: {
+  code: string;
+  lang?: string;
+  className?: string;
+  /** Editor-style folding, from useCodeFolding. Omit for a plain block. */
+  folding?: CodeFolding;
+}) {
+  const [copied, setCopied] = React.useState(false);
+  const plainLines = React.useMemo(
+    () => code.replace(/\n$/, "").split("\n"),
+    [code],
+  );
+  const lines = folding?.lines ?? plainLines;
+  const regions = folding?.regions ?? emptyRegions;
+  const hidden = folding?.hidden ?? emptyLines;
+  const collapsed = folding?.collapsed ?? emptyLines;
+  const toggle = folding?.toggle ?? noop;
 
   async function copy() {
     try {
@@ -91,40 +157,18 @@ export function SourceBlock({
     <div
       className={cn(
         "group relative min-w-0 overflow-hidden rounded-xl border border-border bg-card",
-        className
+        className,
       )}
     >
       <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
-      {foldable && regions.size > 0 ? (
-        <>
-          {atDefault ? null : (
-            <button
-              type="button"
-              onClick={() => setCollapsed(new Set(initialCollapsed))}
-              className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
-            >
-              Reset
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              setCollapsed(allCollapsed ? new Set() : new Set(regions.keys()))
-            }
-            className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
-          >
-            {allCollapsed ? "Expand all" : "Collapse all"}
-          </button>
-        </>
-      ) : null}
-      <button
-        type="button"
-        onClick={copy}
-        aria-label="Copy code"
-        className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
-      >
-        {copied ? "Copied" : "Copy"}
-      </button>
+        <button
+          type="button"
+          onClick={copy}
+          aria-label="Copy code"
+          className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
       </div>
       <pre className="overflow-x-auto p-4 text-[0.8125rem] leading-6">
         <code>
@@ -134,7 +178,7 @@ export function SourceBlock({
             const isCollapsed = collapsed.has(i);
             return (
               <span key={i} className="flex">
-                {foldable ? (
+                {folding ? (
                   <span className="sticky left-0 w-4 shrink-0 select-none bg-card">
                     {region ? (
                       <button
@@ -236,3 +280,7 @@ function defaultCollapsed(regions: Map<number, Region>, lines: string[]) {
   }
   return collapsed;
 }
+
+const emptyRegions = new Map<number, Region>();
+const emptyLines = new Set<number>();
+const noop = () => {};
