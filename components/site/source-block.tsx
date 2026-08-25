@@ -47,9 +47,11 @@ export function SourceBlock({
     () => (foldable ? findRegions(lines) : new Map<number, Region>()),
     [foldable, lines]
   );
-  const [collapsed, setCollapsed] = React.useState<Set<number>>(() =>
-    foldable ? defaultCollapsed(regions) : new Set()
+  const initialCollapsed = React.useMemo(
+    () => (foldable ? defaultCollapsed(regions, lines) : new Set<number>()),
+    [foldable, lines, regions]
   );
+  const [collapsed, setCollapsed] = React.useState<Set<number>>(initialCollapsed);
 
   // Whichever collapsed region a line falls inside, it stays out of the flow.
   const hidden = React.useMemo(() => {
@@ -63,6 +65,9 @@ export function SourceBlock({
   }, [collapsed, regions]);
 
   const allCollapsed = collapsed.size >= regions.size && regions.size > 0;
+  const atDefault =
+    collapsed.size === initialCollapsed.size &&
+    [...collapsed].every((start) => initialCollapsed.has(start));
 
   function toggle(start: number) {
     setCollapsed((prev) => {
@@ -91,15 +96,26 @@ export function SourceBlock({
     >
       <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
       {foldable && regions.size > 0 ? (
-        <button
-          type="button"
-          onClick={() =>
-            setCollapsed(allCollapsed ? new Set() : new Set(regions.keys()))
-          }
-          className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
-        >
-          {allCollapsed ? "Expand all" : "Collapse all"}
-        </button>
+        <>
+          {atDefault ? null : (
+            <button
+              type="button"
+              onClick={() => setCollapsed(new Set(initialCollapsed))}
+              className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              setCollapsed(allCollapsed ? new Set() : new Set(regions.keys()))
+            }
+            className="rounded-md border border-border bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur transition hover:text-foreground"
+          >
+            {allCollapsed ? "Expand all" : "Collapse all"}
+          </button>
+        </>
       ) : null}
       <button
         type="button"
@@ -202,11 +218,21 @@ function findRegions(lines: string[]): Map<number, Region> {
   return regions;
 }
 
-/** Long top-level blocks start folded: the shape of the file first, detail on demand. */
-function defaultCollapsed(regions: Map<number, Region>) {
+/** `const NAME = [` / `= {`: a data literal rather than a component or hook. */
+const dataDeclaration =
+  /^(?:export\s+)?(?:const|let|var)\s+[A-Za-z_$][\w$]*(?::[^=]+)?\s*=\s*[[{]\s*$/;
+
+/**
+ * The default view: code open, data folded. Fixtures and lookup tables are
+ * the bulk of a demo file and almost never what a reader came for, so they
+ * start closed; components, hooks and handlers stay open.
+ */
+function defaultCollapsed(regions: Map<number, Region>, lines: string[]) {
   const collapsed = new Set<number>();
   for (const [start, region] of regions) {
-    if (region.indent === 0 && region.end - start > 12) collapsed.add(start);
+    if (region.indent !== 0) continue;
+    if (region.end - start < 4) continue;
+    if (dataDeclaration.test(lines[start])) collapsed.add(start);
   }
   return collapsed;
 }
