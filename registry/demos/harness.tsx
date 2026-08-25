@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  ArrowLeft,
   Calendar,
   Check,
   Columns2,
@@ -1118,10 +1119,40 @@ function WorkflowView() {
 }
 
 const themePresets = [
-  { id: "", label: "Nessa", hint: "The library's own neutral palette" },
-  { id: "tokyo-night", label: "Tokyo Night", hint: "Cool indigo, dark only" },
+  { id: "", label: "Nessa", hint: "The library's neutral palette" },
+  { id: "vercel", label: "Vercel", hint: "Pure black, white ink" },
+  { id: "github-dark", label: "GitHub Dark", hint: "Slate with blue accents" },
+  { id: "tokyo-night", label: "Tokyo Night", hint: "Cool indigo" },
+  { id: "catppuccin", label: "Catppuccin", hint: "Mauve on slate" },
+  { id: "nord", label: "Nord", hint: "Arctic blue" },
+  { id: "gruvbox", label: "Gruvbox", hint: "Warm retro amber" },
+  { id: "everforest", label: "Everforest", hint: "Soft forest green" },
   { id: "rose-pine", label: "Rosé Pine", hint: "Muted rose on plum" },
+  { id: "solarized", label: "Solarized", hint: "Light, classic" },
   { id: "paper", label: "Paper", hint: "Warm light, ink on cream" },
+];
+
+/**
+ * Fonts are tokens too: every nessa-ui surface resolves through
+ * --nessa-font-sans and --nessa-font-mono, so a family swap is two variables.
+ */
+const sansFonts = [
+  { id: "", label: "Geist", stack: "var(--font-geist), ui-sans-serif, system-ui, sans-serif" },
+  { id: "inter", label: "Inter", stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif" },
+  { id: "serif", label: "Source Serif", stack: "var(--font-source-serif), ui-serif, Georgia, serif" },
+  { id: "system", label: "System", stack: "ui-sans-serif, system-ui, sans-serif" },
+];
+
+const monoFonts = [
+  { id: "", label: "Geist Mono", stack: "var(--font-geist-mono), ui-monospace, monospace" },
+  { id: "jetbrains", label: "JetBrains Mono", stack: "var(--font-jetbrains), ui-monospace, monospace" },
+  { id: "plex", label: "IBM Plex Mono", stack: "var(--font-plex-mono), ui-monospace, monospace" },
+];
+
+const textSizes = [
+  { id: "14", label: "Small" },
+  { id: "16", label: "Default" },
+  { id: "18", label: "Large" },
 ];
 
 /**
@@ -1133,6 +1164,9 @@ const themePresets = [
 function AppearanceView() {
   const [mode, setMode] = React.useState<"light" | "dark">("dark");
   const [preset, setPreset] = React.useState("");
+  const [sans, setSans] = React.useState("");
+  const [mono, setMono] = React.useState("");
+  const [size, setSize] = React.useState("16");
 
   React.useEffect(() => {
     setMode(
@@ -1154,6 +1188,27 @@ function AppearanceView() {
     const root = document.documentElement;
     if (next) root.dataset.nessaTheme = next;
     else delete root.dataset.nessaTheme;
+  }
+
+  function applySans(next: string) {
+    setSans(next);
+    const stack = sansFonts.find((font) => font.id === next)?.stack;
+    document.documentElement.style.setProperty("--nessa-font-sans", stack ?? "");
+  }
+
+  function applyMono(next: string) {
+    setMono(next);
+    const stack = monoFonts.find((font) => font.id === next)?.stack;
+    document.documentElement.style.setProperty("--nessa-font-mono", stack ?? "");
+  }
+
+  /**
+   * Text size is not a library token: component sizes are rem-based, so the
+   * host scales them by changing the root font size, and every surface follows.
+   */
+  function applySize(next: string) {
+    setSize(next);
+    document.documentElement.style.fontSize = `${next}px`;
   }
 
   return (
@@ -1208,6 +1263,52 @@ function AppearanceView() {
           })}
         </div>
 
+        <h2 className="mt-8 mb-3 text-sm font-medium">Font</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-sm">
+            <span className="mb-1.5 block text-muted-foreground">Interface</span>
+            <select
+              value={sans}
+              onChange={(event) => applySans(event.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none"
+            >
+              {sansFonts.map((font) => (
+                <option key={font.id || "default"} value={font.id}>
+                  {font.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1.5 block text-muted-foreground">Monospace</span>
+            <select
+              value={mono}
+              onChange={(event) => applyMono(event.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-background px-2 font-mono text-sm outline-none"
+            >
+              {monoFonts.map((font) => (
+                <option key={font.id || "default"} value={font.id}>
+                  {font.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <h2 className="mt-8 mb-3 text-sm font-medium">Text size</h2>
+        <SegmentedControl value={size} onValueChange={applySize}>
+          {textSizes.map((option) => (
+            <SegmentedControlOption key={option.id} value={option.id}>
+              {option.label}
+            </SegmentedControlOption>
+          ))}
+        </SegmentedControl>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Component sizes are rem-based, so scaling the root font size carries
+          every surface with it.
+        </p>
+
         <h2 className="mt-8 mb-3 text-sm font-medium">What a theme is</h2>
         <pre className="overflow-x-auto rounded-xl border border-border bg-card p-3 font-mono text-xs leading-6 text-muted-foreground">
 {`[data-nessa-theme="tokyo-night"] {
@@ -1230,13 +1331,14 @@ const settingsSections = [
   { id: "about", label: "About" },
 ];
 
-/** Settings is its own surface: nav on the left, one section at a time. */
-function SettingsView() {
+/** Settings takes over the window, with only its own sidebar. */
+function SettingsSurface({ onClose }: { onClose: () => void }) {
   const [section, setSection] = React.useState("appearance");
 
   return (
-    <div className="flex min-h-0 flex-1">
-      <nav className="w-44 shrink-0 border-e border-border p-2">
+    <div className="flex h-full min-h-0 bg-background">
+      <nav className="flex w-56 shrink-0 flex-col border-e border-border bg-sidebar p-2">
+        <div className="mb-2 px-2 py-1.5 text-sm font-semibold">Settings</div>
         {settingsSections.map((entry) => (
           <button
             key={entry.id}
@@ -1252,6 +1354,15 @@ function SettingsView() {
             {entry.label}
           </button>
         ))}
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-auto flex items-center gap-2 rounded-md border-t border-border px-2 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <ArrowLeft aria-hidden className="size-4" />
+          Back to the harness
+        </button>
       </nav>
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -1328,7 +1439,6 @@ function SettingsSection({
 }
 
 function PaneBody({ viewId }: { viewId: string | undefined }) {
-  if (viewId === "view:settings") return <SettingsView />;
   if (viewId === "view:board") return <BoardView />;
   if (viewId === "view:calendar") return <CalendarView />;
   if (viewId === "view:workflow") return <WorkflowView />;
@@ -1428,11 +1538,7 @@ function Pane({ pane }: { pane: PaneNode }) {
   const showReveal =
     !sidebarOpen && firstPaneId(layout.workspace.root) === pane.id;
   const viewId = pane.activeViewId ?? pane.views[0];
-  const view =
-    views.find((entry) => entry.id === viewId) ??
-    (viewId === "view:settings"
-      ? { id: viewId, label: "Settings", icon: null }
-      : undefined);
+  const view = views.find((entry) => entry.id === viewId);
   const maximized = layout.workspace.maximizedPaneId === pane.id;
   const actions = usePaneActions(pane, maximized);
 
@@ -1537,7 +1643,13 @@ function Pane({ pane }: { pane: PaneNode }) {
 const SIDEBAR_WIDTH = 232;
 
 /** Closing hides the sidebar outright; the toggle moves into the pane bar. */
-function Sidebar({ actions }: { actions?: React.ReactNode }) {
+function Sidebar({
+  actions,
+  onOpenSettings,
+}: {
+  actions?: React.ReactNode;
+  onOpenSettings: () => void;
+}) {
   const { openView, layout, toggleDock } = useAppShell();
   const active = layout.workspace.activePaneId;
 
@@ -1581,9 +1693,7 @@ function Sidebar({ actions }: { actions?: React.ReactNode }) {
       <div className="flex items-center gap-0.5 border-t border-border p-2">
         <button
           type="button"
-          onClick={() =>
-            openView({ viewId: "view:settings", paneId: active })
-          }
+          onClick={onOpenSettings}
           className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Settings aria-hidden className="size-4" />
@@ -1749,10 +1859,16 @@ function Shortcuts() {
   return null;
 }
 
-function SidebarDock({ actions }: { actions?: React.ReactNode }) {
+function SidebarDock({
+  actions,
+  onOpenSettings,
+}: {
+  actions?: React.ReactNode;
+  onOpenSettings: () => void;
+}) {
   return (
     <AppShellDock side={AppShellDockSide.Left} minSize={180} maxSize={380}>
-      <Sidebar actions={actions} />
+      <Sidebar actions={actions} onOpenSettings={onOpenSettings} />
     </AppShellDock>
   );
 }
@@ -1763,6 +1879,12 @@ export function AgentHarness({
   /** Rendered in the sidebar footer, before the exit control. */
   headerActions?: React.ReactNode;
 } = {}) {
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+
+  if (settingsOpen) {
+    return <SettingsSurface onClose={() => setSettingsOpen(false)} />;
+  }
+
   return (
     <AppShell
       className="h-full"
@@ -1774,7 +1896,10 @@ export function AgentHarness({
     >
       <Shortcuts />
       <AppShellBody className="relative">
-        <SidebarDock actions={headerActions} />
+        <SidebarDock
+          actions={headerActions}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
         <AppShellMain className="relative">
           <AppShellWorkspace renderPane={(pane) => <Pane pane={pane} />} />
           <AppShellDock side={AppShellDockSide.Bottom} minSize={120} maxSize={360}>
