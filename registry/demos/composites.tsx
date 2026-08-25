@@ -657,9 +657,6 @@ const workspaceViews: Record<string, { label: string; body: string }> = {
   notes: { label: "Notes", body: "Rerank above 0.4 only. Ask Ada." },
 };
 
-let workspaceIds = 0;
-const nextWorkspaceId = () => `node-${(workspaceIds += 1)}`;
-
 /** Replaces one pane with a split holding it and a copy of it. */
 function splitNode(
   node: WorkspaceNode,
@@ -668,13 +665,15 @@ function splitNode(
 ): WorkspaceNode {
   if (node.type === "pane") {
     if (node.id !== paneId) return node;
+    // Ids derive from the pane being split, so they stay unique without a
+    // counter the render has to carry around.
     return {
       type: "split",
-      id: nextWorkspaceId(),
+      id: `${node.id}-split`,
       orientation,
       children: [
-        { type: "pane", id: nextWorkspaceId(), view: node.view },
-        { type: "pane", id: nextWorkspaceId(), view: node.view },
+        { type: "pane", id: `${node.id}-1`, view: node.view },
+        { type: "pane", id: `${node.id}-2`, view: node.view },
       ],
     };
   }

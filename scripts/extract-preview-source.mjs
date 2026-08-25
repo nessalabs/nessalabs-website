@@ -95,6 +95,21 @@ function maskTemplates(text) {
   return out;
 }
 
+/**
+ * Where a single-expression arrow body ends: the first newline that is not
+ * inside brackets, which is where the next declaration would start.
+ */
+function endOfExpression(text, start) {
+  let depth = 0;
+  for (let i = start; i < text.length; i += 1) {
+    const char = text[i];
+    if (char === "(" || char === "[" || char === "{") depth += 1;
+    else if (char === ")" || char === "]" || char === "}") depth -= 1;
+    else if (char === "\n" && depth <= 0) return i;
+  }
+  return text.length;
+}
+
 /** Module-level `const NAME = …` and `function Name(…) {…}` declarations. */
 function collectDeclarations() {
   const declarations = new Map();
@@ -119,6 +134,16 @@ function collectDeclarations() {
       const openIndex = valueStart + opener.index;
       const pairs = { "[": "]", "{": "}", "(": ")" };
       end = readBalanced(source, openIndex, opener[0], pairs[opener[0]]) + 1;
+      // An arrow function's parameter list closes long before the value does:
+      // keep reading through the body, block or expression.
+      const arrow = source.slice(end).match(/^\s*=>\s*/);
+      if (opener[0] === "(" && arrow) {
+        const bodyStart = end + arrow[0].length;
+        end =
+          source[bodyStart] === "{"
+            ? readBalanced(source, bodyStart, "{", "}") + 1
+            : endOfExpression(source, bodyStart);
+      }
     } else {
       end = source.indexOf("\n", valueStart);
     }
