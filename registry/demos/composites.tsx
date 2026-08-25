@@ -758,10 +758,64 @@ export function SplitViewWorkspaceDemo() {
       },
     ],
   }));
-  const [dragging, setDragging] = React.useState<string | null>(null);
-  // The drop handler runs in the same gesture that started the drag, so it
-  // reads the ref rather than state that may not have committed yet.
-  const draggingRef = React.useRef<string | null>(null);
+  const dragThreshold = 4;
+  const [drag, setDrag] = React.useState<{
+    from: string;
+    over: string | null;
+  } | null>(null);
+  const press = React.useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    pane: string;
+    started: boolean;
+  } | null>(null);
+  const ghost = React.useRef<HTMLDivElement | null>(null);
+
+  /** Which pane the pointer is over, read from the DOM rather than tracked. */
+  const paneAt = (x: number, y: number) =>
+    document
+      .elementFromPoint(x, y)
+      ?.closest("[data-pane-id]")
+      ?.getAttribute("data-pane-id") ?? null;
+
+  /** A faded miniature of the pane, riding the cursor for the whole drag. */
+  function liftGhost(pane: HTMLElement, x: number, y: number) {
+    const bounds = pane.getBoundingClientRect();
+    const node = pane.cloneNode(true) as HTMLElement;
+    node.style.width = `${bounds.width}px`;
+    node.style.height = `${bounds.height}px`;
+    node.style.transform = "scale(0.6)";
+    node.style.transformOrigin = "top left";
+    const shell = document.createElement("div");
+    shell.setAttribute("aria-hidden", "true");
+    shell.className =
+      "pointer-events-none fixed left-0 top-0 z-50 overflow-hidden rounded-md border border-border bg-background opacity-90 shadow-lg";
+    shell.style.width = `${bounds.width * 0.6}px`;
+    shell.style.height = `${bounds.height * 0.6}px`;
+    shell.appendChild(node);
+    document.body.appendChild(shell);
+    ghost.current = shell;
+    moveGhost(x, y);
+  }
+
+  function moveGhost(x: number, y: number) {
+    if (ghost.current) {
+      ghost.current.style.translate = `${x + 12}px ${y + 12}px`;
+    }
+  }
+
+  const endDrag = React.useCallback((commitOver: string | null) => {
+    const source = press.current;
+    press.current = null;
+    ghost.current?.remove();
+    ghost.current = null;
+    setDrag(null);
+    if (!source?.started || !commitOver || commitOver === source.pane) return;
+    setRoot((current) => swapViews(current, source.pane, commitOver));
+  }, []);
+
+  React.useEffect(() => () => ghost.current?.remove(), []);
 
   const paneCount = (node: WorkspaceNode): number =>
     node.type === "pane"
@@ -784,37 +838,86 @@ export function SplitViewWorkspaceDemo() {
     }
 
     const view = workspaceViews[node.view];
+    const isSource = drag?.from === node.id;
+    const isTarget = drag !== null && drag.over === node.id && !isSource;
     return (
       <div
-        className="flex h-full min-h-0 flex-col"
-        onDragOver={(event) => {
-          const source = draggingRef.current;
-          if (source && source !== node.id) event.preventDefault();
-        }}
-        onDrop={() => {
-          const source = draggingRef.current;
-          if (!source || source === node.id) return;
-          setRoot((current) => swapViews(current, source, node.id));
-          draggingRef.current = null;
-          setDragging(null);
-        }}
+        data-pane-id={node.id}
+        className={cn(
+          "flex h-full min-h-0 flex-col transition-colors",
+          isSource && "opacity-40",
+          isTarget && "bg-accent/40 ring-2 ring-inset ring-ring",
+          drag !== null && "select-none"
+        )}
       >
+        {/* Pointer-driven rather than HTML5 drag and drop: the whole pane
+            lifts as a ghost, the pane under the cursor highlights, and
+            Escape cancels, which is how the app shell moves panes. */}
         <div
-          draggable
-          onDragStart={(event) => {
-            draggingRef.current = node.id;
-            event.dataTransfer.setData("text/plain", node.id);
-            event.dataTransfer.effectAllowed = "move";
-            setDragging(node.id);
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            // A drag is not a text selection: without this the title and the
+            // pane body highlight as the pointer sweeps across them.
+            event.preventDefault();
+            const pane = event.currentTarget.closest(
+              "[data-pane-id]"
+            ) as HTMLElement | null;
+            press.current = {
+              pointerId: event.pointerId,
+              x: event.clientX,
+              y: event.clientY,
+              pane: node.id,
+              started: false,
+            };
+
+            // The gesture lives on the window rather than the handle: the
+            // pointer spends the whole drag over other panes, and Escape has
+            // to reach it wherever focus happens to be.
+            const detach = () => {
+              window.removeEventListener("pointermove", onMove);
+              window.removeEventListener("pointerup", onUp);
+              window.removeEventListener("pointercancel", onCancel);
+              window.removeEventListener("keydown", onKeyDown);
+            };
+            const onMove = (moveEvent: PointerEvent) => {
+              const current = press.current;
+              if (!current) return;
+              if (!current.started) {
+                const travelled =
+                  Math.abs(moveEvent.clientX - current.x) +
+                  Math.abs(moveEvent.clientY - current.y);
+                if (travelled < dragThreshold) return;
+                current.started = true;
+                // Any selection made before the threshold was crossed would
+                // otherwise keep extending under the ghost.
+                document.getSelection()?.removeAllRanges();
+                if (pane) liftGhost(pane, moveEvent.clientX, moveEvent.clientY);
+                setDrag({ from: node.id, over: null });
+              }
+              moveGhost(moveEvent.clientX, moveEvent.clientY);
+              const over = paneAt(moveEvent.clientX, moveEvent.clientY);
+              setDrag((state) => (state ? { ...state, over } : state));
+            };
+            const onUp = (upEvent: PointerEvent) => {
+              detach();
+              endDrag(paneAt(upEvent.clientX, upEvent.clientY));
+            };
+            const onCancel = () => {
+              detach();
+              endDrag(null);
+            };
+            const onKeyDown = (keyEvent: KeyboardEvent) => {
+              if (keyEvent.key !== "Escape") return;
+              detach();
+              endDrag(null);
+            };
+
+            window.addEventListener("pointermove", onMove);
+            window.addEventListener("pointerup", onUp);
+            window.addEventListener("pointercancel", onCancel);
+            window.addEventListener("keydown", onKeyDown);
           }}
-          onDragEnd={() => {
-            draggingRef.current = null;
-            setDragging(null);
-          }}
-          className={cn(
-            "flex h-8 shrink-0 cursor-grab items-center gap-1 border-b border-border px-2 text-xs",
-            dragging === node.id && "opacity-50"
-          )}
+          className="flex h-8 shrink-0 cursor-grab touch-none select-none items-center gap-1 border-b border-border px-2 text-xs active:cursor-grabbing"
         >
           <span className="min-w-0 flex-1 truncate font-medium">
             {view.label}
@@ -867,7 +970,12 @@ export function SplitViewWorkspaceDemo() {
   }
 
   return (
-    <div className="h-96 w-full overflow-hidden rounded-xl border border-border">
+    <div
+      className={cn(
+        "h-96 w-full overflow-hidden rounded-xl border border-border",
+        drag !== null && "select-none"
+      )}
+    >
       {render(root)}
     </div>
   );
