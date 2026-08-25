@@ -12,7 +12,11 @@ import {
   FileJson,
   FileSearch,
   FileText,
+  HelpCircle,
   KanbanSquare,
+  Languages,
+  ListTree,
+  MessageSquarePlus,
   LogOut,
   Maximize2,
   Minimize2,
@@ -21,6 +25,9 @@ import {
   Plus,
   Rows2,
   Mic,
+  Quote,
+  Search,
+  TextQuote,
   Pencil,
   Rocket,
   RotateCcw,
@@ -32,6 +39,7 @@ import {
 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { cn } from "@/lib/cn";
+import { SourceBlock } from "@/components/site/source-block";
 import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
   AppShell,
@@ -57,6 +65,37 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
   ComposerAccessMode,
+  DiffStat,
+  FileDiffCard,
+  FileDiffCardHeader,
+  FileDiffCardHeading,
+  FileDiffCardTitle,
+  FileDiffList,
+  FileDiffListItem,
+  FileDiffListToggle,
+  FileDiffPath,
+  MathBlock,
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerViewport,
+  MermaidDiagram,
+  MessageMarkdown,
+  Reference,
+  SelectionTooltip,
+  SelectionTooltipAction,
+  SelectionTooltipLabel,
+  SelectionTooltipMore,
+  SelectionTooltipSeparator,
+  SelectionTooltipShelf,
+  ReferenceCard,
+  ReferenceContent,
+  ReferenceTrigger,
+  ConversationRail,
+  ConversationRailItem,
+  ConversationRailMarker,
+  ConversationRailPreview,
+  ConversationRailTrigger,
   EventCalendar,
   EventCalendarGrid,
   EventCalendarToolbar,
@@ -104,8 +143,30 @@ import {
 
 /* ── data ──────────────────────────────────────────────────────────────── */
 
+/**
+ * Rich reply content. An assistant turn is either plain prose or a sequence of
+ * these, so one thread can show markdown, code, diagrams, formulas, citations
+ * and diffs without a bespoke renderer per thread.
+ */
+type Block =
+  | { kind: "markdown"; value: string }
+  | { kind: "code"; lang: string; value: string }
+  | { kind: "mermaid"; value: string }
+  | { kind: "math"; value: string }
+  | {
+      kind: "diff";
+      files: { path: string; additions: number; deletions: number }[];
+    }
+  | {
+      kind: "reference";
+      before: string;
+      after: string;
+      source: { title: string; excerpt: string; meta: string };
+    };
+
 interface Turn {
   role: "user" | "assistant" | "tool";
+  blocks?: Block[];
   text?: string;
   name?: string;
   meta?: string;
@@ -122,183 +183,572 @@ interface Thread {
 
 const threads: Thread[] = [
   {
-    "id": "chat:retrieval",
-    "title": "Retrieval recall drop",
-    "turns": [
+    id: "chat:tour",
+    title: "What nessa-ui covers",
+    turns: [
       {
-        "role": "user",
-        "text": "Why did retrieval recall drop from 92% to 87% in the last eval run?"
+        role: "user",
+        text: "Give me the tour. What does @nessa-ui/react actually cover, and what am I still expected to write myself?",
       },
       {
-        "role": "tool",
-        "name": "search_runs",
-        "meta": "suite=retrieval, last=5",
-        "status": "complete",
-        "output": "Run 4189: 92.1% recall (2026-08-20)\nRun 4190: 90.8% recall (2026-08-21)\nRun 4191: 87.3% recall (2026-08-22)\nRun 4192: 86.9% recall (2026-08-23)"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Three layers, and only the first two are ours.",
+              "",
+              "| Layer | Ships in the package | You own |",
+              "| --- | --- | --- |",
+              "| Primitives | Button, Input, Badge, Card, SegmentedControl | palette, radius, density |",
+              "| Agent surfaces | Message, ToolCall, ToolApproval, ChatComposer, ConversationRail | copy, model list, policy |",
+              "| Workspaces | AppShell, SplitView, Kanban, EventCalendar, WorkflowCanvas | data, persistence |",
+              "",
+              "Every surface is a compound component with `data-slot` attributes, so",
+              "restyling is a class away and nothing is locked behind a variant prop.",
+            ].join("\n"),
+          },
+        ],
       },
       {
-        "role": "tool",
-        "name": "query_warehouse",
-        "meta": "table=run_metadata, runs=4189-4193",
-        "status": "complete",
-        "output": "4189: embed_model=v2.1, chunk_size=512\n4190: embed_model=v2.1, chunk_size=512\n4191: embed_model=v2.2, chunk_size=256\n4192: embed_model=v2.2, chunk_size=256"
+        role: "user",
+        text: "Show me the smallest chat surface I can ship.",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=config/v2.2.yaml",
-        "status": "complete",
-        "output": "chunk_strategy: semantic_split\nmax_chunk_tokens: 256\nembedding_model: v2.2-ada\nrerank_threshold: 0.65"
+        role: "tool",
+        name: "read_file",
+        meta: "path=packages/react/src/components/message.tsx",
+        status: "complete",
+        output:
+          "export function Message({ from, ...props })\nexport function MessageContent(props)\nexport function MessageBubble({ variant, streaming, ...props })\nexport function MessageFooter(props)\nexport function MessageActions(props)",
       },
       {
-        "role": "assistant",
-        "text": "The drop tracks the v2.2 embedding model and 256 chunk size that landed in run 4191. The semantic_split strategy with tighter chunking cut context density. Worth testing chunk_size 512 against v2.2 to separate the model change from the chunking change."
-      }
-    ]
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: "Five components, no provider, no context:",
+          },
+          {
+            kind: "code",
+            lang: "tsx",
+            value: [
+              'import { Message, MessageBubble, MessageContent } from "@nessa-ui/react";',
+              "",
+              "export function Transcript({ turns }: { turns: Turn[] }) {",
+              "  return (",
+              '    <div role="log" className="flex flex-col gap-3">',
+              "      {turns.map((turn, i) => (",
+              "        <Message key={i} from={turn.role}>",
+              "          <MessageContent>",
+              '            <MessageBubble variant={turn.role === "user" ? "primary" : "plain"}>',
+              "              {turn.text}",
+              "            </MessageBubble>",
+              "          </MessageContent>",
+              "        </Message>",
+              "      ))}",
+              "    </div>",
+              "  );",
+              "}",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "Alignment, bubble shape, hover actions and the streaming fade come from the slots. Swap `variant` and it is still your palette.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "How does streaming text land? Does the whole transcript re-render per token?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "No. New text mounts inside per-word spans that fade from transparent; already-painted words keep their DOM nodes, so the work per token is proportional to the tail, not the transcript:",
+          },
+          {
+            kind: "math",
+            value: String.raw`\text{work}(t) \;=\; O\!\left(w_{\text{new}}(t)\right) \quad\text{not}\quad O\!\left(\sum_{i=1}^{n} w_i\right)`,
+          },
+          {
+            kind: "markdown",
+            value:
+              "Code, math and diagram nodes are excluded from the fade wrapper, so a half-parsed fence never animates character by character.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Draw me the render pipeline for a streamed markdown reply.",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "mermaid",
+            value: [
+              "flowchart LR",
+              "  A[Token stream] --> B[MessageMarkdown]",
+              "  B --> C{Node type}",
+              "  C -- prose --> D[Word spans fade in]",
+              "  C -- fence --> E[CodeBlock]",
+              "  C -- $$ --> F[MathBlock]",
+              "  C -- mermaid --> G[MermaidDiagram]",
+              "  D --> H[MessageBubble]",
+              "  E --> H",
+              "  F --> H",
+              "  G --> H",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "`MathBlock` holds the last valid render while intermediate TeX is unparseable, which is why formulas grow instead of flashing an error.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Our retrieval answers cite sources. Can the transcript carry citations and the scoring maths together?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "reference",
+            before:
+              "Ranking is plain cosine similarity over normalised embeddings",
+            after:
+              "so a citation is just a hover target inside the sentence it supports.",
+            source: {
+              title: "retrieval/rerank.ts",
+              excerpt:
+                "score = dot(q, d) / (norm(q) * norm(d)) // cross-encoder applied above 0.4",
+              meta: "lines 41-58",
+            },
+          },
+          {
+            kind: "math",
+            value: String.raw`\text{sim}(q, d) = \frac{q \cdot d}{\lVert q \rVert \, \lVert d \rVert}, \qquad p_i = \frac{e^{s_i / \tau}}{\sum_j e^{s_j / \tau}}`,
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "Show me what landed in the last release.",
+      },
+      {
+        role: "tool",
+        name: "git_diff",
+        meta: "range=v0.8.2..v0.9.0",
+        status: "complete",
+        output:
+          "9 files changed\n+284 -137\nconversation-rail.tsx (new)\nworkflow-canvas/node.tsx\nevent-calendar.tsx",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "diff",
+            files: [
+              {
+                path: "packages/react/src/components/conversation-rail.tsx",
+                additions: 148,
+                deletions: 0,
+              },
+              {
+                path: "packages/react/src/components/workflow-canvas/node.tsx",
+                additions: 62,
+                deletions: 41,
+              },
+              {
+                path: "packages/react/src/components/event-calendar.tsx",
+                additions: 34,
+                deletions: 58,
+              },
+              {
+                path: "packages/react/src/components/message.tsx",
+                additions: 21,
+                deletions: 12,
+              },
+              {
+                path: "packages/react/src/index.ts",
+                additions: 6,
+                deletions: 1,
+              },
+              { path: "docs/agent-surfaces.md", additions: 13, deletions: 25 },
+            ],
+          },
+          {
+            kind: "markdown",
+            value:
+              "`ConversationRail` is the headline: turn markers beside the transcript that widen toward the pointer and preview on hover. It is in this pane, to the left, once the pane is wide enough for it.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "So what is left for me to build?",
+      },
+      {
+        role: "assistant",
+        streaming: true,
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Your product. We hand you interaction and state:",
+              "",
+              "- keyboard and focus behaviour, including roving focus in lists and canvases",
+              "- drag, drop and resize with commit semantics you can veto",
+              "- streaming, queueing and cancellation in the composer",
+              "- layout persistence for panes, docks and splits",
+              "",
+              "What we deliberately do not hand you is opinion. There is no brand colour,",
+              "no mandated font, no copy. Tokens sit on `--nessa-*` variables, and every",
+              "themed surface in this harness, including the eleven presets in Settings,",
+              "is a variable swap rather than a fork.",
+            ].join("\n"),
+          },
+        ],
+      },
+    ],
   },
   {
-    "id": "chat:release",
-    "title": "Release freeze window",
-    "turns": [
+    id: "chat:krusty",
+    title: "Kanban for the Krusty Krab",
+    turns: [
       {
-        "role": "user",
-        "text": "When can we merge the new eval harness if a freeze is coming up?"
+        role: "user",
+        text: "Mr. Krabs wants a board for the fry station. Four columns, cards you can throw between them. How much of that do I write?",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=RELEASE_SCHEDULE.md",
-        "status": "complete",
-        "output": "Release v1.8: 2026-08-25 (code freeze 2026-08-24)\nRelease v1.9: 2026-09-15 (code freeze 2026-09-01)\nHotfix window: 2026-08-26 to 2026-08-31"
+        role: "tool",
+        name: "read_file",
+        meta: "path=packages/react/src/components/kanban/index.ts",
+        status: "complete",
+        output:
+          "export { Kanban, KanbanColumn, KanbanColumnHeader, KanbanCard, KanbanCardTitle, KanbanCardMeta }\nexport type { KanbanDropResult }",
       },
       {
-        "role": "tool",
-        "name": "git_diff",
-        "meta": "branch=eval-harness, base=main",
-        "status": "complete",
-        "output": "173 files changed, 4521 insertions(+), 892 deletions(-)\nevaluation/harness.py, tests/eval_*.py, config/evals.yaml"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "The drag is ours, the patties are yours. You give it columns and cards, and get back a drop result you can accept or refuse:",
+          },
+          {
+            kind: "code",
+            lang: "tsx",
+            value: [
+              '<Kanban onDrop={(drop) => {',
+              '  if (drop.toColumn === "served" && !patty.cooked) return false;',
+              "  move(drop.cardId, drop.toColumn, drop.index);",
+              "}}>",
+              "  {columns.map((column) => (",
+              "    <KanbanColumn key={column.id} id={column.id}>",
+              "      <KanbanColumnHeader>{column.title}</KanbanColumnHeader>",
+              "      {column.cards.map((card) => (",
+              "        <KanbanCard key={card.id} id={card.id}>",
+              "          <KanbanCardTitle>{card.title}</KanbanCardTitle>",
+              "        </KanbanCard>",
+              "      ))}",
+              "    </KanbanColumn>",
+              "  ))}",
+              "</Kanban>",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "Returning `false` from `onDrop` snaps the card home, which is the closest thing in software to Squidward saying no.",
+          },
+        ],
       },
       {
-        "role": "assistant",
-        "text": "The v1.8 freeze is tomorrow and this branch touches 173 files, so merging now carries real risk. Either land it before 2026-08-24 23:59 UTC or target v1.9, whose window opens 2026-09-01. Between those, 08-26 to 08-31 is hotfix only."
+        role: "user",
+        text: "Does the card follow the cursor, or is it one of those lists where a grey box appears somewhere and you hope?",
       },
       {
-        "role": "user",
-        "text": "What if we cherry-pick the core changes and defer the refactor?"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "It follows. Three things run at once while you drag:",
+              "",
+              "1. the card lifts and tracks the pointer",
+              "2. a dotted placeholder opens at the index you are actually over",
+              "3. the column under the pointer takes a highlight",
+              "",
+              "Keyboard drag is the same model: pick up with `Space`, move with arrows, drop with `Space`, cancel with `Escape`. Try it on the Board view in the sidebar.",
+            ].join("\n"),
+          },
+        ],
       },
       {
-        "role": "tool",
-        "name": "run_eval",
-        "meta": "suite=core_harness, baseline=4182",
-        "status": "running",
-        "output": "Evaluating 12 checkpoints\n2 of 12 complete, ETA 8 min"
+        role: "user",
+        text: "And if Plankton drags 400 cards at once?",
       },
       {
-        "role": "assistant",
-        "text": "Running the core harness against baseline 4182 now. If the next eight minutes come back clean, cherry-picking the evaluation core alone is safe for v1.8."
-      }
-    ]
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "Only the dragged card and the two columns it touches re-render. Everything else keeps its DOM nodes, so cost per frame is:",
+          },
+          {
+            kind: "math",
+            value: String.raw`O(1) \;\text{per frame}, \quad \text{not}\; O(n)\;\text{cards}`,
+          },
+        ],
+      },
+    ],
   },
   {
-    "id": "chat:flaky",
-    "title": "Test suite flakiness",
-    "turns": [
+    id: "chat:timeline",
+    title: "A Marvel timeline, badly",
+    turns: [
       {
-        "role": "user",
-        "text": "Integration tests keep failing intermittently. What is causing the flakes?"
+        role: "user",
+        text: "I want to plot the MCU on EventCalendar as a joke for standup. Can it handle events that overlap into nonsense?",
       },
       {
-        "role": "tool",
-        "name": "tail_logs",
-        "meta": "tests/integration, pattern=FAIL",
-        "status": "complete",
-        "output": "14:32:45 test_retrieval_timeout: expected 150ms, got 280ms\n14:28:12 test_cache_consistency: assertion mismatch\n14:22:31 test_retrieval_timeout: expected 150ms, got 310ms"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "It can, and the overlap is the interesting part. Concurrent events share the column width and the layout is deterministic, so Endgame does not shove Loki off screen.",
+              "",
+              "| View | Good for | Overlap |",
+              "| --- | --- | --- |",
+              "| Day | one timeline, hour by hour | side by side |",
+              "| Week | the working week | side by side |",
+              "| Month | shape of a quarter | stacked, with a count |",
+              "",
+              "The calendar in the sidebar is clamped to 9-5 because nobody needs to see 3am.",
+            ].join("\n"),
+          },
+        ],
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=tests/integration/test_retrieval.py",
-        "status": "error",
-        "output": "Error: no such file\nDid you mean tests/integration/retrieval_timeout.py?"
+        role: "tool",
+        name: "search_docs",
+        meta: "query=event-calendar drag semantics",
+        status: "complete",
+        output:
+          "event-calendar.md#drag: onEventChange fires on commit, not during\nevent-calendar.md#resize: edges resize in step increments\nevent-calendar.md#keyboard: arrows move, shift+arrows resize",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=tests/integration/retrieval_timeout.py",
-        "status": "complete",
-        "output": "def test_retrieval_timeout():\n    assert elapsed_ms < 150  # hardcoded threshold\n# note: warehouse latency varies 140-320ms"
+        role: "user",
+        text: "Wait, so if I drag the Snap to a different Tuesday, when does my state actually change?",
       },
       {
-        "role": "assistant",
-        "text": "The 150ms threshold sits inside the warehouse latency range of 140 to 320ms, so the test fails whenever the warehouse is slow. Raise it to 350ms, or assert a percentile instead of an absolute bound."
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "On release. During the drag the component runs its own preview so your state is not thrashed sixty times a second; `onEventChange` fires once with the final start and end, and you can reject it. Refusing a change snaps the event back with no flicker, because the preview never touched your data.",
+          },
+          {
+            kind: "mermaid",
+            value: [
+              "sequenceDiagram",
+              "  participant U as Pointer",
+              "  participant C as EventCalendar",
+              "  participant H as Your store",
+              "  U->>C: drag Snap to Tue",
+              "  C->>C: preview position",
+              "  U->>C: release",
+              "  C->>H: onEventChange(start, end)",
+              "  H-->>C: accept or reject",
+              "  C->>U: commit or snap back",
+            ].join("\n"),
+          },
+        ],
       },
       {
-        "role": "user",
-        "text": "Is the cache consistency failure separate?"
+        role: "user",
+        text: "Good. Now the important question: can I make it look like a Wakandan interface?",
       },
       {
-        "role": "tool",
-        "name": "run_eval",
-        "meta": "suite=integration, runs=100, seed=42",
-        "status": "complete",
-        "output": "retrieval_timeout: 18 of 100 failed\ncache_consistency: 3 of 100 failed"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "Yes, and without touching a component. Every surface reads `--nessa-*` tokens, so a palette is a stylesheet, not a fork. Settings in this harness swaps eleven of them at runtime and nothing re-mounts. Purple and gold is four variables away.",
+          },
+        ],
       },
-      {
-        "role": "assistant",
-        "text": "Separate, and much rarer: 3% against 18%. Fix the timeout threshold first, then look at cache consistency on its own."
-      }
-    ]
+    ],
   },
   {
-    "id": "chat:latency",
-    "title": "Inference endpoint cost",
-    "turns": [
+    id: "chat:theming",
+    title: "Theming without a fork",
+    turns: [
       {
-        "role": "user",
-        "text": "The inference endpoint is running hot. What is driving the cost?"
+        role: "user",
+        text: "Our designer wants Tokyo Night everywhere, our CEO wants paper white, and legal wants high contrast. Do I ship three builds?",
       },
       {
-        "role": "tool",
-        "name": "profile_endpoint",
-        "meta": "inference-prod-v2, window=1h",
-        "status": "complete",
-        "output": "p50 latency 287ms\np99 latency 840ms\n14,200 requests/hour\nCPU 78%, GPU 92%"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "One build. Themes are variable scopes, so a theme is data you can ship after the fact, including from a database:",
+          },
+          {
+            kind: "code",
+            lang: "css",
+            value: [
+              '[data-nessa-theme="tokyo-night"] {',
+              "  --nessa-background: oklch(0.21 0.03 265);",
+              "  --nessa-foreground: oklch(0.89 0.03 265);",
+              "  --nessa-primary: oklch(0.72 0.13 265);",
+              "  --nessa-muted: oklch(0.27 0.03 265);",
+              "  --nessa-border: oklch(0.32 0.03 265);",
+              "}",
+            ].join("\n"),
+          },
+          {
+            kind: "markdown",
+            value:
+              "Set the attribute on any element and everything inside it re-themes, including portalled menus, which is the part most token systems get wrong.",
+          },
+        ],
       },
       {
-        "role": "tool",
-        "name": "query_warehouse",
-        "meta": "table=endpoint_costs",
-        "status": "complete",
-        "output": "2026-08-20: $0.042 / 1k tokens\n2026-08-21: $0.041 / 1k tokens\n2026-08-22: $0.045 / 1k tokens\n2026-08-23: $0.048 / 1k tokens"
+        role: "user",
+        text: "What about fonts and text size? Those usually mean hunting through fifty files.",
       },
       {
-        "role": "tool",
-        "name": "read_file",
-        "meta": "path=config/inference-prod.yaml",
-        "status": "complete",
-        "output": "batch_size: 32\ncontext_window: 32k\ncache_ttl: 300s"
+        role: "tool",
+        name: "grep",
+        meta: 'pattern="--nessa-font", path=packages/react/src',
+        status: "complete",
+        output:
+          "theme.css: --nessa-font-sans, --nessa-font-mono\ncomponents/*: font-sans, font-mono only\n0 hard-coded font families",
       },
       {
-        "role": "assistant",
-        "text": "GPU sits at 92% and cost per thousand tokens rose 14% in three days, from $0.042 to $0.048. A 32k context at batch size 32 maximises throughput but holds expensive GPU memory. Dropping to batch 16, or an 8k context, should bring cost per request down."
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Fonts are two variables and nothing else. Text size is not a token, deliberately: sizes are in `rem`, so the host scales the root and the whole surface follows, including line heights and the gaps that depend on them.",
+              "",
+              "- `--nessa-font-sans` drives every prose and UI surface",
+              "- `--nessa-font-mono` drives code, diffs and tool output",
+              "- `html { font-size }` drives scale",
+              "",
+              "Settings in this harness does exactly that, and nothing else.",
+            ].join("\n"),
+          },
+        ],
       },
       {
-        "role": "user",
-        "text": "How much would 8k context actually save?"
+        role: "user",
+        text: "Any chance of a flash of the wrong theme on load?",
       },
       {
-        "role": "tool",
-        "name": "profile_endpoint",
-        "meta": "inference-staging-8k, window=1h",
-        "status": "running",
-        "output": "Sampling requests against context_window=8k\n~3 min remaining"
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "Only if you defer the choice to React. Stamp the attribute in a blocking inline script before paint and the first frame is already correct. This site does it in about ten lines.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "chat:approval",
+    title: "When the agent asks first",
+    turns: [
+      {
+        role: "user",
+        text: "Our agent runs shell commands. I need the approval prompt to feel like a decision, not a modal people dismiss on reflex.",
       },
       {
-        "role": "assistant",
-        "text": "Profiling the 8k variant now. Cutting the context window usually takes 30 to 40% off memory cost and returns 8 to 15% on latency from fewer GPU operations."
-      }
-    ]
-  }
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "`ToolApproval` is built for that. The command, its arguments and its blast radius are on screen at the moment of the choice, and the surface adapts instead of becoming a dialog: a notch-sized pill when it is small, a full card when it is not.",
+          },
+        ],
+      },
+      {
+        role: "tool",
+        name: "run_command",
+        meta: "cmd=rm -rf ./build, cwd=/srv/app",
+        status: "error",
+        output:
+          "Blocked: awaiting approval\npolicy=ask-approval\nreason=destructive path outside allowlist",
+      },
+      {
+        role: "user",
+        text: "That is the one. What happens after I approve?",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value:
+              "The approval turns into the tool call in place. Same row, same position in the transcript, so the history reads as one event rather than a prompt followed by a mystery. The composer's access mode picks the default policy: ask every time, allow reads, or full auto.",
+          },
+          {
+            kind: "mermaid",
+            value: [
+              "stateDiagram-v2",
+              "  [*] --> Pending",
+              "  Pending --> Running: approve",
+              "  Pending --> Denied: reject",
+              "  Running --> Complete",
+              "  Running --> Failed",
+              "  Denied --> [*]",
+              "  Complete --> [*]",
+            ].join("\n"),
+          },
+        ],
+      },
+      {
+        role: "user",
+        text: "And the risky ones? I do not want a yes-to-all button next to a delete.",
+      },
+      {
+        role: "assistant",
+        blocks: [
+          {
+            kind: "markdown",
+            value: [
+              "Nothing is auto-focused, so `Enter` cannot approve by accident. Beyond that it is your policy, not ours: we render what you classify.",
+              "",
+              "A rule of thumb some teams use is to require a second confirmation once the estimated blast radius crosses a threshold:",
+            ].join("\n"),
+          },
+          {
+            kind: "math",
+            value: String.raw`\text{risk} = \underbrace{p_{\text{fail}}}_{\text{history}} \times \underbrace{|\text{files}|}_{\text{scope}} \times \underbrace{c_{\text{undo}}}_{\text{recoverability}}`,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const replies = [
@@ -307,7 +757,7 @@ const replies = [
   "Pulling the failure-rate trend for the last week so we can prioritise.",
   "Worth an alert on latency percentiles so this surfaces sooner next time.",
   "That baseline holds. Comparing it against the previous checkpoint now.",
-  "I will model the cost and latency tradeoff once profiling finishes."
+  "I will model the cost and latency tradeoff once profiling finishes.",
 ];
 
 interface SlashItem {
@@ -323,16 +773,40 @@ const slashSections: SectionedListboxSection<SlashItem>[] = [
     id: "skills",
     label: "Skills",
     items: [
-      { id: "eval", kind: "skill", label: "Eval suite", description: "run the harness", icon: <Sparkles /> },
-      { id: "trace", kind: "skill", label: "Trace reader", description: "inspect a run", icon: <FileSearch /> },
+      {
+        id: "eval",
+        kind: "skill",
+        label: "Eval suite",
+        description: "run the harness",
+        icon: <Sparkles />,
+      },
+      {
+        id: "trace",
+        kind: "skill",
+        label: "Trace reader",
+        description: "inspect a run",
+        icon: <FileSearch />,
+      },
     ],
   },
   {
     id: "plugins",
     label: "Plugins",
     items: [
-      { id: "sql", kind: "plugin", label: "Warehouse SQL", description: "query metrics", icon: <Database /> },
-      { id: "deploy", kind: "plugin", label: "Deploy", description: "ship a build", icon: <Rocket /> },
+      {
+        id: "sql",
+        kind: "plugin",
+        label: "Warehouse SQL",
+        description: "query metrics",
+        icon: <Database />,
+      },
+      {
+        id: "deploy",
+        kind: "plugin",
+        label: "Deploy",
+        description: "ship a build",
+        icon: <Rocket />,
+      },
     ],
   },
 ];
@@ -360,7 +834,13 @@ const thinkingLevels = [
   { value: "deep", label: "Deep" },
 ];
 
-function ModelAsset({ name, invert = false }: { name: string; invert?: boolean }) {
+function ModelAsset({
+  name,
+  invert = false,
+}: {
+  name: string;
+  invert?: boolean;
+}) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -380,8 +860,18 @@ const harnessModels: ModelPickerGroup[] = [
     shortLabel: "Claude",
     icon: <ModelAsset name="claude-color" />,
     models: [
-      { id: "opus", label: "Opus 5", description: "Deep reasoning", icon: <ModelAsset name="claude-color" /> },
-      { id: "sonnet", label: "Sonnet 5", description: "Everyday work", icon: <ModelAsset name="claude-color" /> },
+      {
+        id: "opus",
+        label: "Opus 5",
+        description: "Deep reasoning",
+        icon: <ModelAsset name="claude-color" />,
+      },
+      {
+        id: "sonnet",
+        label: "Sonnet 5",
+        description: "Everyday work",
+        icon: <ModelAsset name="claude-color" />,
+      },
     ],
   },
   {
@@ -390,7 +880,12 @@ const harnessModels: ModelPickerGroup[] = [
     shortLabel: "GPT",
     icon: <ModelAsset name="openai" invert />,
     models: [
-      { id: "codex", label: "Codex", description: "Agentic implementation", icon: <ModelAsset name="openai" invert /> },
+      {
+        id: "codex",
+        label: "Codex",
+        description: "Agentic implementation",
+        icon: <ModelAsset name="openai" invert />,
+      },
     ],
   },
 ];
@@ -400,7 +895,6 @@ const files = [
   "apps/api/routes/search.ts",
   "docs/retrieval.md",
 ];
-
 
 const views: {
   id: string;
@@ -416,6 +910,57 @@ const views: {
   { id: "view:calendar", label: "Calendar", icon: Calendar },
   { id: "view:workflow", label: "Workflow", icon: Workflow },
 ];
+
+/**
+ * The edit field takes the shape of the message it replaces: full column width,
+ * and tall enough for the text without scrolling.
+ */
+function AutosizeTextarea({
+  value,
+  onValueChange,
+  onSubmit,
+  onCancel,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [value]);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.focus();
+    // Caret at the end, so editing continues from where the sentence stopped.
+    element.setSelectionRange(element.value.length, element.value.length);
+  }, []);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(event) => onValueChange(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onCancel();
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          onSubmit();
+        }
+      }}
+      aria-label="Edit message"
+      rows={1}
+      className="max-h-64 w-full resize-none overflow-y-auto rounded-2xl border border-border bg-background px-3.5 py-2.5 text-sm leading-6 outline-none focus:border-ring"
+    />
+  );
+}
 
 /** Copy swaps to a check for a moment, the way copy controls usually do. */
 function CopyAction({ text }: { text: string }) {
@@ -451,6 +996,211 @@ function CopyAction({ text }: { text: string }) {
 
 /* ── chat pane ─────────────────────────────────────────────────────────── */
 
+/**
+ * Rich reply content.
+ *
+ * Markdown, math and diagrams come straight from the library. Fenced code is
+ * the one exception: nessa-ui's CodeBlock renders through Pierre's worker
+ * engine, which does not paint inside this app yet, so the docs' own
+ * highlighter stands in until it does.
+ */
+function TurnBlocks({
+  blocks,
+  streaming,
+}: {
+  blocks: Block[];
+  streaming?: boolean;
+}) {
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      {blocks.map((block, index) => {
+        switch (block.kind) {
+          case "markdown":
+            return (
+              <MessageMarkdown key={index} streaming={streaming}>
+                {block.value}
+              </MessageMarkdown>
+            );
+          case "code":
+            return (
+              <SourceBlock
+                key={index}
+                code={block.value}
+                lang={block.lang}
+                className="bg-background"
+              />
+            );
+          case "mermaid":
+            return <MermaidDiagram key={index} chart={block.value} />;
+          case "math":
+            return <MathBlock key={index} tex={block.value} />;
+          case "reference":
+            return (
+              <p key={index} className="text-sm leading-6">
+                {block.before}{" "}
+                <Reference>
+                  <ReferenceTrigger>1</ReferenceTrigger>
+                  <ReferenceContent>
+                    <ReferenceCard sources={[block.source]} />
+                  </ReferenceContent>
+                </Reference>{" "}
+                {block.after}
+              </p>
+            );
+          case "diff":
+            return (
+              <FileDiffCard key={index} itemCount={block.files.length}>
+                <FileDiffCardHeader>
+                  <FileDiffCardHeading>
+                    <FileDiffCardTitle>Changes</FileDiffCardTitle>
+                  </FileDiffCardHeading>
+                  <DiffStat
+                    additions={block.files.reduce((n, f) => n + f.additions, 0)}
+                    deletions={block.files.reduce((n, f) => n + f.deletions, 0)}
+                  />
+                </FileDiffCardHeader>
+                <FileDiffList>
+                  {block.files.map((file) => (
+                    <FileDiffListItem key={file.path}>
+                      <FileDiffPath path={file.path} />
+                      <DiffStat
+                        additions={file.additions}
+                        deletions={file.deletions}
+                      />
+                    </FileDiffListItem>
+                  ))}
+                </FileDiffList>
+                <FileDiffListToggle />
+              </FileDiffCard>
+            );
+        }
+      })}
+    </div>
+  );
+}
+
+/**
+ * Where the current selection sits inside `containerRef`, or null when there
+ * is none. SelectionTooltip is presentational by design, so anchoring is the
+ * host's job: this is that job, done once for every transcript.
+ */
+function useSelectionAnchor(
+  containerRef: React.RefObject<HTMLElement | null>
+) {
+  const [anchor, setAnchor] = React.useState<{
+    top: number;
+    left: number;
+    text: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    function update() {
+      const node = containerRef.current;
+      if (!node) return;
+      const selection = document.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+        setAnchor(null);
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      if (!node.contains(range.commonAncestorContainer)) {
+        setAnchor(null);
+        return;
+      }
+      const bounds = range.getBoundingClientRect();
+      if (bounds.width === 0 && bounds.height === 0) {
+        setAnchor(null);
+        return;
+      }
+      const host = node.getBoundingClientRect();
+      setAnchor({
+        top: bounds.top - host.top - 8,
+        left: bounds.left - host.left + bounds.width / 2,
+        text: selection.toString(),
+      });
+    }
+
+    document.addEventListener("selectionchange", update);
+    // The transcript scrolls under the pill, so the anchor is re-read rather
+    // than left to drift away from the words it points at.
+    container.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      document.removeEventListener("selectionchange", update);
+      container.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [containerRef]);
+
+  return anchor;
+}
+
+const selectionShelf = [
+  { label: "Explain", icon: HelpCircle },
+  { label: "Improve", icon: Sparkles },
+  { label: "Translate", icon: Languages },
+  { label: "Summarize", icon: ListTree },
+  { label: "Find similar", icon: Search },
+  { label: "Cite", icon: Quote },
+];
+
+function TranscriptSelectionTooltip({
+  anchor,
+  onQuote,
+}: {
+  anchor: { top: number; left: number; text: string };
+  onQuote: (text: string) => void;
+}) {
+  return (
+    <div
+      className="pointer-events-none absolute z-30"
+      style={{
+        top: anchor.top,
+        left: anchor.left,
+        transform: "translate(-50%, -100%)",
+      }}
+    >
+      <div className="pointer-events-auto">
+        <SelectionTooltip>
+          <SelectionTooltipAction
+            aria-label="Quote in composer"
+            tooltip="Quote in composer"
+            onClick={() => onQuote(anchor.text)}
+          >
+            <MessageSquarePlus aria-hidden="true" />
+            <SelectionTooltipLabel>Quote</SelectionTooltipLabel>
+          </SelectionTooltipAction>
+          <SelectionTooltipSeparator />
+          <SelectionTooltipAction
+            aria-label="Copy"
+            tooltip="Copy"
+            onClick={() => navigator.clipboard?.writeText(anchor.text)}
+          >
+            <Copy aria-hidden="true" />
+            <SelectionTooltipLabel>Copy</SelectionTooltipLabel>
+          </SelectionTooltipAction>
+          <SelectionTooltipSeparator />
+          <SelectionTooltipMore />
+          <SelectionTooltipShelf>
+            {selectionShelf.map(({ label, icon: Icon }) => (
+              <SelectionTooltipAction
+                key={label}
+                aria-label={label}
+                tooltip={label}
+              >
+                <Icon aria-hidden="true" />
+              </SelectionTooltipAction>
+            ))}
+          </SelectionTooltipShelf>
+        </SelectionTooltip>
+      </div>
+    </div>
+  );
+}
+
 function ChatPane({ viewId }: { viewId: string }) {
   const thread = threads.find((entry) => entry.id === viewId) ?? threads[0];
   const [turns, setTurns] = React.useState<Turn[]>(thread.turns);
@@ -468,6 +1218,10 @@ function ChatPane({ viewId }: { viewId: string }) {
   const editorRef = React.useRef<ChatComposerEditorHandle>(null);
   const [editing, setEditing] = React.useState<number | null>(null);
   const [editDraft, setEditDraft] = React.useState("");
+  const [activeTurn, setActiveTurn] = React.useState(0);
+  const turnRefs = React.useRef<Array<HTMLDivElement | null>>([]);
+  const transcriptRef = React.useRef<HTMLDivElement | null>(null);
+  const selection = useSelectionAnchor(transcriptRef);
 
   React.useEffect(() => setTurns(thread.turns), [thread]);
 
@@ -502,128 +1256,193 @@ function ChatPane({ viewId }: { viewId: string }) {
 
   return (
     <>
+      {/* A size container: the rail appears only when the pane is wide enough
+          for it, and the transcript stops stretching past a comfortable
+          measure instead of running the full width of a maximised pane. */}
       <div
-        role="log"
-        aria-label={thread.title}
-        tabIndex={0}
-        className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3 outline-none"
+        ref={transcriptRef}
+        className="@container relative flex min-h-0 flex-1"
       >
-        {turns.map((turn, index) => {
-          if (turn.role === "tool") {
-            return (
-              <ToolCall key={index} status={turn.status}>
-                <ToolCallTrigger meta={turn.meta}>{turn.name}</ToolCallTrigger>
-                {turn.output ? (
-                  <ToolCallContent>
-                    <ToolCallTabs output={turn.output} />
-                  </ToolCallContent>
-                ) : null}
-              </ToolCall>
-            );
-          }
+        <ConversationRail className="absolute left-2 top-1/2 z-10 hidden -translate-y-1/2 @[34rem]:flex">
+          {turns
+            .map((turn, index) => ({ turn, index }))
+            .filter(({ turn }) => turn.role === "user")
+            .map(({ turn, index }) => (
+              <ConversationRailItem key={index} active={index === activeTurn}>
+                <ConversationRailTrigger
+                  aria-label={turn.text ?? `Turn ${index + 1}`}
+                  onClick={() => {
+                    setActiveTurn(index);
+                    turnRefs.current[index]?.scrollIntoView({
+                      block: "center",
+                      behavior: "smooth",
+                    });
+                  }}
+                >
+                  <ConversationRailMarker />
+                </ConversationRailTrigger>
+                <ConversationRailPreview>
+                  <p className="m-0 line-clamp-2 text-muted-foreground">
+                    {turn.text}
+                  </p>
+                </ConversationRailPreview>
+              </ConversationRailItem>
+            ))}
+        </ConversationRail>
 
-          if (turn.role === "assistant") {
-            return (
-              <Message key={index} from="assistant">
-                <MessageContent>
-                  <MessageBubble variant="plain" streaming={turn.streaming}>
-                    {turn.streaming ? (
-                      <MessageStreamText text={turn.text ?? ""} />
-                    ) : (
-                      turn.text
-                    )}
-                  </MessageBubble>
-                  {/* Actions stay hidden until the row is hovered or focused. */}
-                  <MessageFooter>
-                    <MessageActions>
-                      <CopyAction text={turn.text ?? ""} />
-                      <MessageAction aria-label="Retry" title="Retry">
-                        <RotateCcw aria-hidden className="size-3.5" />
-                      </MessageAction>
-                      <span className="ms-1">
-                        {TIMESTAMPS[index % TIMESTAMPS.length]}
-                      </span>
-                    </MessageActions>
-                  </MessageFooter>
-                </MessageContent>
-              </Message>
-            );
-          }
+        <MessageScroller className="flex-1">
+          <MessageScrollerViewport
+            aria-label={thread.title}
+            className="p-3 @[34rem]:ps-10"
+          >
+            {/* The viewport spans the pane, so its scrollbar rides the pane
+                edge; only the content is held to a readable measure. */}
+            <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-3">
+              {turns.map((turn, index) => {
+                if (turn.role === "tool") {
+                  return (
+                    <ToolCall key={index} status={turn.status}>
+                      <ToolCallTrigger meta={turn.meta}>
+                        {turn.name}
+                      </ToolCallTrigger>
+                      {turn.output ? (
+                        <ToolCallContent>
+                          <ToolCallTabs output={turn.output} />
+                        </ToolCallContent>
+                      ) : null}
+                    </ToolCall>
+                  );
+                }
 
-          if (editing === index) {
-            return (
-              <Message key={index} from="user">
-                <MessageContent>
-                  <form
-                    className="flex w-full max-w-md flex-col gap-2"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      resend(index);
+                if (turn.role === "assistant") {
+                  return (
+                    <Message key={index} from="assistant">
+                      <MessageContent>
+                        <MessageBubble
+                          variant="plain"
+                          streaming={turn.streaming}
+                          className={turn.blocks ? "w-full" : undefined}
+                        >
+                          {turn.blocks ? (
+                            <TurnBlocks
+                              blocks={turn.blocks}
+                              streaming={turn.streaming}
+                            />
+                          ) : turn.streaming ? (
+                            <MessageStreamText text={turn.text ?? ""} />
+                          ) : (
+                            turn.text
+                          )}
+                        </MessageBubble>
+                        {/* Actions stay hidden until the row is hovered or focused. */}
+                        <MessageFooter>
+                          <MessageActions>
+                            <CopyAction text={turn.text ?? ""} />
+                            <MessageAction aria-label="Retry" title="Retry">
+                              <RotateCcw aria-hidden className="size-3.5" />
+                            </MessageAction>
+                            <span className="ms-1">
+                              {TIMESTAMPS[index % TIMESTAMPS.length]}
+                            </span>
+                          </MessageActions>
+                        </MessageFooter>
+                      </MessageContent>
+                    </Message>
+                  );
+                }
+
+                if (editing === index) {
+                  return (
+                    <Message key={index} from="user">
+                      <MessageContent>
+                        <form
+                          // MessageContent is items-end, so a child only fills the
+                          // column when it asks for the width.
+                          className="flex w-[32rem] max-w-full flex-col gap-2 self-stretch"
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            resend(index);
+                          }}
+                        >
+                          <AutosizeTextarea
+                            value={editDraft}
+                            onValueChange={setEditDraft}
+                            onSubmit={() => resend(index)}
+                            onCancel={() => setEditing(null)}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              type="button"
+                              onClick={() => setEditing(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button size="sm" type="submit">
+                              Send
+                            </Button>
+                          </div>
+                        </form>
+                      </MessageContent>
+                    </Message>
+                  );
+                }
+
+                return (
+                  <Message
+                    key={index}
+                    from="user"
+                    ref={(element: HTMLDivElement | null) => {
+                      turnRefs.current[index] = element;
                     }}
                   >
-                    <textarea
-                      autoFocus
-                      rows={2}
-                      value={editDraft}
-                      onChange={(event) => setEditDraft(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") setEditing(null);
-                        if (event.key === "Enter" && !event.shiftKey) {
-                          event.preventDefault();
-                          resend(index);
-                        }
-                      }}
-                      aria-label="Edit message"
-                      className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        type="button"
-                        onClick={() => setEditing(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button size="sm" type="submit">
-                        Send
-                      </Button>
-                    </div>
-                  </form>
-                </MessageContent>
-              </Message>
-            );
-          }
+                    <MessageContent>
+                      <MessageBubble variant="primary">
+                        {turn.text}
+                      </MessageBubble>
+                      <MessageFooter className="justify-end">
+                        <MessageActions>
+                          <MessageAction
+                            aria-label="Edit message"
+                            title="Edit"
+                            onClick={() => {
+                              setEditing(index);
+                              setEditDraft(turn.text ?? "");
+                            }}
+                          >
+                            <Pencil aria-hidden className="size-3.5" />
+                          </MessageAction>
+                          <CopyAction text={turn.text ?? ""} />
+                          <span className="ms-1">
+                            {TIMESTAMPS[index % TIMESTAMPS.length]}
+                          </span>
+                        </MessageActions>
+                      </MessageFooter>
+                    </MessageContent>
+                  </Message>
+                );
+              })}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          {/* Appears the moment the reader leaves the live edge. */}
+          <MessageScrollerButton />
+        </MessageScroller>
 
-          return (
-            <Message key={index} from="user">
-              <MessageContent>
-                <MessageBubble variant="primary">{turn.text}</MessageBubble>
-                <MessageFooter className="justify-end">
-                  <MessageActions>
-                    <MessageAction
-                      aria-label="Edit message"
-                      title="Edit"
-                      onClick={() => {
-                        setEditing(index);
-                        setEditDraft(turn.text ?? "");
-                      }}
-                    >
-                      <Pencil aria-hidden className="size-3.5" />
-                    </MessageAction>
-                    <CopyAction text={turn.text ?? ""} />
-                    <span className="ms-1">
-                      {TIMESTAMPS[index % TIMESTAMPS.length]}
-                    </span>
-                  </MessageActions>
-                </MessageFooter>
-              </MessageContent>
-            </Message>
-          );
-        })}
+        {selection ? (
+          <TranscriptSelectionTooltip
+            anchor={selection}
+            onQuote={(text) => {
+              setDraft((current) =>
+                `${current}${current ? "\n\n" : ""}> ${text}\n\n`.trimStart()
+              );
+              editorRef.current?.focus();
+            }}
+          />
+        ) : null}
       </div>
 
-      <div className="p-2">
+      <div className="mx-auto w-full max-w-3xl p-2">
         <ChatComposer
           size="compact"
           onSubmit={(event) => {
@@ -640,7 +1459,7 @@ function ChatPane({ viewId }: { viewId: string }) {
                   kind={file.kind}
                   onRemove={() =>
                     setAttachments((current) =>
-                      current.filter((item) => item.id !== file.id)
+                      current.filter((item) => item.id !== file.id),
                     )
                   }
                 >
@@ -665,7 +1484,7 @@ function ChatPane({ viewId }: { viewId: string }) {
                 sections={slashSections.map((section) => ({
                   ...section,
                   items: section.items.filter((item) =>
-                    matches(query, [item.label, item.description])
+                    matches(query, [item.label, item.description]),
                   ),
                 }))}
                 getItemId={(item) => item.id}
@@ -786,7 +1605,10 @@ function ChatPane({ viewId }: { viewId: string }) {
                 value={thinking}
                 onValueChange={setThinking}
               />
-              <ChatComposerAction aria-label="Start voice input" title="Start voice input">
+              <ChatComposerAction
+                aria-label="Start voice input"
+                title="Start voice input"
+              >
                 <Mic aria-hidden="true" />
               </ChatComposerAction>
               <ChatComposerSubmit disabled={!draft.trim()} />
@@ -809,13 +1631,32 @@ const boardColumns = [
   { id: "done", title: "Done" },
 ];
 
-const boardCards: Record<string, { title: string; meta: string; owner: string }> = {
-  "long-context": { title: "Long-context regression", meta: "bug", owner: "AL" },
-  "tool-traces": { title: "Add tool-call traces", meta: "feature", owner: "GH" },
+const boardCards: Record<
+  string,
+  { title: string; meta: string; owner: string }
+> = {
+  "long-context": {
+    title: "Long-context regression",
+    meta: "bug",
+    owner: "AL",
+  },
+  "tool-traces": {
+    title: "Add tool-call traces",
+    meta: "feature",
+    owner: "GH",
+  },
   "sweep-4192": { title: "Sweep 4192", meta: "eval · 12m", owner: "AT" },
-  "index-rebuild": { title: "Rebuild retrieval index", meta: "infra · 4m", owner: "AL" },
+  "index-rebuild": {
+    title: "Rebuild retrieval index",
+    meta: "infra · 4m",
+    owner: "AL",
+  },
   "safety-pass": { title: "Safety pass", meta: "eval", owner: "GH" },
-  "checkpoint-4188": { title: "Checkpoint 4188", meta: "training", owner: "AT" },
+  "checkpoint-4188": {
+    title: "Checkpoint 4188",
+    meta: "training",
+    owner: "AT",
+  },
   "docs-sprint": { title: "Docs sprint", meta: "docs", owner: "AL" },
 };
 
@@ -835,7 +1676,8 @@ function BoardView() {
       <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
         <span>Sprint 24</span>
         <span>
-          {Object.values(columns).reduce((n, cards) => n + cards.length, 0)} cards
+          {Object.values(columns).reduce((n, cards) => n + cards.length, 0)}{" "}
+          cards
         </span>
       </div>
 
@@ -914,11 +1756,40 @@ const at = (month: number, date: number, hour = 0, minute = 0) =>
   new Date(2026, month, date, hour, minute);
 
 const harnessEvents: EventCalendarEvent[] = [
-  { id: "standup", title: "Standup", start: at(7, 18, 9, 30), end: at(7, 18, 9, 45) },
-  { id: "crit", title: "Design crit", start: at(7, 18, 13, 0), end: at(7, 18, 14, 30), location: "Studio" },
-  { id: "sweep", title: "Eval sweep", start: at(7, 19, 10, 0), end: at(7, 19, 12, 0), tone: "secondary" },
-  { id: "freeze", title: "Code freeze", start: at(7, 21, 16, 0), end: at(7, 21, 17, 0), tone: "destructive" },
-  { id: "offsite", title: "Offsite", start: at(7, 20), end: at(7, 21), tone: "muted" },
+  {
+    id: "standup",
+    title: "Standup",
+    start: at(7, 18, 9, 30),
+    end: at(7, 18, 9, 45),
+  },
+  {
+    id: "crit",
+    title: "Design crit",
+    start: at(7, 18, 13, 0),
+    end: at(7, 18, 14, 30),
+    location: "Studio",
+  },
+  {
+    id: "sweep",
+    title: "Eval sweep",
+    start: at(7, 19, 10, 0),
+    end: at(7, 19, 12, 0),
+    tone: "secondary",
+  },
+  {
+    id: "freeze",
+    title: "Code freeze",
+    start: at(7, 21, 16, 0),
+    end: at(7, 21, 17, 0),
+    tone: "destructive",
+  },
+  {
+    id: "offsite",
+    title: "Offsite",
+    start: at(7, 20),
+    end: at(7, 21),
+    tone: "muted",
+  },
 ];
 
 const CALENDAR_HOURS = { min: 8, max: 18 };
@@ -977,10 +1848,30 @@ interface WorkflowJob {
 }
 
 const initialJobs: WorkflowJob[] = [
-  { id: "fetch", title: "Fetch corpus", detail: "every 15m", position: { x: 60, y: 80 } },
-  { id: "chunk", title: "Chunk", detail: "512 tokens", position: { x: 340, y: 80 } },
-  { id: "embed", title: "Embed", detail: "nessa-embed-1", position: { x: 340, y: 260 } },
-  { id: "serve", title: "Serve", detail: "retrieval api", position: { x: 620, y: 170 } },
+  {
+    id: "fetch",
+    title: "Fetch corpus",
+    detail: "every 15m",
+    position: { x: 60, y: 80 },
+  },
+  {
+    id: "chunk",
+    title: "Chunk",
+    detail: "512 tokens",
+    position: { x: 340, y: 80 },
+  },
+  {
+    id: "embed",
+    title: "Embed",
+    detail: "nessa-embed-1",
+    position: { x: 340, y: 260 },
+  },
+  {
+    id: "serve",
+    title: "Serve",
+    detail: "retrieval api",
+    position: { x: 620, y: 170 },
+  },
 ];
 
 /** Offered when a connection is dropped on empty canvas. */
@@ -1007,14 +1898,17 @@ function WorkflowView() {
   function removeJob(jobId: string) {
     setJobs((current) => current.filter((job) => job.id !== jobId));
     setEdges((current) =>
-      current.filter((edge) => edge.source !== jobId && edge.target !== jobId)
+      current.filter((edge) => edge.source !== jobId && edge.target !== jobId),
     );
   }
 
   function addJob(option: (typeof jobPalette)[number]) {
     if (!palette) return;
     const id = `${option.id}-${jobs.length}`;
-    setJobs((current) => [...current, { ...option, id, position: palette.point }]);
+    setJobs((current) => [
+      ...current,
+      { ...option, id, position: palette.point },
+    ]);
     setEdges((current) => [
       ...current,
       { id: `${palette.source}-${id}`, source: palette.source, target: id },
@@ -1037,7 +1931,9 @@ function WorkflowView() {
           },
         ])
       }
-      onConnectEnd={(end) => setPalette({ source: end.source, point: end.point })}
+      onConnectEnd={(end) =>
+        setPalette({ source: end.source, point: end.point })
+      }
       onDismiss={() => setPalette(null)}
     >
       <WorkflowCanvasGrid />
@@ -1137,16 +2033,44 @@ const themePresets = [
  * --nessa-font-sans and --nessa-font-mono, so a family swap is two variables.
  */
 const sansFonts = [
-  { id: "", label: "Geist", stack: "var(--font-geist), ui-sans-serif, system-ui, sans-serif" },
-  { id: "inter", label: "Inter", stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif" },
-  { id: "serif", label: "Source Serif", stack: "var(--font-source-serif), ui-serif, Georgia, serif" },
-  { id: "system", label: "System", stack: "ui-sans-serif, system-ui, sans-serif" },
+  {
+    id: "",
+    label: "Geist",
+    stack: "var(--font-geist), ui-sans-serif, system-ui, sans-serif",
+  },
+  {
+    id: "inter",
+    label: "Inter",
+    stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+  },
+  {
+    id: "serif",
+    label: "Source Serif",
+    stack: "var(--font-source-serif), ui-serif, Georgia, serif",
+  },
+  {
+    id: "system",
+    label: "System",
+    stack: "ui-sans-serif, system-ui, sans-serif",
+  },
 ];
 
 const monoFonts = [
-  { id: "", label: "Geist Mono", stack: "var(--font-geist-mono), ui-monospace, monospace" },
-  { id: "jetbrains", label: "JetBrains Mono", stack: "var(--font-jetbrains), ui-monospace, monospace" },
-  { id: "plex", label: "IBM Plex Mono", stack: "var(--font-plex-mono), ui-monospace, monospace" },
+  {
+    id: "",
+    label: "Geist Mono",
+    stack: "var(--font-geist-mono), ui-monospace, monospace",
+  },
+  {
+    id: "jetbrains",
+    label: "JetBrains Mono",
+    stack: "var(--font-jetbrains), ui-monospace, monospace",
+  },
+  {
+    id: "plex",
+    label: "IBM Plex Mono",
+    stack: "var(--font-plex-mono), ui-monospace, monospace",
+  },
 ];
 
 const textSizes = [
@@ -1170,7 +2094,7 @@ function AppearanceView() {
 
   React.useEffect(() => {
     setMode(
-      document.documentElement.classList.contains("dark") ? "dark" : "light"
+      document.documentElement.classList.contains("dark") ? "dark" : "light",
     );
     setPreset(document.documentElement.dataset.nessaTheme ?? "");
   }, []);
@@ -1193,13 +2117,19 @@ function AppearanceView() {
   function applySans(next: string) {
     setSans(next);
     const stack = sansFonts.find((font) => font.id === next)?.stack;
-    document.documentElement.style.setProperty("--nessa-font-sans", stack ?? "");
+    document.documentElement.style.setProperty(
+      "--nessa-font-sans",
+      stack ?? "",
+    );
   }
 
   function applyMono(next: string) {
     setMono(next);
     const stack = monoFonts.find((font) => font.id === next)?.stack;
-    document.documentElement.style.setProperty("--nessa-font-mono", stack ?? "");
+    document.documentElement.style.setProperty(
+      "--nessa-font-mono",
+      stack ?? "",
+    );
   }
 
   /**
@@ -1240,7 +2170,7 @@ function AppearanceView() {
                   "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
                   active
                     ? "border-ring bg-accent"
-                    : "border-border hover:bg-accent/50"
+                    : "border-border hover:bg-accent/50",
                 )}
               >
                 <span
@@ -1266,7 +2196,9 @@ function AppearanceView() {
         <h2 className="mt-8 mb-3 text-sm font-medium">Font</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
-            <span className="mb-1.5 block text-muted-foreground">Interface</span>
+            <span className="mb-1.5 block text-muted-foreground">
+              Interface
+            </span>
             <select
               value={sans}
               onChange={(event) => applySans(event.target.value)}
@@ -1281,7 +2213,9 @@ function AppearanceView() {
           </label>
 
           <label className="text-sm">
-            <span className="mb-1.5 block text-muted-foreground">Monospace</span>
+            <span className="mb-1.5 block text-muted-foreground">
+              Monospace
+            </span>
             <select
               value={mono}
               onChange={(event) => applyMono(event.target.value)}
@@ -1311,7 +2245,7 @@ function AppearanceView() {
 
         <h2 className="mt-8 mb-3 text-sm font-medium">What a theme is</h2>
         <pre className="overflow-x-auto rounded-xl border border-border bg-card p-3 font-mono text-xs leading-6 text-muted-foreground">
-{`[data-nessa-theme="tokyo-night"] {
+          {`[data-nessa-theme="tokyo-night"] {
   --background: oklch(0.24 0.03 267);
   --foreground: oklch(0.86 0.03 267);
   --primary:    oklch(0.72 0.13 267);
@@ -1348,7 +2282,7 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
               "mb-0.5 block w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors",
               section === entry.id
                 ? "bg-secondary font-medium text-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
             {entry.label}
@@ -1372,7 +2306,10 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
             title="Models"
             description="The default model for new conversations."
           >
-            <ModelPicker groups={harnessModels} defaultValue={{ providerId: "anthropic", modelId: "opus" }} />
+            <ModelPicker
+              groups={harnessModels}
+              defaultValue={{ providerId: "anthropic", modelId: "opus" }}
+            />
           </SettingsSection>
         ) : null}
         {section === "shortcuts" ? (
@@ -1388,7 +2325,10 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
                 ["Skills and commands", "/"],
                 ["Mention a file", "@"],
               ].map(([label, keys]) => (
-                <div key={label} className="flex items-center justify-between p-3">
+                <div
+                  key={label}
+                  className="flex items-center justify-between p-3"
+                >
                   <dt className="text-muted-foreground">{label}</dt>
                   <dd className="font-mono text-xs">{keys}</dd>
                 </div>
@@ -1407,7 +2347,10 @@ function SettingsSurface({ onClose }: { onClose: () => void }) {
                 ["Surfaces", "AppShell, Message, ChatComposer, ToolCall"],
                 ["Views", "Kanban, EventCalendar, WorkflowCanvas"],
               ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between gap-4 p-3">
+                <div
+                  key={label}
+                  className="flex items-center justify-between gap-4 p-3"
+                >
                   <dt className="text-muted-foreground">{label}</dt>
                   <dd className="truncate">{value}</dd>
                 </div>
@@ -1468,7 +2411,7 @@ function PaneAction({
       variant="ghost"
       className={cn(
         "size-6 shrink-0 text-muted-foreground hover:text-foreground",
-        className
+        className,
       )}
       aria-label={label}
       title={label}
@@ -1500,13 +2443,21 @@ function usePaneActions(pane: PaneNode, maximized: boolean): PaneActionItem[] {
       label: "Split right",
       icon: <Columns2 aria-hidden className="size-3.5" />,
       run: () =>
-        splitPane({ paneId: pane.id, direction: PaneSplitDirection.Right, views: [] }),
+        splitPane({
+          paneId: pane.id,
+          direction: PaneSplitDirection.Right,
+          views: [],
+        }),
     },
     {
       label: "Split down",
       icon: <Rows2 aria-hidden className="size-3.5" />,
       run: () =>
-        splitPane({ paneId: pane.id, direction: PaneSplitDirection.Down, views: [] }),
+        splitPane({
+          paneId: pane.id,
+          direction: PaneSplitDirection.Down,
+          views: [],
+        }),
     },
     {
       label: maximized ? "Restore" : "Maximize",
@@ -1516,7 +2467,8 @@ function usePaneActions(pane: PaneNode, maximized: boolean): PaneActionItem[] {
         <Maximize2 aria-hidden className="size-3.5" />
       ),
       shortcut: "⇧⎋",
-      run: () => (maximized ? restorePane() : maximizePane({ paneId: pane.id })),
+      run: () =>
+        maximized ? restorePane() : maximizePane({ paneId: pane.id }),
     },
     {
       label: "Close pane",
@@ -1546,7 +2498,7 @@ function Pane({ pane }: { pane: PaneNode }) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div className="group/pane-bar flex h-8 items-center pe-1">
+          <div className="group/pane-bar flex h-9 items-center pe-1">
             {showReveal ? (
               <PaneAction
                 label="Show sidebar"
@@ -1560,11 +2512,11 @@ function Pane({ pane }: { pane: PaneNode }) {
               paneId={pane.id}
               className={cn(
                 "flex h-full min-w-0 items-center gap-1.5",
-                showReveal ? "ps-1.5" : "ps-2.5"
+                showReveal ? "ps-1.5" : "ps-2.5",
               )}
               title="Drag to move this pane"
             >
-              <span className="truncate text-xs font-medium">
+              <span className="truncate px-0.5 py-0.5 text-[0.8125rem] font-medium">
                 {view?.label ?? "Empty pane"}
               </span>
             </AppShellPaneDragHandle>
@@ -1597,7 +2549,7 @@ function Pane({ pane }: { pane: PaneNode }) {
                         "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden",
                         "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
                         action.destructive &&
-                          "text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
+                          "text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive",
                       )}
                     >
                       {action.icon}
@@ -1677,7 +2629,12 @@ function Sidebar({
         {views
           .filter((view) => view.id.startsWith("chat:"))
           .map((view) => (
-            <SidebarItem key={view.id} view={view} onOpen={openView} paneId={active} />
+            <SidebarItem
+              key={view.id}
+              view={view}
+              onOpen={openView}
+              paneId={active}
+            />
           ))}
 
         <div className="mt-4 px-2 py-1 text-xs font-medium text-muted-foreground">
@@ -1686,7 +2643,12 @@ function Sidebar({
         {views
           .filter((view) => view.id.startsWith("view:"))
           .map((view) => (
-            <SidebarItem key={view.id} view={view} onOpen={openView} paneId={active} />
+            <SidebarItem
+              key={view.id}
+              view={view}
+              onOpen={openView}
+              paneId={active}
+            />
           ))}
       </nav>
 
@@ -1771,7 +2733,9 @@ function useHarnessShortcuts() {
       event.preventDefault();
 
       const panes = [
-        ...document.querySelectorAll<HTMLElement>("[data-slot='app-shell-pane']"),
+        ...document.querySelectorAll<HTMLElement>(
+          "[data-slot='app-shell-pane']",
+        ),
       ].map((element) => ({
         id: element.dataset.paneId!,
         rect: element.getBoundingClientRect(),
@@ -1781,8 +2745,10 @@ function useHarnessShortcuts() {
 
       const candidates = panes.filter((pane) => {
         if (pane.id === current.id) return false;
-        if (direction === "left") return pane.rect.right <= current.rect.left + 1;
-        if (direction === "right") return pane.rect.left >= current.rect.right - 1;
+        if (direction === "left")
+          return pane.rect.right <= current.rect.left + 1;
+        if (direction === "right")
+          return pane.rect.left >= current.rect.right - 1;
         if (direction === "up") return pane.rect.bottom <= current.rect.top + 1;
         return pane.rect.top >= current.rect.bottom - 1;
       });
@@ -1817,9 +2783,15 @@ function useHarnessShortcuts() {
 /* ── terminal dock ─────────────────────────────────────────────────────── */
 
 const terminalSession = [
-  { prompt: "nessa eval --suite retrieval", output: "worker-3 attached\n128/131 evaluations complete" },
+  {
+    prompt: "nessa eval --suite retrieval",
+    output: "worker-3 attached\n128/131 evaluations complete",
+  },
   { prompt: "nessa runs tail 4192", output: "re-running 3 cases" },
-  { prompt: "nessa index status", output: "index 4188 · encoder 4189 · mismatch" },
+  {
+    prompt: "nessa index status",
+    output: "index 4188 · encoder 4189 · mismatch",
+  },
 ];
 
 /** The shell's bottom dock, carrying a terminal session. Read-only here. */
@@ -1889,7 +2861,7 @@ export function AgentHarness({
     <AppShell
       className="h-full"
       defaultLayout={createAppShellLayout({
-        views: ["chat:retrieval"],
+        views: ["chat:tour"],
         openDocks: [AppShellDockSide.Left],
         dockSizes: { [AppShellDockSide.Left]: SIDEBAR_WIDTH },
       })}
@@ -1902,12 +2874,15 @@ export function AgentHarness({
         />
         <AppShellMain className="relative">
           <AppShellWorkspace renderPane={(pane) => <Pane pane={pane} />} />
-          <AppShellDock side={AppShellDockSide.Bottom} minSize={120} maxSize={360}>
+          <AppShellDock
+            side={AppShellDockSide.Bottom}
+            minSize={120}
+            maxSize={360}
+          >
             <TerminalDock />
           </AppShellDock>
         </AppShellMain>
       </AppShellBody>
-
     </AppShell>
   );
 }

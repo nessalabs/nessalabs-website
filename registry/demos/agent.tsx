@@ -3,8 +3,10 @@
 import * as React from "react";
 import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
+  AtSign,
   Bookmark,
   Copy,
+  FileCode,
   FileSearch,
   Flag,
   HelpCircle,
@@ -32,6 +34,15 @@ import {
   ChatComposerAttachments,
   ChatComposerEditor,
   ChatComposerTrigger,
+  ConversationRail,
+  ConversationRailItem,
+  ConversationRailMarker,
+  ConversationRailPreview,
+  ConversationRailTrigger,
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerViewport,
   ChatComposerFooter,
   ChatComposerInput,
   ChatComposerSubmit,
@@ -941,6 +952,164 @@ export function ChatComposerFullDemo() {
           </ChatComposerActions>
         </ChatComposerFooter>
       </ChatComposer>
+    </div>
+  );
+}
+
+/* ── ConversationRail ──────────────────────────────────────────────────── */
+
+const railTurns = [
+  { id: "t1", title: "Retrieval recall drop", preview: "92% to 87% after the rebuild" },
+  { id: "t2", title: "Encoder mismatch", preview: "index 4188, encoder 4189" },
+  { id: "t3", title: "Chunk size", preview: "512 against v2.2" },
+  { id: "t4", title: "Re-run plan", preview: "three cases, matched index" },
+];
+
+/**
+ * A turn navigator beside a transcript. Markers widen as the pointer
+ * approaches, and hover or focus opens the turn's preview.
+ */
+export function ConversationRailDemo() {
+  const [activeId, setActiveId] = React.useState(railTurns[0].id);
+  const active = railTurns.find((turn) => turn.id === activeId)!;
+
+  return (
+    <div className="flex min-h-64 w-full items-center gap-6 rounded-2xl border border-border bg-card p-6">
+      <ConversationRail>
+        {railTurns.map((turn) => (
+          <ConversationRailItem key={turn.id} active={turn.id === activeId}>
+            <ConversationRailTrigger
+              aria-label={turn.title}
+              onClick={() => setActiveId(turn.id)}
+            >
+              <ConversationRailMarker />
+            </ConversationRailTrigger>
+            <ConversationRailPreview>
+              <p className="m-0 font-medium text-foreground">{turn.title}</p>
+              <p className="m-0 mt-1 text-muted-foreground">{turn.preview}</p>
+            </ConversationRailPreview>
+          </ConversationRailItem>
+        ))}
+      </ConversationRail>
+
+      <div className="min-w-0">
+        <div className="text-sm font-medium">{active.title}</div>
+        <p className="mt-1 text-sm text-muted-foreground">{active.preview}</p>
+      </div>
+    </div>
+  );
+}
+
+const scrollerTurns = [
+  "How far back does the transcript go?",
+  "All of it. The viewport keeps the reader at the live edge while they are there, and lets go the moment they scroll away.",
+  "What happens when a reply streams in while I am reading history?",
+  "Nothing moves. Following resumes only when the reader returns to the bottom, by scrolling or by pressing the button.",
+  "And the button?",
+  "It fades in once the reader leaves the live edge, and hands focus back to the viewport when it hides.",
+  "Does it fight a fast stream?",
+  "No. A return animation retargets as content grows, and any upward move cancels it rather than dragging the reader down.",
+  "Keyboard?",
+  "The viewport is the tab stop, so arrow keys and Page Up work without a mouse.",
+];
+
+/**
+ * A transcript that follows new content only while the reader is at the live
+ * edge. Scroll up and the return control fades in.
+ */
+export function MessageScrollerDemo() {
+  return (
+    <MessageScroller className="h-80 w-full max-w-2xl rounded-2xl border border-border bg-card">
+      <MessageScrollerViewport aria-label="Transcript" className="p-4">
+        <MessageScrollerContent className="gap-3">
+          {scrollerTurns.map((text, index) => (
+            <Message key={index} from={index % 2 === 0 ? "user" : "assistant"}>
+              <MessageContent>
+                <MessageBubble variant={index % 2 === 0 ? "primary" : "plain"}>
+                  {text}
+                </MessageBubble>
+              </MessageContent>
+            </Message>
+          ))}
+        </MessageScrollerContent>
+      </MessageScrollerViewport>
+      <MessageScrollerButton />
+    </MessageScroller>
+  );
+}
+
+const inlineChips = [
+  { id: "skill:eval", label: "Eval suite", kind: "skill" as const },
+  { id: "file:encoder", label: "encoder.ts", kind: "file" as const },
+  { id: "mention:ada", label: "Ada Lovelace", kind: "mention" as const },
+];
+
+/**
+ * Attachments as inline chips rather than pills above the input. A chip is an
+ * atomic island in the sentence: it keeps its place in the text, moves with
+ * the words around it, and deletes whole on Backspace. Long pastes become a
+ * chip too instead of flooding the field.
+ */
+export function ChatComposerInlineDemo() {
+  const editorRef = React.useRef<ChatComposerEditorHandle>(null);
+  const [content, setContent] = React.useState("");
+  const pasteCount = React.useRef(0);
+
+  return (
+    <div className="grid w-full min-w-0 gap-3">
+      <ChatComposer
+        onSubmit={(event) => {
+          event.preventDefault();
+        }}
+      >
+        <ChatComposerEditor
+          ref={editorRef}
+          placeholder="Compare @encoder.ts against the /Eval suite baseline"
+          onContentChange={(next) => setContent(next.text)}
+          // A pasted stack trace belongs in an attachment, not in the field.
+          onPasteAttachment={(text) => {
+            pasteCount.current += 1;
+            editorRef.current?.insertChip({
+              id: `paste:${pasteCount.current}`,
+              label: `Pasted text (${text.length} chars)`,
+              kind: "pasted-text",
+              textValue: text,
+            });
+          }}
+        />
+
+        <ChatComposerFooter>
+          <ChatComposerActions>
+            {inlineChips.map((chip) => (
+              <ChatComposerAction
+                key={chip.id}
+                aria-label={`Insert ${chip.label}`}
+                title={`Insert ${chip.label}`}
+                onClick={() =>
+                  editorRef.current?.insertChip({
+                    id: `${chip.id}:${Math.round(performance.now())}`,
+                    label: chip.label,
+                    kind: chip.kind,
+                  })
+                }
+              >
+                {chip.kind === "skill" ? (
+                  <Sparkles aria-hidden="true" />
+                ) : chip.kind === "file" ? (
+                  <FileCode aria-hidden="true" />
+                ) : (
+                  <AtSign aria-hidden="true" />
+                )}
+              </ChatComposerAction>
+            ))}
+          </ChatComposerActions>
+          <ChatComposerSubmit aria-label="Send" />
+        </ChatComposerFooter>
+      </ChatComposer>
+
+      <p className="text-xs text-muted-foreground">
+        Serialized: {content ? content : "empty"}
+      </p>
     </div>
   );
 }

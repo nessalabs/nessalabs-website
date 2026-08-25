@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { SourceBlock } from "@/components/site/source-block";
 import { CardArt } from "@/components/site/card-art";
 import { groups, registry } from "@/registry";
@@ -72,6 +73,26 @@ export default function ComponentsOverviewPage() {
           </div>
         ))}
       </div>
+
+      {/* The harness is the worked example rather than a product surface, so
+          it lives here in the docs rather than in the site nav. */}
+      <Link
+        href="/ui/harness"
+        className="group mt-8 flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
+      >
+        <div className="min-w-0">
+          <div className="font-medium">Agent harness</div>
+          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+            A full agent app assembled from these components: sidebar, split
+            panes, transcript, composer, board, calendar, workflow canvas and a
+            terminal dock. Its source is one click away inside the app.
+          </p>
+        </div>
+        <ArrowRight
+          aria-hidden
+          className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+        />
+      </Link>
 
       <h2 className="mt-12 mb-4 text-lg font-semibold">Installation</h2>
       <SourceBlock

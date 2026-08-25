@@ -109,6 +109,18 @@ const documented: {
   },
 
   {
+    slug: "conversation-rail",
+    group: "Agent surfaces",
+    description:
+      "Turn navigator beside a transcript. Markers widen toward the pointer; hover or focus opens a preview.",
+  },
+  {
+    slug: "message-scroller",
+    group: "Agent surfaces",
+    description:
+      "Transcript viewport that follows the live edge until the reader scrolls away, with a return control.",
+  },
+  {
     slug: "message",
     group: "Agent surfaces",
     description: "Transcript row. Assistant and user sides, with avatar, bubble and footer parts.",
@@ -148,6 +160,10 @@ const documented: {
         id: "chat-composer-full",
         title: "Attachments, / and @ menus, model and thinking controls",
       },
+      {
+        id: "chat-composer-inline",
+        title: "Inline attachment chips, including a captured paste",
+      },
     ],
   },
   {
@@ -178,6 +194,12 @@ const documented: {
     group: "Composites",
     description:
       "Resizable panels around a draggable separator. Arrow keys resize from the keyboard.",
+    examples: [
+      {
+        id: "split-view-workspace",
+        title: "Nested splits, with views dragged between panes",
+      },
+    ],
   },
   {
     slug: "kanban",

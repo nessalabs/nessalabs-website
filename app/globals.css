@@ -62,6 +62,14 @@ pre {
  * escape the scroller, land past the fold and stretch the page. Making the list
  * positioned keeps them inside. Belongs upstream in @nessa-ui/react.
  */
+/* A scrolling transcript gets its own composited layer. Without an opaque
+   background under it, Chrome can fall back to subpixel antialiasing there and
+   fringe white text with colour while the layer moves. */
+[data-slot="message-scroller-viewport"] {
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
 [data-slot="file-diff-list"] {
   position: relative;
 }
