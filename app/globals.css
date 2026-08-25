@@ -86,6 +86,93 @@ pre {
   }
 }
 
+/*
+ * Host theme presets. nessa-ui paints every surface from these tokens, so a
+ * whole palette is a block of variables scoped to [data-nessa-theme] rather
+ * than a fork of any component. The library ships neutral light and dark; the
+ * three below are this site's own.
+ */
+[data-nessa-theme="tokyo-night"] {
+  --background: oklch(0.24 0.03 267);
+  --foreground: oklch(0.86 0.03 267);
+  --card: oklch(0.27 0.03 267);
+  --card-foreground: oklch(0.88 0.03 267);
+  --popover: oklch(0.27 0.03 267);
+  --popover-foreground: oklch(0.9 0.03 267);
+  --primary: oklch(0.72 0.13 267);
+  --primary-foreground: oklch(0.19 0.03 267);
+  --secondary: oklch(0.31 0.03 267);
+  --secondary-foreground: oklch(0.88 0.02 267);
+  --muted: oklch(0.31 0.03 267);
+  --muted-foreground: oklch(0.68 0.03 267);
+  --accent: oklch(0.34 0.05 267);
+  --accent-foreground: oklch(0.9 0.03 267);
+  --destructive: oklch(0.68 0.17 20);
+  --border: oklch(0.34 0.03 267);
+  --input: oklch(0.34 0.03 267);
+  --ring: oklch(0.72 0.13 267);
+  --sidebar: oklch(0.21 0.03 267);
+  --sidebar-foreground: oklch(0.86 0.03 267);
+  --sidebar-accent: oklch(0.31 0.03 267);
+  --sidebar-accent-foreground: oklch(0.9 0.03 267);
+  --sidebar-border: oklch(0.32 0.03 267);
+  --sidebar-ring: oklch(0.72 0.13 267);
+}
+
+[data-nessa-theme="rose-pine"] {
+  --background: oklch(0.24 0.02 315);
+  --foreground: oklch(0.89 0.02 60);
+  --card: oklch(0.27 0.02 315);
+  --card-foreground: oklch(0.9 0.02 60);
+  --popover: oklch(0.27 0.02 315);
+  --popover-foreground: oklch(0.9 0.02 60);
+  --primary: oklch(0.75 0.09 20);
+  --primary-foreground: oklch(0.21 0.02 315);
+  --secondary: oklch(0.31 0.02 315);
+  --secondary-foreground: oklch(0.9 0.02 60);
+  --muted: oklch(0.31 0.02 315);
+  --muted-foreground: oklch(0.7 0.02 60);
+  --accent: oklch(0.35 0.04 315);
+  --accent-foreground: oklch(0.92 0.02 60);
+  --destructive: oklch(0.66 0.15 15);
+  --border: oklch(0.34 0.02 315);
+  --input: oklch(0.34 0.02 315);
+  --ring: oklch(0.75 0.09 20);
+  --sidebar: oklch(0.21 0.02 315);
+  --sidebar-foreground: oklch(0.89 0.02 60);
+  --sidebar-accent: oklch(0.31 0.02 315);
+  --sidebar-accent-foreground: oklch(0.92 0.02 60);
+  --sidebar-border: oklch(0.33 0.02 315);
+  --sidebar-ring: oklch(0.75 0.09 20);
+}
+
+[data-nessa-theme="paper"] {
+  --background: oklch(0.98 0.01 90);
+  --foreground: oklch(0.25 0.02 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.02 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.02 60);
+  --primary: oklch(0.45 0.09 45);
+  --primary-foreground: oklch(0.99 0.01 90);
+  --secondary: oklch(0.94 0.01 90);
+  --secondary-foreground: oklch(0.3 0.02 60);
+  --muted: oklch(0.94 0.01 90);
+  --muted-foreground: oklch(0.48 0.02 60);
+  --accent: oklch(0.92 0.02 80);
+  --accent-foreground: oklch(0.28 0.02 60);
+  --destructive: oklch(0.55 0.18 25);
+  --border: oklch(0.89 0.01 85);
+  --input: oklch(0.89 0.01 85);
+  --ring: oklch(0.45 0.09 45);
+  --sidebar: oklch(0.96 0.01 90);
+  --sidebar-foreground: oklch(0.25 0.02 60);
+  --sidebar-accent: oklch(0.92 0.02 80);
+  --sidebar-accent-foreground: oklch(0.28 0.02 60);
+  --sidebar-border: oklch(0.89 0.01 85);
+  --sidebar-ring: oklch(0.45 0.09 45);
+}
+
 @utility bg-radial-fade {
   background: radial-gradient(
     ellipse 70% 60% at 50% 45%,

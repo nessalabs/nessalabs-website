@@ -3,7 +3,9 @@
 import * as React from "react";
 import {
   Calendar,
+  Check,
   Columns2,
+  Copy,
   Database,
   FileCode,
   FileJson,
@@ -18,7 +20,9 @@ import {
   Plus,
   Rows2,
   Mic,
+  Pencil,
   Rocket,
+  RotateCcw,
   Settings,
   Sparkles,
   Terminal as TerminalIcon,
@@ -52,15 +56,38 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
   ComposerAccessMode,
+  EventCalendar,
+  EventCalendarGrid,
+  EventCalendarToolbar,
+  KanbanBoard,
+  KanbanCard,
+  KanbanColumn,
+  KanbanColumnHandle,
+  KanbanColumnList,
   Message,
+  MessageAction,
+  MessageActions,
   MessageBubble,
   MessageContent,
+  MessageFooter,
   MessageStreamText,
   ModelPicker,
   ModelThinkingControl,
   PaneSplitDirection,
   SectionedListbox,
+  SegmentedControl,
+  SegmentedControlOption,
+  WorkflowCanvas,
+  WorkflowCanvasEdge,
+  WorkflowCanvasEdges,
+  WorkflowCanvasGrid,
+  WorkflowCanvasNode,
+  WorkflowCanvasNodeHandle,
+  WorkflowCanvasSurface,
+  applyKanbanMove,
   ToolCall,
+  ToolCallContent,
+  ToolCallTabs,
   ToolCallTrigger,
   createAppShellLayout,
   useAppShell,
@@ -69,42 +96,218 @@ import {
   type ModelPickerGroup,
   type ModelPickerValue,
   type AppShellLayout,
+  type EventCalendarEvent,
   type PaneNode,
   type SectionedListboxSection,
 } from "@nessa-ui/react";
-import {
-  EventCalendarDemo,
-  KanbanDemo,
-  WorkflowCanvasDemo,
-} from "./composites";
 
 /* ── data ──────────────────────────────────────────────────────────────── */
 
 interface Turn {
-  id: string;
-  from: "user" | "assistant";
-  text: string;
+  role: "user" | "assistant" | "tool";
+  text?: string;
+  name?: string;
+  meta?: string;
+  status?: "complete" | "running" | "error";
+  output?: string;
   streaming?: boolean;
 }
 
-const openingTurns: Record<string, Turn[]> = {
-  "chat:retrieval": [
-    { id: "1", from: "user", text: "Why did the retrieval suite regress?" },
-    {
-      id: "2",
-      from: "assistant",
-      text: "The index was rebuilt against checkpoint 4188 while the query encoder moved to 4189. Re-running the three failing cases against a matched index now.",
-    },
-  ],
-  "chat:release": [
-    { id: "1", from: "user", text: "What is left before the freeze?" },
-    {
-      id: "2",
-      from: "assistant",
-      text: "Composites are at 15 percent and hardening has not started. Everything else is done or in review.",
-    },
-  ],
-};
+interface Thread {
+  id: string;
+  title: string;
+  turns: Turn[];
+}
+
+const threads: Thread[] = [
+  {
+    "id": "chat:retrieval",
+    "title": "Retrieval recall drop",
+    "turns": [
+      {
+        "role": "user",
+        "text": "Why did retrieval recall drop from 92% to 87% in the last eval run?"
+      },
+      {
+        "role": "tool",
+        "name": "search_runs",
+        "meta": "suite=retrieval, last=5",
+        "status": "complete",
+        "output": "Run 4189: 92.1% recall (2026-08-20)\nRun 4190: 90.8% recall (2026-08-21)\nRun 4191: 87.3% recall (2026-08-22)\nRun 4192: 86.9% recall (2026-08-23)"
+      },
+      {
+        "role": "tool",
+        "name": "query_warehouse",
+        "meta": "table=run_metadata, runs=4189-4193",
+        "status": "complete",
+        "output": "4189: embed_model=v2.1, chunk_size=512\n4190: embed_model=v2.1, chunk_size=512\n4191: embed_model=v2.2, chunk_size=256\n4192: embed_model=v2.2, chunk_size=256"
+      },
+      {
+        "role": "tool",
+        "name": "read_file",
+        "meta": "path=config/v2.2.yaml",
+        "status": "complete",
+        "output": "chunk_strategy: semantic_split\nmax_chunk_tokens: 256\nembedding_model: v2.2-ada\nrerank_threshold: 0.65"
+      },
+      {
+        "role": "assistant",
+        "text": "The drop tracks the v2.2 embedding model and 256 chunk size that landed in run 4191. The semantic_split strategy with tighter chunking cut context density. Worth testing chunk_size 512 against v2.2 to separate the model change from the chunking change."
+      }
+    ]
+  },
+  {
+    "id": "chat:release",
+    "title": "Release freeze window",
+    "turns": [
+      {
+        "role": "user",
+        "text": "When can we merge the new eval harness if a freeze is coming up?"
+      },
+      {
+        "role": "tool",
+        "name": "read_file",
+        "meta": "path=RELEASE_SCHEDULE.md",
+        "status": "complete",
+        "output": "Release v1.8: 2026-08-25 (code freeze 2026-08-24)\nRelease v1.9: 2026-09-15 (code freeze 2026-09-01)\nHotfix window: 2026-08-26 to 2026-08-31"
+      },
+      {
+        "role": "tool",
+        "name": "git_diff",
+        "meta": "branch=eval-harness, base=main",
+        "status": "complete",
+        "output": "173 files changed, 4521 insertions(+), 892 deletions(-)\nevaluation/harness.py, tests/eval_*.py, config/evals.yaml"
+      },
+      {
+        "role": "assistant",
+        "text": "The v1.8 freeze is tomorrow and this branch touches 173 files, so merging now carries real risk. Either land it before 2026-08-24 23:59 UTC or target v1.9, whose window opens 2026-09-01. Between those, 08-26 to 08-31 is hotfix only."
+      },
+      {
+        "role": "user",
+        "text": "What if we cherry-pick the core changes and defer the refactor?"
+      },
+      {
+        "role": "tool",
+        "name": "run_eval",
+        "meta": "suite=core_harness, baseline=4182",
+        "status": "running",
+        "output": "Evaluating 12 checkpoints\n2 of 12 complete, ETA 8 min"
+      },
+      {
+        "role": "assistant",
+        "text": "Running the core harness against baseline 4182 now. If the next eight minutes come back clean, cherry-picking the evaluation core alone is safe for v1.8."
+      }
+    ]
+  },
+  {
+    "id": "chat:flaky",
+    "title": "Test suite flakiness",
+    "turns": [
+      {
+        "role": "user",
+        "text": "Integration tests keep failing intermittently. What is causing the flakes?"
+      },
+      {
+        "role": "tool",
+        "name": "tail_logs",
+        "meta": "tests/integration, pattern=FAIL",
+        "status": "complete",
+        "output": "14:32:45 test_retrieval_timeout: expected 150ms, got 280ms\n14:28:12 test_cache_consistency: assertion mismatch\n14:22:31 test_retrieval_timeout: expected 150ms, got 310ms"
+      },
+      {
+        "role": "tool",
+        "name": "read_file",
+        "meta": "path=tests/integration/test_retrieval.py",
+        "status": "error",
+        "output": "Error: no such file\nDid you mean tests/integration/retrieval_timeout.py?"
+      },
+      {
+        "role": "tool",
+        "name": "read_file",
+        "meta": "path=tests/integration/retrieval_timeout.py",
+        "status": "complete",
+        "output": "def test_retrieval_timeout():\n    assert elapsed_ms < 150  # hardcoded threshold\n# note: warehouse latency varies 140-320ms"
+      },
+      {
+        "role": "assistant",
+        "text": "The 150ms threshold sits inside the warehouse latency range of 140 to 320ms, so the test fails whenever the warehouse is slow. Raise it to 350ms, or assert a percentile instead of an absolute bound."
+      },
+      {
+        "role": "user",
+        "text": "Is the cache consistency failure separate?"
+      },
+      {
+        "role": "tool",
+        "name": "run_eval",
+        "meta": "suite=integration, runs=100, seed=42",
+        "status": "complete",
+        "output": "retrieval_timeout: 18 of 100 failed\ncache_consistency: 3 of 100 failed"
+      },
+      {
+        "role": "assistant",
+        "text": "Separate, and much rarer: 3% against 18%. Fix the timeout threshold first, then look at cache consistency on its own."
+      }
+    ]
+  },
+  {
+    "id": "chat:latency",
+    "title": "Inference endpoint cost",
+    "turns": [
+      {
+        "role": "user",
+        "text": "The inference endpoint is running hot. What is driving the cost?"
+      },
+      {
+        "role": "tool",
+        "name": "profile_endpoint",
+        "meta": "inference-prod-v2, window=1h",
+        "status": "complete",
+        "output": "p50 latency 287ms\np99 latency 840ms\n14,200 requests/hour\nCPU 78%, GPU 92%"
+      },
+      {
+        "role": "tool",
+        "name": "query_warehouse",
+        "meta": "table=endpoint_costs",
+        "status": "complete",
+        "output": "2026-08-20: $0.042 / 1k tokens\n2026-08-21: $0.041 / 1k tokens\n2026-08-22: $0.045 / 1k tokens\n2026-08-23: $0.048 / 1k tokens"
+      },
+      {
+        "role": "tool",
+        "name": "read_file",
+        "meta": "path=config/inference-prod.yaml",
+        "status": "complete",
+        "output": "batch_size: 32\ncontext_window: 32k\ncache_ttl: 300s"
+      },
+      {
+        "role": "assistant",
+        "text": "GPU sits at 92% and cost per thousand tokens rose 14% in three days, from $0.042 to $0.048. A 32k context at batch size 32 maximises throughput but holds expensive GPU memory. Dropping to batch 16, or an 8k context, should bring cost per request down."
+      },
+      {
+        "role": "user",
+        "text": "How much would 8k context actually save?"
+      },
+      {
+        "role": "tool",
+        "name": "profile_endpoint",
+        "meta": "inference-staging-8k, window=1h",
+        "status": "running",
+        "output": "Sampling requests against context_window=8k\n~3 min remaining"
+      },
+      {
+        "role": "assistant",
+        "text": "Profiling the 8k variant now. Cutting the context window usually takes 30 to 40% off memory cost and returns 8 to 15% on latency from fewer GPU operations."
+      }
+    ]
+  }
+];
+
+const replies = [
+  "Running a full regression pass to confirm this does not cascade into the other suites.",
+  "Checking the deploy log to see whether config changed alongside that run.",
+  "Pulling the failure-rate trend for the last week so we can prioritise.",
+  "Worth an alert on latency percentiles so this surfaces sooner next time.",
+  "That baseline holds. Comparing it against the previous checkpoint now.",
+  "I will model the cost and latency tradeoff once profiling finishes."
+];
 
 interface SlashItem {
   id: string;
@@ -197,26 +400,59 @@ const files = [
   "docs/retrieval.md",
 ];
 
-const replies = [
-  "Queued. I will report back when the run settles.",
-  "Reading the trace now. The mismatch starts at step 7.",
-  "Done. Three cases pass against the matched index.",
-];
 
-const views = [
-  { id: "chat:retrieval", label: "Retrieval regression", icon: null },
-  { id: "chat:release", label: "Release plan", icon: null },
+const views: {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }> | null;
+}[] = [
+  ...threads.map((thread) => ({
+    id: thread.id,
+    label: thread.title,
+    icon: null,
+  })),
   { id: "view:board", label: "Board", icon: KanbanSquare },
   { id: "view:calendar", label: "Calendar", icon: Calendar },
   { id: "view:workflow", label: "Workflow", icon: Workflow },
-] as { id: string; label: string; icon: React.ComponentType<{ className?: string }> | null }[];
+];
+
+/** Copy swaps to a check for a moment, the way copy controls usually do. */
+function CopyAction({ text }: { text: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!copied) return;
+    const id = window.setTimeout(() => setCopied(false), 1400);
+    return () => window.clearTimeout(id);
+  }, [copied]);
+
+  return (
+    <MessageAction
+      aria-label={copied ? "Copied" : "Copy message"}
+      title={copied ? "Copied" : "Copy"}
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          setCopied(true);
+        } catch {
+          setCopied(false);
+        }
+      }}
+    >
+      {copied ? (
+        <Check aria-hidden className="size-3.5" />
+      ) : (
+        <Copy aria-hidden className="size-3.5" />
+      )}
+    </MessageAction>
+  );
+}
 
 /* ── chat pane ─────────────────────────────────────────────────────────── */
 
 function ChatPane({ viewId }: { viewId: string }) {
-  const [turns, setTurns] = React.useState<Turn[]>(
-    openingTurns[viewId] ?? openingTurns["chat:retrieval"]
-  );
+  const thread = threads.find((entry) => entry.id === viewId) ?? threads[0];
+  const [turns, setTurns] = React.useState<Turn[]>(thread.turns);
   const [draft, setDraft] = React.useState("");
   const [attachments, setAttachments] = React.useState<
     { id: string; name: string; kind: "file" | "skill" | "mention" }[]
@@ -229,6 +465,26 @@ function ChatPane({ viewId }: { viewId: string }) {
   const [accessMode, setAccessMode] =
     React.useState<ComposerAccessModeValue>("ask-approval");
   const editorRef = React.useRef<ChatComposerEditorHandle>(null);
+  const [editing, setEditing] = React.useState<number | null>(null);
+  const [editDraft, setEditDraft] = React.useState("");
+
+  React.useEffect(() => setTurns(thread.turns), [thread]);
+
+  /** Editing a sent message drops everything after it and answers again. */
+  function resend(index: number) {
+    const text = editDraft.trim();
+    if (!text) return;
+    setTurns((current) => [
+      ...current.slice(0, index),
+      { role: "user", text },
+      {
+        role: "assistant",
+        text: replies[index % replies.length],
+        streaming: true,
+      },
+    ]);
+    setEditing(null);
+  }
 
   function send() {
     const text = draft.trim();
@@ -236,8 +492,8 @@ function ChatPane({ viewId }: { viewId: string }) {
     const reply = replies[turns.length % replies.length];
     setTurns((current) => [
       ...current,
-      { id: `${current.length}-u`, from: "user", text },
-      { id: `${current.length}-a`, from: "assistant", text: reply, streaming: true },
+      { role: "user", text },
+      { role: "assistant", text: reply, streaming: true },
     ]);
     setDraft("");
     editorRef.current?.clear();
@@ -247,37 +503,123 @@ function ChatPane({ viewId }: { viewId: string }) {
     <>
       <div
         role="log"
-        aria-label="Conversation"
+        aria-label={thread.title}
         tabIndex={0}
         className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3 outline-none"
       >
-        {turns.map((turn) =>
-          turn.from === "assistant" ? (
-            <Message key={turn.id} from="assistant">
-              <MessageContent>
-                {/* No avatar or sender name: the agent's turns read as plain
-                    text, and only the person's turns carry a bubble. */}
-                <MessageBubble variant="plain" streaming={turn.streaming}>
-                  {turn.streaming ? (
-                    <MessageStreamText text={turn.text} />
-                  ) : (
-                    turn.text
-                  )}
-                </MessageBubble>
-              </MessageContent>
-            </Message>
-          ) : (
-            <Message key={turn.id} from="user">
+        {turns.map((turn, index) => {
+          if (turn.role === "tool") {
+            return (
+              <ToolCall key={index} status={turn.status}>
+                <ToolCallTrigger meta={turn.meta}>{turn.name}</ToolCallTrigger>
+                {turn.output ? (
+                  <ToolCallContent>
+                    <ToolCallTabs output={turn.output} />
+                  </ToolCallContent>
+                ) : null}
+              </ToolCall>
+            );
+          }
+
+          if (turn.role === "assistant") {
+            return (
+              <Message key={index} from="assistant">
+                <MessageContent>
+                  <MessageBubble variant="plain" streaming={turn.streaming}>
+                    {turn.streaming ? (
+                      <MessageStreamText text={turn.text ?? ""} />
+                    ) : (
+                      turn.text
+                    )}
+                  </MessageBubble>
+                  {/* Actions stay hidden until the row is hovered or focused. */}
+                  <MessageFooter>
+                    <MessageActions>
+                      <CopyAction text={turn.text ?? ""} />
+                      <MessageAction aria-label="Retry" title="Retry">
+                        <RotateCcw aria-hidden className="size-3.5" />
+                      </MessageAction>
+                      <span className="ms-1">
+                        {TIMESTAMPS[index % TIMESTAMPS.length]}
+                      </span>
+                    </MessageActions>
+                  </MessageFooter>
+                </MessageContent>
+              </Message>
+            );
+          }
+
+          if (editing === index) {
+            return (
+              <Message key={index} from="user">
+                <MessageContent>
+                  <form
+                    className="flex w-full max-w-md flex-col gap-2"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      resend(index);
+                    }}
+                  >
+                    <textarea
+                      autoFocus
+                      rows={2}
+                      value={editDraft}
+                      onChange={(event) => setEditDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") setEditing(null);
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          resend(index);
+                        }
+                      }}
+                      aria-label="Edit message"
+                      className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        type="button"
+                        onClick={() => setEditing(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button size="sm" type="submit">
+                        Send
+                      </Button>
+                    </div>
+                  </form>
+                </MessageContent>
+              </Message>
+            );
+          }
+
+          return (
+            <Message key={index} from="user">
               <MessageContent>
                 <MessageBubble variant="primary">{turn.text}</MessageBubble>
+                <MessageFooter className="justify-end">
+                  <MessageActions>
+                    <MessageAction
+                      aria-label="Edit message"
+                      title="Edit"
+                      onClick={() => {
+                        setEditing(index);
+                        setEditDraft(turn.text ?? "");
+                      }}
+                    >
+                      <Pencil aria-hidden className="size-3.5" />
+                    </MessageAction>
+                    <CopyAction text={turn.text ?? ""} />
+                    <span className="ms-1">
+                      {TIMESTAMPS[index % TIMESTAMPS.length]}
+                    </span>
+                  </MessageActions>
+                </MessageFooter>
               </MessageContent>
             </Message>
-          )
-        )}
-
-        <ToolCall status="complete">
-          <ToolCallTrigger meta="suite=retrieval">Read run 4192</ToolCallTrigger>
-        </ToolCall>
+          );
+        })}
       </div>
 
       <div className="p-2">
@@ -333,6 +675,9 @@ function ChatPane({ viewId }: { viewId: string }) {
                     id: item.id,
                     label: item.label,
                     kind: item.kind,
+                    // Without this the chip falls back to the kind's default
+                    // glyph and stops matching the row that was chosen.
+                    icon: item.icon,
                   });
                 }}
                 renderItem={(item) => (
@@ -454,25 +799,539 @@ function ChatPane({ viewId }: { viewId: string }) {
 
 /* ── panes ─────────────────────────────────────────────────────────────── */
 
+/* ── views ─────────────────────────────────────────────────────────────── */
+
+const boardColumns = [
+  { id: "triage", title: "Triage" },
+  { id: "running", title: "Running" },
+  { id: "review", title: "Review" },
+  { id: "done", title: "Done" },
+];
+
+const boardCards: Record<string, { title: string; meta: string; owner: string }> = {
+  "long-context": { title: "Long-context regression", meta: "bug", owner: "AL" },
+  "tool-traces": { title: "Add tool-call traces", meta: "feature", owner: "GH" },
+  "sweep-4192": { title: "Sweep 4192", meta: "eval · 12m", owner: "AT" },
+  "index-rebuild": { title: "Rebuild retrieval index", meta: "infra · 4m", owner: "AL" },
+  "safety-pass": { title: "Safety pass", meta: "eval", owner: "GH" },
+  "checkpoint-4188": { title: "Checkpoint 4188", meta: "training", owner: "AT" },
+  "docs-sprint": { title: "Docs sprint", meta: "docs", owner: "AL" },
+};
+
+const initialBoard: Record<string, readonly string[]> = {
+  triage: ["long-context", "tool-traces"],
+  running: ["sweep-4192", "index-rebuild"],
+  review: ["safety-pass"],
+  done: ["checkpoint-4188", "docs-sprint"],
+};
+
+function BoardView() {
+  const [columns, setColumns] = React.useState(initialBoard);
+  const [order, setOrder] = React.useState(boardColumns.map((c) => c.id));
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
+        <span>Sprint 24</span>
+        <span>
+          {Object.values(columns).reduce((n, cards) => n + cards.length, 0)} cards
+        </span>
+      </div>
+
+      <KanbanBoard
+        className="flex min-h-0 flex-1 gap-3 overflow-x-auto px-3 pb-3"
+        onCardMove={(move) =>
+          setColumns((current) => applyKanbanMove(current, move))
+        }
+        onColumnMove={(move) =>
+          setOrder((current) => {
+            const next = current.filter((id) => id !== move.columnId);
+            next.splice(move.index, 0, move.columnId);
+            return next;
+          })
+        }
+      >
+        {order.map((columnId) => {
+          const column = boardColumns.find((entry) => entry.id === columnId)!;
+          const cards = columns[column.id] ?? [];
+
+          return (
+            <KanbanColumn
+              key={column.id}
+              columnId={column.id}
+              aria-label={column.title}
+              className="flex w-60 shrink-0 flex-col rounded-xl border border-border bg-card p-2"
+            >
+              <span className="mb-2 flex items-center justify-between gap-2 px-1">
+                <span className="flex items-center gap-1.5">
+                  <KanbanColumnHandle
+                    aria-label={`Move ${column.title}`}
+                    className="size-5"
+                  />
+                  <span className="text-sm font-medium">{column.title}</span>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {cards.length}
+                </span>
+              </span>
+
+              <KanbanColumnList
+                aria-label={`${column.title} cards`}
+                className="min-h-0 flex-1 overflow-auto"
+              >
+                {cards.map((cardId) => (
+                  <KanbanCard
+                    key={cardId}
+                    cardId={cardId}
+                    aria-label={boardCards[cardId].title}
+                    className="mb-2 rounded-lg border border-border bg-background p-2.5 last:mb-0"
+                  >
+                    <span className="block text-sm">
+                      {boardCards[cardId].title}
+                    </span>
+                    <span className="mt-1.5 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {boardCards[cardId].meta}
+                      </span>
+                      <span className="flex size-5 items-center justify-center rounded-full bg-secondary text-[10px] text-muted-foreground">
+                        {boardCards[cardId].owner}
+                      </span>
+                    </span>
+                  </KanbanCard>
+                ))}
+              </KanbanColumnList>
+            </KanbanColumn>
+          );
+        })}
+      </KanbanBoard>
+    </div>
+  );
+}
+
+const harnessNow = new Date(2026, 7, 18, 9, 40);
+const at = (month: number, date: number, hour = 0, minute = 0) =>
+  new Date(2026, month, date, hour, minute);
+
+const harnessEvents: EventCalendarEvent[] = [
+  { id: "standup", title: "Standup", start: at(7, 18, 9, 30), end: at(7, 18, 9, 45) },
+  { id: "crit", title: "Design crit", start: at(7, 18, 13, 0), end: at(7, 18, 14, 30), location: "Studio" },
+  { id: "sweep", title: "Eval sweep", start: at(7, 19, 10, 0), end: at(7, 19, 12, 0), tone: "secondary" },
+  { id: "freeze", title: "Code freeze", start: at(7, 21, 16, 0), end: at(7, 21, 17, 0), tone: "destructive" },
+  { id: "offsite", title: "Offsite", start: at(7, 20), end: at(7, 21), tone: "muted" },
+];
+
+const CALENDAR_HOURS = { min: 8, max: 18 };
+
+/**
+ * The time grid sizes itself from `hourHeight`, so a fixed value leaves dead
+ * space in a tall pane. Measure the pane and divide the height across the
+ * visible hours instead, with a floor so a short pane scrolls rather than
+ * squashing the rows.
+ */
+function CalendarView() {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [hourHeight, setHourHeight] = React.useState(56);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      // Toolbar, day header and the all-day shelf sit above the hour rows.
+      const chrome = 132;
+      const hours = CALENDAR_HOURS.max - CALENDAR_HOURS.min;
+      const available = entry.contentRect.height - chrome;
+      setHourHeight(Math.max(44, Math.floor(available / hours)));
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="flex min-h-0 flex-1 flex-col">
+      <EventCalendar
+        className="flex min-h-0 flex-1 flex-col border-0"
+        defaultEvents={harnessEvents}
+        defaultDate={harnessNow}
+        defaultView="week"
+        now={harnessNow}
+        locale="en-US"
+        minHour={CALENDAR_HOURS.min}
+        maxHour={CALENDAR_HOURS.max}
+        hourHeight={hourHeight}
+      >
+        <EventCalendarToolbar />
+        <EventCalendarGrid className="min-h-0 flex-1" />
+      </EventCalendar>
+    </div>
+  );
+}
+
+interface WorkflowJob {
+  id: string;
+  title: string;
+  detail: string;
+  position: { x: number; y: number };
+}
+
+const initialJobs: WorkflowJob[] = [
+  { id: "fetch", title: "Fetch corpus", detail: "every 15m", position: { x: 60, y: 80 } },
+  { id: "chunk", title: "Chunk", detail: "512 tokens", position: { x: 340, y: 80 } },
+  { id: "embed", title: "Embed", detail: "nessa-embed-1", position: { x: 340, y: 260 } },
+  { id: "serve", title: "Serve", detail: "retrieval api", position: { x: 620, y: 170 } },
+];
+
+/** Offered when a connection is dropped on empty canvas. */
+const TIMESTAMPS = ["09:41", "09:42", "09:44", "09:47", "09:51", "09:58"];
+
+const jobPalette = [
+  { id: "filter", title: "Filter", detail: "drop duplicates" },
+  { id: "rerank", title: "Rerank", detail: "cross-encoder" },
+  { id: "notify", title: "Notify", detail: "slack" },
+];
+
+function WorkflowView() {
+  const [jobs, setJobs] = React.useState(initialJobs);
+  const [edges, setEdges] = React.useState([
+    { id: "fetch-chunk", source: "fetch", target: "chunk" },
+    { id: "chunk-embed", source: "chunk", target: "embed" },
+    { id: "embed-serve", source: "embed", target: "serve" },
+  ]);
+  const [palette, setPalette] = React.useState<{
+    source: string;
+    point: { x: number; y: number };
+  } | null>(null);
+
+  function removeJob(jobId: string) {
+    setJobs((current) => current.filter((job) => job.id !== jobId));
+    setEdges((current) =>
+      current.filter((edge) => edge.source !== jobId && edge.target !== jobId)
+    );
+  }
+
+  function addJob(option: (typeof jobPalette)[number]) {
+    if (!palette) return;
+    const id = `${option.id}-${jobs.length}`;
+    setJobs((current) => [...current, { ...option, id, position: palette.point }]);
+    setEdges((current) => [
+      ...current,
+      { id: `${palette.source}-${id}`, source: palette.source, target: id },
+    ]);
+    setPalette(null);
+  }
+
+  return (
+    <WorkflowCanvas
+      aria-label="Retrieval workflow"
+      className="min-h-0 flex-1 border-0"
+      bounds={{ minX: -60, minY: -60, maxX: 900, maxY: 520 }}
+      onConnect={(connection) =>
+        setEdges((current) => [
+          ...current,
+          {
+            id: `${connection.source}-${connection.target}-${current.length}`,
+            source: connection.source,
+            target: connection.target,
+          },
+        ])
+      }
+      onConnectEnd={(end) => setPalette({ source: end.source, point: end.point })}
+      onDismiss={() => setPalette(null)}
+    >
+      <WorkflowCanvasGrid />
+      <WorkflowCanvasSurface>
+        <WorkflowCanvasEdges>
+          {edges.map((edge) => (
+            <WorkflowCanvasEdge
+              key={edge.id}
+              source={edge.source}
+              target={edge.target}
+              className="stroke-[3.5] stroke-muted-foreground/70"
+              aria-label={`Edge from ${edge.source} to ${edge.target}`}
+              onDelete={() =>
+                setEdges((current) => current.filter((e) => e.id !== edge.id))
+              }
+            />
+          ))}
+        </WorkflowCanvasEdges>
+
+        {jobs.map((job) => (
+          <WorkflowCanvasNode
+            key={job.id}
+            nodeId={job.id}
+            defaultPosition={job.position}
+            aria-label={`${job.title} job`}
+            // Delete and Backspace remove a focused node with its edges.
+            onDelete={() => removeJob(job.id)}
+          >
+            <span className="block w-44 rounded-xl border border-border bg-card p-3 shadow-sm">
+              <span className="block text-sm font-medium">{job.title}</span>
+              <span className="block text-xs text-muted-foreground">
+                {job.detail}
+              </span>
+            </span>
+            <WorkflowCanvasNodeHandle side="left" />
+            <WorkflowCanvasNodeHandle side="right" />
+            <WorkflowCanvasNodeHandle side="top" />
+            <WorkflowCanvasNodeHandle side="bottom" />
+          </WorkflowCanvasNode>
+        ))}
+
+        {palette ? (
+          <WorkflowCanvasNode
+            nodeId="palette"
+            defaultPosition={palette.point}
+            aria-label="Add a job"
+          >
+            <div className="w-52 rounded-xl border border-dashed border-primary/60 bg-popover p-2 shadow-lg">
+              <div className="flex items-center justify-between px-1 pb-1">
+                <span className="text-xs font-medium">Add a job</span>
+                <button
+                  type="button"
+                  aria-label="Dismiss"
+                  onClick={() => setPalette(null)}
+                  className="rounded px-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  ×
+                </button>
+              </div>
+              {jobPalette.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => addJob(option)}
+                  className="block w-full rounded-lg px-2 py-1.5 text-left hover:bg-accent"
+                >
+                  <span className="block text-sm">{option.title}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {option.detail}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </WorkflowCanvasNode>
+        ) : null}
+      </WorkflowCanvasSurface>
+    </WorkflowCanvas>
+  );
+}
+
+const themePresets = [
+  { id: "", label: "Nessa", hint: "The library's own neutral palette" },
+  { id: "tokyo-night", label: "Tokyo Night", hint: "Cool indigo, dark only" },
+  { id: "rose-pine", label: "Rosé Pine", hint: "Muted rose on plum" },
+  { id: "paper", label: "Paper", hint: "Warm light, ink on cream" },
+];
+
+/**
+ * Appearance settings. Mode flips the `.dark` class the library keys off;
+ * presets set `data-nessa-theme`, and each one is only a block of token
+ * overrides. No component is patched, because every surface is painted from
+ * those tokens.
+ */
+function AppearanceView() {
+  const [mode, setMode] = React.useState<"light" | "dark">("dark");
+  const [preset, setPreset] = React.useState("");
+
+  React.useEffect(() => {
+    setMode(
+      document.documentElement.classList.contains("dark") ? "dark" : "light"
+    );
+    setPreset(document.documentElement.dataset.nessaTheme ?? "");
+  }, []);
+
+  function applyMode(next: "light" | "dark") {
+    setMode(next);
+    const root = document.documentElement;
+    root.classList.toggle("dark", next === "dark");
+    root.dataset.theme = next;
+    root.style.colorScheme = next;
+  }
+
+  function applyPreset(next: string) {
+    setPreset(next);
+    const root = document.documentElement;
+    if (next) root.dataset.nessaTheme = next;
+    else delete root.dataset.nessaTheme;
+  }
+
+  return (
+    <SettingsSection
+      title="Appearance"
+      description="Every nessa-ui surface is painted from semantic tokens, so a theme is a block of variables rather than a fork of any component."
+    >
+      <div>
+        <h2 className="mb-3 text-sm font-medium">Mode</h2>
+        <SegmentedControl
+          value={mode}
+          onValueChange={(value) => applyMode(value as "light" | "dark")}
+        >
+          <SegmentedControlOption value="light">Light</SegmentedControlOption>
+          <SegmentedControlOption value="dark">Dark</SegmentedControlOption>
+        </SegmentedControl>
+
+        <h2 className="mt-8 mb-3 text-sm font-medium">Theme</h2>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {themePresets.map((option) => {
+            const active = preset === option.id;
+            return (
+              <button
+                key={option.id || "default"}
+                type="button"
+                onClick={() => applyPreset(option.id)}
+                aria-pressed={active}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                  active
+                    ? "border-ring bg-accent"
+                    : "border-border hover:bg-accent/50"
+                )}
+              >
+                <span
+                  aria-hidden
+                  data-nessa-theme={option.id || undefined}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background"
+                >
+                  <span className="size-4 rounded-full bg-primary" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">
+                    {option.label}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {option.hint}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <h2 className="mt-8 mb-3 text-sm font-medium">What a theme is</h2>
+        <pre className="overflow-x-auto rounded-xl border border-border bg-card p-3 font-mono text-xs leading-6 text-muted-foreground">
+{`[data-nessa-theme="tokyo-night"] {
+  --background: oklch(0.24 0.03 267);
+  --foreground: oklch(0.86 0.03 267);
+  --primary:    oklch(0.72 0.13 267);
+  --border:     oklch(0.34 0.03 267);
+  /* ...the rest of the token set */
+}`}
+        </pre>
+      </div>
+    </SettingsSection>
+  );
+}
+
+const settingsSections = [
+  { id: "appearance", label: "Appearance" },
+  { id: "models", label: "Models" },
+  { id: "shortcuts", label: "Shortcuts" },
+  { id: "about", label: "About" },
+];
+
+/** Settings is its own surface: nav on the left, one section at a time. */
+function SettingsView() {
+  const [section, setSection] = React.useState("appearance");
+
+  return (
+    <div className="flex min-h-0 flex-1">
+      <nav className="w-44 shrink-0 border-e border-border p-2">
+        {settingsSections.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            onClick={() => setSection(entry.id)}
+            className={cn(
+              "mb-0.5 block w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+              section === entry.id
+                ? "bg-secondary font-medium text-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            )}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="min-h-0 flex-1 overflow-auto">
+        {section === "appearance" ? <AppearanceView /> : null}
+        {section === "models" ? (
+          <SettingsSection
+            title="Models"
+            description="The default model for new conversations."
+          >
+            <ModelPicker groups={harnessModels} defaultValue={{ providerId: "anthropic", modelId: "opus" }} />
+          </SettingsSection>
+        ) : null}
+        {section === "shortcuts" ? (
+          <SettingsSection
+            title="Shortcuts"
+            description="Available anywhere in the harness."
+          >
+            <dl className="divide-y divide-border rounded-xl border border-border text-sm">
+              {[
+                ["Toggle terminal", "⌘J"],
+                ["Move between panes", "⌘⇧H / J / K / L"],
+                ["Maximize pane", "⇧⎋"],
+                ["Skills and commands", "/"],
+                ["Mention a file", "@"],
+              ].map(([label, keys]) => (
+                <div key={label} className="flex items-center justify-between p-3">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-mono text-xs">{keys}</dd>
+                </div>
+              ))}
+            </dl>
+          </SettingsSection>
+        ) : null}
+        {section === "about" ? (
+          <SettingsSection
+            title="About"
+            description="This harness is a demo, assembled entirely from @nessa-ui/react."
+          >
+            <dl className="divide-y divide-border rounded-xl border border-border text-sm">
+              {[
+                ["Package", "@nessa-ui/react 0.1.0"],
+                ["Surfaces", "AppShell, Message, ChatComposer, ToolCall"],
+                ["Views", "Kanban, EventCalendar, WorkflowCanvas"],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-4 p-3">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="truncate">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </SettingsSection>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SettingsSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto w-full max-w-2xl p-6">
+      <h1 className="text-lg font-semibold">{title}</h1>
+      <p className="mt-1 mb-6 text-sm text-muted-foreground">{description}</p>
+      {children}
+    </div>
+  );
+}
+
 function PaneBody({ viewId }: { viewId: string | undefined }) {
-  if (viewId === "view:board")
-    return (
-      <div className="min-h-0 flex-1 overflow-auto p-3">
-        <KanbanDemo />
-      </div>
-    );
-  if (viewId === "view:calendar")
-    return (
-      <div className="min-h-0 flex-1 overflow-auto p-3">
-        <EventCalendarDemo defaultView="day" />
-      </div>
-    );
-  if (viewId === "view:workflow")
-    return (
-      <div className="min-h-0 flex-1 overflow-auto p-3">
-        <WorkflowCanvasDemo />
-      </div>
-    );
+  if (viewId === "view:settings") return <SettingsView />;
+  if (viewId === "view:board") return <BoardView />;
+  if (viewId === "view:calendar") return <CalendarView />;
+  if (viewId === "view:workflow") return <WorkflowView />;
   if (viewId?.startsWith("chat:")) return <ChatPane viewId={viewId} />;
 
   return (
@@ -485,17 +1344,22 @@ function PaneBody({ viewId }: { viewId: string | undefined }) {
 function PaneAction({
   label,
   onClick,
+  className,
   children,
 }: {
   label: string;
   onClick: () => void;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
     <Button
       size="icon"
       variant="ghost"
-      className="size-6 text-muted-foreground hover:text-foreground"
+      className={cn(
+        "size-6 shrink-0 text-muted-foreground hover:text-foreground",
+        className
+      )}
       aria-label={label}
       title={label}
       onClick={onClick}
@@ -563,8 +1427,12 @@ function Pane({ pane }: { pane: PaneNode }) {
   const sidebarOpen = layout.docks[AppShellDockSide.Left].open;
   const showReveal =
     !sidebarOpen && firstPaneId(layout.workspace.root) === pane.id;
-  const viewId = pane.views[0];
-  const view = views.find((entry) => entry.id === viewId);
+  const viewId = pane.activeViewId ?? pane.views[0];
+  const view =
+    views.find((entry) => entry.id === viewId) ??
+    (viewId === "view:settings"
+      ? { id: viewId, label: "Settings", icon: null }
+      : undefined);
   const maximized = layout.workspace.maximizedPaneId === pane.id;
   const actions = usePaneActions(pane, maximized);
 
@@ -574,18 +1442,20 @@ function Pane({ pane }: { pane: PaneNode }) {
         <ContextMenuTrigger asChild>
           <div className="group/pane-bar flex h-8 items-center pe-1">
             {showReveal ? (
-              <span className="ps-1.5">
-                <PaneAction
-                  label="Show sidebar"
-                  onClick={() => toggleDock({ side: AppShellDockSide.Left })}
-                >
-                  <PanelLeft aria-hidden className="size-3.5" />
-                </PaneAction>
-              </span>
+              <PaneAction
+                label="Show sidebar"
+                onClick={() => toggleDock({ side: AppShellDockSide.Left })}
+                className="ms-1.5"
+              >
+                <PanelLeft aria-hidden className="size-3.5" />
+              </PaneAction>
             ) : null}
             <AppShellPaneDragHandle
               paneId={pane.id}
-              className="flex h-full min-w-0 items-center gap-1.5 ps-2"
+              className={cn(
+                "flex h-full min-w-0 items-center gap-1.5",
+                showReveal ? "ps-1.5" : "ps-2.5"
+              )}
               title="Drag to move this pane"
             >
               <span className="truncate text-xs font-medium">
@@ -711,6 +1581,9 @@ function Sidebar({ actions }: { actions?: React.ReactNode }) {
       <div className="flex items-center gap-0.5 border-t border-border p-2">
         <button
           type="button"
+          onClick={() =>
+            openView({ viewId: "view:settings", paneId: active })
+          }
           className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Settings aria-hidden className="size-4" />
