@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
   Bookmark,
   Copy,
@@ -29,6 +30,7 @@ import {
   ChatComposerActions,
   ChatComposerAttachment,
   ChatComposerAttachments,
+  ChatComposerEditor,
   ChatComposerTrigger,
   ChatComposerFooter,
   ChatComposerInput,
@@ -73,6 +75,7 @@ import {
   SelectionTooltipMore,
   SelectionTooltipSeparator,
   SelectionTooltipShelf,
+  type ChatComposerEditorHandle,
   type ModelPickerGroup,
   type ModelPickerValue,
 } from "@nessa-ui/react";
@@ -792,6 +795,7 @@ interface Attachment {
  */
 export function ChatComposerFullDemo() {
   const [message, setMessage] = React.useState("");
+  const editorRef = React.useRef<ChatComposerEditorHandle>(null);
   const [sent, setSent] = React.useState("");
   const [model, setModel] = React.useState<ModelPickerValue>({
     providerId: "anthropic",
@@ -819,6 +823,7 @@ export function ChatComposerFullDemo() {
           if (!message.trim()) return;
           setSent(message.trim());
           setMessage("");
+          editorRef.current?.clear();
         }}
       >
         {attachments.length ? (
@@ -840,10 +845,12 @@ export function ChatComposerFullDemo() {
           </ChatComposerAttachments>
         ) : null}
 
-        <ChatComposerInput
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
+        {/* ChatComposerEditor turns a chosen skill or mention into an atomic
+            inline chip; ChatComposerInput would leave it as plain text. */}
+        <ChatComposerEditor
+          ref={editorRef}
           placeholder="Type / for skills, @ to mention"
+          onContentChange={(content) => setMessage(content.text)}
         />
 
         <ChatComposerTrigger trigger="/" label="Skills and commands">
@@ -922,6 +929,7 @@ export function ChatComposerFullDemo() {
               onValueChange={setModel}
             />
             <ModelThinkingControl
+              icon={<ThinkingIcon className="size-[18px]" />}
               levels={thinkingLevels}
               value={thinking}
               onValueChange={setThinking}

@@ -17,35 +17,56 @@ export function HarnessView() {
 
   return (
     <div className="relative h-dvh overflow-hidden">
-      <AgentHarness />
-
-      <button
-        type="button"
-        onClick={() => setShowCode((v) => !v)}
-        aria-label={showCode ? "Hide source" : "View source"}
-        title={showCode ? "Hide source" : "View source"}
-        className={cn(
-          "absolute right-3 top-2 z-30 inline-flex size-7 items-center justify-center rounded-md border border-border",
-          "bg-background/80 text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
-        )}
-      >
-        {showCode ? <X className="size-3.5" /> : <Code2 className="size-3.5" />}
-      </button>
+      <AgentHarness
+        headerActions={
+          <button
+            type="button"
+            onClick={() => setShowCode((v) => !v)}
+            aria-label={showCode ? "Hide source" : "View source"}
+            title={showCode ? "Hide source" : "View source"}
+            className={cn(
+              "inline-flex size-6 items-center justify-center rounded-md",
+              "text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            )}
+          >
+            {showCode ? (
+              <X className="size-3.5" />
+            ) : (
+              <Code2 className="size-3.5" />
+            )}
+          </button>
+        }
+      />
 
       {showCode ? (
-        <div className="absolute inset-0 z-20 overflow-auto bg-background/95 p-6 backdrop-blur">
-          <div className="mx-auto w-full max-w-4xl">
-            <h2 className="mb-1 text-lg font-semibold">Harness source</h2>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Everything on this page, assembled from @nessa-ui/react.
-            </p>
-            {source ? (
-              <SourceBlock code={source} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Source unavailable.
+        <div className="absolute inset-0 z-20 flex flex-col bg-background/95 backdrop-blur">
+          <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-2">
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold">Harness source</h2>
+              <p className="truncate text-xs text-muted-foreground">
+                Everything on this page, assembled from @nessa-ui/react.
               </p>
-            )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowCode(false)}
+              aria-label="Close source"
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-auto p-4">
+            <div className="mx-auto w-full max-w-4xl">
+              {source ? (
+                <SourceBlock code={source} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Source unavailable.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       ) : null}
