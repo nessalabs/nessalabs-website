@@ -174,6 +174,12 @@ const documented: {
       "Project timeline with summary roll-ups, milestones and dependency arrows. Bars reschedule by drag or keyboard.",
   },
   {
+    slug: "split-view",
+    group: "Composites",
+    description:
+      "Resizable panels around a draggable separator. Arrow keys resize from the keyboard.",
+  },
+  {
     slug: "kanban",
     group: "Composites",
     description: "Board of columns and draggable cards. Moves report through onCardMove.",

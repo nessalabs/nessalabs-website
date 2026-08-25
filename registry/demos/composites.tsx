@@ -14,6 +14,9 @@ import {
   KanbanColumn,
   KanbanColumnHandle,
   KanbanColumnList,
+  SplitView,
+  SplitViewPanel,
+  SplitViewSeparator,
   WorkflowCanvas,
   WorkflowCanvasEdge,
   WorkflowCanvasEdges,
@@ -592,5 +595,34 @@ export function WorkflowCanvasPaletteDemo() {
         </WorkflowCanvasSurface>
       </WorkflowCanvas>
     </div>
+  );
+}
+
+/** Two resizable panels either side of a draggable separator. */
+export function SplitViewDemo() {
+  return (
+    <SplitView className="h-72 w-full overflow-hidden rounded-xl border border-border">
+      <SplitViewPanel id="files" defaultSize={32} minSize={18}>
+        <div className="h-full overflow-auto p-3">
+          <div className="mb-2 text-xs font-medium text-muted-foreground">
+            Files
+          </div>
+          {["ingest.ts", "embed.ts", "index.ts", "serve.ts"].map((file) => (
+            <div
+              key={file}
+              className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground"
+            >
+              {file}
+            </div>
+          ))}
+        </div>
+      </SplitViewPanel>
+      <SplitViewSeparator />
+      <SplitViewPanel id="detail" minSize={30}>
+        <div className="h-full overflow-auto p-3 text-sm text-muted-foreground">
+          Drag the separator, or focus it and use the arrow keys.
+        </div>
+      </SplitViewPanel>
+    </SplitView>
   );
 }

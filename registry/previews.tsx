@@ -5,6 +5,7 @@ import {
   EventCalendarDemo,
   GanttChartDemo,
   KanbanDemo,
+  SplitViewDemo,
   WorkflowCanvasDemo,
   WorkflowCanvasNestedDemo,
   WorkflowCanvasPaletteDemo,
@@ -26,6 +27,7 @@ import {
   SelectionTooltipDemo,
   SelectionTooltipShelfDemo,
 } from "./demos/agent";
+import { AgentHarness } from "./demos/harness";
 import {
   BadgeDemo,
   ButtonDemo,
@@ -82,10 +84,14 @@ export const previews: Record<string, React.ReactNode> = {
   "selection-tooltip": <SelectionTooltipDemo />,
   "selection-tooltip-shelf": <SelectionTooltipShelfDemo />,
 
+  // harness
+  "agent-harness": <AgentHarness />,
+
   // composites
   "event-calendar": <EventCalendarDemo />,
   "gantt-chart": <GanttChartDemo />,
   kanban: <KanbanDemo />,
+  "split-view": <SplitViewDemo />,
   "workflow-canvas": <WorkflowCanvasDemo />,
   "workflow-canvas-nested": <WorkflowCanvasNestedDemo />,
   "workflow-canvas-palette": <WorkflowCanvasPaletteDemo />,
