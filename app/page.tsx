@@ -30,8 +30,7 @@ export default function HomePage() {
         </h1>
 
         <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-base text-muted-foreground">
-          Nessa Labs builds agents and the interfaces they run in. nessa-ui,
-          the React component system behind them, is documented here.
+          Nessa Labs builds agents and the interfaces they run in.
         </p>
 
         <div className="animate-fade-up mt-10 flex flex-wrap items-center justify-center gap-3">
