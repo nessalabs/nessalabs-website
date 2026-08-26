@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { PanelLeft, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { groups, registry } from "@/registry";
 
@@ -26,12 +26,14 @@ const sections: {
 
 /**
  * Docs navigation. A pinned rail on desktop; on small screens the same tree
- * collapses into a disclosure above the content, so the docs stay navigable
- * without the rail.
+ * slides in from the left as a drawer, so the reader keeps their place in the
+ * page instead of having the content pushed down by a disclosure.
  */
 export function DocsNav() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
   const current =
     registry.find((c) => pathname === `/ui/components/${c.slug}`)?.name ??
@@ -39,32 +41,96 @@ export function DocsNav() {
 
   React.useEffect(() => setOpen(false), [pathname]);
 
+  // While the drawer is open it owns the viewport: escape closes it, the page
+  // behind it does not scroll, and focus starts inside the panel.
+  React.useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = overflow;
+      triggerRef.current?.focus();
+    };
+  }, [open]);
+
   return (
     <>
       {/* mobile */}
       <div className="border-b border-border lg:hidden">
         <button
+          ref={triggerRef}
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(true)}
           aria-expanded={open}
-          className="flex w-full items-center justify-between gap-2 px-6 py-3 text-sm sm:px-8"
+          aria-controls="docs-nav-drawer"
+          className="flex w-full items-center gap-2.5 px-6 py-3 text-sm sm:px-8"
         >
+          <PanelLeft size={16} className="shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground">
             Components <span className="text-foreground">/ {current}</span>
           </span>
-          <ChevronDown
-            size={16}
-            className={cn(
-              "text-muted-foreground transition-transform",
-              open && "rotate-180"
-            )}
-          />
         </button>
-        {open ? (
-          <div className="max-h-[60vh] overflow-y-auto border-t border-border px-4 py-3 sm:px-6">
+      </div>
+
+      <div
+        aria-hidden={!open}
+        className={cn(
+          "fixed inset-0 z-[60] lg:hidden",
+          // Opening is immediate so the panel is focusable at once; closing
+          // holds visibility across the slide-out, then drops out of the tab
+          // order.
+          open
+            ? "visible"
+            : "invisible transition-[visibility] duration-200 motion-reduce:transition-none"
+        )}
+      >
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Close navigation"
+          onClick={() => setOpen(false)}
+          className={cn(
+            "absolute inset-0 bg-background/70 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none",
+            open ? "opacity-100" : "opacity-0"
+          )}
+        />
+        <div
+          id="docs-nav-drawer"
+          ref={panelRef}
+          role="dialog"
+          aria-modal={open || undefined}
+          aria-label="Components navigation"
+          tabIndex={-1}
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-[17rem] max-w-[85vw] flex-col border-r border-border bg-background outline-none",
+            "transition-transform duration-200 ease-out motion-reduce:transition-none",
+            open ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-border pl-6 pr-3">
+            <span className="text-sm font-medium">Components</span>
+            <button
+              type="button"
+              aria-label="Close navigation"
+              onClick={() => setOpen(false)}
+              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <X size={16} aria-hidden />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto overscroll-contain py-6 pl-3 pr-3">
             <Tree pathname={pathname} />
           </div>
-        ) : null}
+        </div>
       </div>
 
       {/* desktop */}
