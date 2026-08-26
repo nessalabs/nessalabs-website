@@ -25,6 +25,7 @@ import {
   MathBlock,
   MermaidDiagram,
   MessageMarkdown,
+  RandomAvatar,
   Reference,
   ReferenceCard,
   ReferenceContent,
@@ -82,6 +83,115 @@ export function SegmentedControlDemo() {
       <SegmentedControlOption value="week">Week</SegmentedControlOption>
       <SegmentedControlOption value="month">Month</SegmentedControlOption>
     </SegmentedControl>
+  );
+}
+
+const roster = [
+  "Chief",
+  "Sales Outbound",
+  "Inbox Manager",
+  "Account Manager",
+  "Talent Scout",
+  "Research Desk",
+];
+
+/**
+ * The avatar's home habitat: one painting per teammate, at the size a list row
+ * uses. The name is the seed, so the same teammate paints the same picture on
+ * every client — there is no image to upload, fetch or cache.
+ */
+export function RandomAvatarDemo() {
+  return (
+    <ul className="flex w-full max-w-xs flex-col gap-1">
+      {roster.map((teammate) => (
+        <li key={teammate} className="flex items-center gap-3 rounded-lg p-2">
+          <RandomAvatar seed={teammate} className="size-9" />
+          <span className="text-sm font-medium">{teammate}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * A list of seeds paints one shared picture, the group counterpart of a
+ * facepile. Membership is the identity: reordering the list paints the same
+ * picture, adding or removing an agent repaints the group.
+ */
+export function RandomAvatarGroupDemo() {
+  const crew = ["Chief", "Research Desk", "Talent Scout"];
+
+  return (
+    <div className="flex flex-wrap items-end justify-center gap-8">
+      {[crew.slice(0, 1), crew.slice(0, 2), crew].map((members) => (
+        <div key={members.length} className="flex flex-col items-center gap-2">
+          <RandomAvatar
+            seed={members}
+            name={members.join(", ")}
+            className="size-16"
+          />
+          <span className="text-xs text-muted-foreground">
+            {members.length === 1 ? "1 agent" : `${members.length} agents`}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * `busy` keeps the paint alive: a wash floods the paper and hands over to the
+ * next for as long as an agent is working, and turning it off walks each wash
+ * home rather than snapping it. It also sets `aria-busy`, which defers
+ * reporting rather than announcing — saying "working" out loud is the host's
+ * job, through a live region or a status beside the avatar.
+ */
+export function RandomAvatarWorkingDemo() {
+  const [busy, setBusy] = React.useState(true);
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <RandomAvatar
+        seed="Research Desk"
+        name="Research Desk"
+        busy={busy}
+        className="size-24"
+      />
+      <Button variant="outline" size="sm" onClick={() => setBusy((v) => !v)}>
+        {busy ? "Stop working" : "Start working"}
+      </Button>
+    </div>
+  );
+}
+
+const painted = ["Chief", "Sales Outbound", "Inbox Manager", "Talent Scout", "Research Desk"];
+
+/**
+ * `tone` sets how dilute the paint is, `ground` what it is laid on. The same
+ * five seeds run across every row, so the prop is the only thing changing. On
+ * `ink` the passes lighten instead of multiplying, which is what keeps a
+ * painting's structure on a dark surface rather than a bright disc.
+ */
+export function RandomAvatarToneDemo() {
+  return (
+    <div className="flex flex-col gap-3">
+      {(["pastel", "soft", "vivid", "deep"] as const).map((tone) => (
+        <div key={tone} className="flex items-center gap-3">
+          <span className="w-14 text-xs text-muted-foreground">{tone}</span>
+          {painted.map((seed) => (
+            <RandomAvatar key={seed} seed={seed} tone={tone} className="size-10" />
+          ))}
+        </div>
+      ))}
+      {/* A dark scope, so the ink row sits on the library's dark tokens in
+          either colour mode rather than on a hard-coded colour. */}
+      <div className="dark mt-1 flex items-center gap-3 rounded-lg border border-border bg-background p-3">
+        <span className="w-14 text-xs text-muted-foreground">ink</span>
+        {painted.map((seed) => (
+          <RandomAvatar key={seed} seed={seed} ground="ink" className="size-10" />
+        ))}
+      </div>
+    </div>
   );
 }
 

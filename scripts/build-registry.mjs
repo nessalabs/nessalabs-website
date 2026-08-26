@@ -20,6 +20,7 @@ const catalog = [
   ["card", "Card", "Primitives", "card"],
   ["input", "Input", "Primitives", "input"],
   ["segmented-control", "SegmentedControl", "Primitives", "segmented-control"],
+  ["random-avatar", "RandomAvatar", "Primitives", "random-avatar"],
   ["popover-surface", "PopoverSurface", "Primitives", "popover-surface"],
 
   // Listboxes & menus

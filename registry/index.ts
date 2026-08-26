@@ -57,6 +57,23 @@ const documented: {
     description:
       "A row of mutually exclusive options. Arrow keys move between them.",
   },
+  {
+    slug: "random-avatar",
+    group: "Primitives",
+    description:
+      "An avatar painted from a seed, where the same identity always paints the same picture.",
+    examples: [
+      { id: "random-avatar-group", title: "Several seeds painting one group picture" },
+      {
+        id: "random-avatar-working",
+        title: "The paint keeps flooding while busy is set",
+      },
+      {
+        id: "random-avatar-tones",
+        title: "Tone presets, and the ink ground for dark surfaces",
+      },
+    ],
+  },
 
   {
     slug: "code-block",

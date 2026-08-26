@@ -34,6 +34,13 @@ const motifs: Record<string, React.ReactNode> = {
       <path d="M40 24v22M67 24v22" />
     </>
   ),
+  avatar: (
+    <>
+      <circle cx="54" cy="34" r="24" />
+      <ellipse cx="45" cy="28" rx="13" ry="10" transform="rotate(-18 45 28)" />
+      <ellipse cx="63" cy="40" rx="15" ry="11" transform="rotate(12 63 40)" />
+    </>
+  ),
   code: (
     <>
       <path d="M30 24l-12 11 12 11M78 24l12 11-12 11" />
@@ -153,6 +160,7 @@ const bySlug: Record<string, keyof typeof motifs> = {
   card: "card",
   input: "input",
   "segmented-control": "segmented",
+  "random-avatar": "avatar",
   "code-block": "code",
   "json-tree": "tree",
   "math-block": "math",
