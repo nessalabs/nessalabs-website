@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 
 export interface NavLink {
@@ -39,22 +40,29 @@ export function NavBar({
         <div className="flex items-center gap-8">
           {brand}
           <nav className="hidden items-center gap-6 md:flex">
-            {links.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                target={link.external ? "_blank" : undefined}
-                rel={link.external ? "noreferrer" : undefined}
-                className={cn(
-                  "text-sm transition-colors",
-                  activeHref && activeHref.startsWith(link.href)
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {link.label}
-              </a>
-            ))}
+            {links.map((link) => {
+              const className = cn(
+                "text-sm transition-colors",
+                activeHref && activeHref.startsWith(link.href)
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              );
+              return link.external ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={className}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.href} href={link.href} className={className}>
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
@@ -75,15 +83,28 @@ export function NavBar({
       {open && (
         <nav className="border-t border-border px-6 py-4 md:hidden">
           <div className="flex flex-col gap-3">
-            {links.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                {link.label}
-              </a>
-            ))}
+            {links.map((link) =>
+              link.external ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
             <div className="pt-2">{action}</div>
           </div>
         </nav>
