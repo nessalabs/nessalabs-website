@@ -15,9 +15,8 @@ export default function CoursesPage() {
         Courses
       </h1>
       <p className="mt-4 text-base leading-7 text-muted-foreground">
-        Practical courses on building agents: the loop, tools, memory,
-        evaluation, and the interfaces around them. Every course is free, and
-        stays free. Nothing is published here yet.
+        Free, practical courses on building agents: the loop, tools, memory,
+        evaluation, and the interfaces around them.
       </p>
     </section>
   );
