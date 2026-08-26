@@ -29,12 +29,7 @@ export default function HomePage() {
           that think.
         </h1>
 
-        <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-base text-muted-foreground">
-          Nessa Labs builds agents and the interfaces they run in. Open
-          components, free courses.
-        </p>
-
-        <div className="animate-fade-up mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div className="animate-fade-up mt-12 flex flex-wrap items-center justify-center gap-3">
           <Link href="/ui/components">
             <Button size="lg">Browse components</Button>
           </Link>
