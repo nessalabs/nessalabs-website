@@ -44,6 +44,10 @@ import {
   JsonTreeDemo,
   MathBlockDemo,
   MessageMarkdownDemo,
+  RandomAvatarDemo,
+  RandomAvatarGroupDemo,
+  RandomAvatarToneDemo,
+  RandomAvatarWorkingDemo,
   ReferenceDemo,
   SegmentedControlDemo,
 } from "./demos/content";
@@ -59,6 +63,10 @@ export const previews: Record<string, React.ReactNode> = {
   card: <CardDemo />,
   input: <InputDemo />,
   "segmented-control": <SegmentedControlDemo />,
+  "random-avatar": <RandomAvatarDemo />,
+  "random-avatar-group": <RandomAvatarGroupDemo />,
+  "random-avatar-working": <RandomAvatarWorkingDemo />,
+  "random-avatar-tones": <RandomAvatarToneDemo />,
 
   // content
   "code-block": <CodeBlockDemo />,

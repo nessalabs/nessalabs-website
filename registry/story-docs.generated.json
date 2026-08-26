@@ -193,6 +193,25 @@
       }
     ]
   },
+  "checkbox": {
+    "title": "Components/Checkbox",
+    "component": "Checkbox",
+    "description": "A real `input type=\"checkbox\"` styled in place, so keyboard and form semantics stay native and FormData sees the value. Supports the mixed state through `indeterminate`: the DOM flag is a property rather than an attribute, and the browser clears it on every click, so the component restores it synchronously on click as well as after each render — which makes it the control for a select-all whose rows are only partly selected.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use the controls to compare the unchecked, checked, mixed, and disabled boxes."
+      },
+      {
+        "name": "States",
+        "note": "Every state side by side. The mixed box draws a dash and is reported as mixed natively, through the DOM indeterminate property; checked and mixed share the same primary wash and border, and a disabled control fades as a whole."
+      },
+      {
+        "name": "SelectAll",
+        "note": "The select-all pattern: the header box is checked when every row is selected and mixed when only some are, so one glance distinguishes \"all\" from \"some\". Toggling it selects or clears every row."
+      }
+    ]
+  },
   "code-block": {
     "title": "Components/CodeBlock",
     "component": "CodeBlock",
@@ -280,6 +299,21 @@
       {
         "name": "CustomRowsAndAnimation",
         "note": "Rows are host-rendered: this example swaps markers for dots that read the inherited --nessa-rail-boost variable to scale along the same hill, and replaces the default preview slide with a slower fade-and-scale by overriding classes."
+      }
+    ]
+  },
+  "dropdown-menu": {
+    "title": "Components/DropdownMenu",
+    "component": "DropdownMenu",
+    "description": "A composable action menu on the popover surface. The trigger projects onto any Nessa button; the content composes groups with labels, plain items, checkbox and radio items with leading indicators, separators, shortcut hints, and nested submenus. The accent wash always means \"this row is under the pointer or keyboard\" — checked state is shown only by the item indicators.",
+    "stories": [
+      {
+        "name": "Composition",
+        "note": "The full composition: labeled groups of plain items with shortcut hints, checkbox items, a submenu holding a radio group, separators between sections, and a destructive item. State for the checkbox and radio items lives with the host."
+      },
+      {
+        "name": "Submenu",
+        "note": "The nested submenu path: hovering or activating the sub-trigger opens the sub-content beside the menu, here holding a single-select radio group whose selection is marked by the leading dot indicator only."
       }
     ]
   },
@@ -790,6 +824,21 @@
       }
     ]
   },
+  "pagination": {
+    "title": "Components/Pagination",
+    "component": "Pagination",
+    "description": "Composable pagination controls: a nav landmark (Pagination) wrapping a list (PaginationContent) of items (PaginationItem) that hold compact page buttons (PaginationLink, marked current with aria-current and a ring border), previous/next controls, and a collapsed-run ellipsis. Page state and the windowing rule both live with the host — the example below computes its own page window.",
+    "stories": [
+      {
+        "name": "Windowed",
+        "note": "A host-controlled composition over many pages: the windowed range keeps the first page, the last page, and the current page's neighbors, collapsing the rest into ellipses. The active page carries aria-current and the accent treatment."
+      },
+      {
+        "name": "FewPages",
+        "note": "With seven or fewer pages every page renders directly — no ellipsis — while previous/next stay at the edges."
+      }
+    ]
+  },
   "popover-surface": {
     "title": "Components/PopoverSurface",
     "component": "PopoverSurface",
@@ -825,6 +874,61 @@
       {
         "name": "ComposedFlow",
         "note": "Two questions composed into a stepped flow — the host owns the step and answer state while the questionnaire renders the active question, exactly the composition contract of the kit. The choices are controlled (value + onValueChange lifted to the host) so navigating Back preserves the answer instead of remounting to the default, and the actions row swaps Continue for the submit button on the final step. The play test answers question one, advances, asserts the counter re-announces 'Question 2 of 2' and the submit appears, then returns to prove the answer survived."
+      }
+    ]
+  },
+  "random-avatar": {
+    "title": "Components/RandomAvatar",
+    "component": "RandomAvatar",
+    "description": "A deterministic generative avatar, painted rather than drawn: two to five translucent pools of pigment dropped on tinted paper, their edges pulled apart by turbulence so they bleed and granulate like a wet wash, multiplying where they overlap. The seed decides the hue, the number of passes, where each pool lands, and how far its edge wanders, so the same identity always paints the same abstract — no image to upload, fetch, or cache. Colour is configured in independent halves: hues picks the part of the wheel, hueSpread how far one painting wanders across it, tone how dilute the paint is (pastel, soft, vivid, deep, or a custom lightness/chroma range). Size comes from the box (size-* through className) and name supplies the accessible label. Several seeds paint one group picture, ground=\"ink\" moves the paint onto a dark surface, animateOnMount blooms the pools on, busy floods them to show an agent working, and speed, flood, bleed, and grain tune the paint and its motion.",
+    "stories": [
+      {
+        "name": "Roster",
+        "note": "A conversation roster, the avatar's home habitat: one painting per teammate, at the size a list row uses. The play test asserts the row draws distinct figures and that the avatar sits where the label expects it."
+      },
+      {
+        "name": "Gallery",
+        "note": "Forty seeds, forty paintings, on paper of varying tooth: the number of passes, where each pool lands, how far its edge wanders, and how the hues drift all come from the seed, so the family is open-ended rather than a menu of pictures. Animate all puts every painting into its working state at once, which is the quickest way to see how the flooding reads across hues, wash counts, and densities. The play test asserts the wall draws many distinct signatures and that the toggle reaches every avatar."
+      },
+      {
+        "name": "Spread",
+        "note": "The two knobs that shape what is on the paper. hueSpread controls how far a single wash wanders from the base hue — 0 mixes every pass from one pigment, 80 turns polychrome — and washes controls how many passes are laid down, from a single spill to five overlapping pools. The play test asserts a one-pass row and a five-pass row both render."
+      },
+      {
+        "name": "Determinism",
+        "note": "Two avatars on one editable seed. The play test reads both painting signatures and asserts they match, then names the picture through the name prop so the pair exposes an image role with the seed as its accessible name."
+      },
+      {
+        "name": "Tones",
+        "note": "The same eight seeds at every tone preset, plus a custom lightness/chroma range on the last row. Soft is the default because a roster of avatars should sit quietly beside its labels; heavier presets suit a sparse surface where the avatar is the subject. The play test asserts every row paints."
+      },
+      {
+        "name": "Working",
+        "note": "The working state. While busy is true each wash swells past its own edge, peaks, and gives way to the next, so the paint keeps flooding the paper for as long as the agent is working — phases are spread across the cycle, so a wash is always at full strength and the painting never blinks empty. The avatar carries aria-busy, which marks it as mid-update so assistive technology can defer reporting it; announcing that an agent is working is the host's job, through a live region or a status beside the avatar. It settles to the still painting under prefers-reduced-motion. The play test toggles the state, asserts aria-busy follows, and checks that the washes walk home from where they had got to rather than snapping."
+      },
+      {
+        "name": "PaintOn",
+        "note": "animateOnMount blooms the pools on in sequence, each landing while the last is still spreading — the way a loaded brush is touched in beside a wet wash. It is off by default, since a list should not animate on every render; use it when an agent first appears. The play test repaints and asserts the avatars remount."
+      },
+      {
+        "name": "Tuning",
+        "note": "The tuning knobs a host can override. bleed sets how far pigment creeps at the edges — 0 gives clean shapes with no diffusion, higher values dissolve the pools into the paper. grain sets how much tooth the paper has, from a smooth print at 0 to rough stock. speed multiplies the working cycle, and flood sets how far a wash expands while working: 1 is a full takeover, 0.25 only breathes. flood is additionally scaled by wash count, so a sparse painting holds back where a dense one floods. Every row is the same six seeds, so the knob is the only thing changing. The play test asserts every row paints and that only the animated rows are busy."
+      },
+      {
+        "name": "Mixing",
+        "note": "What the paint does where it overlaps. Pools are laid down with a blend mode rather than stacked opaquely, so a crossing is a real mix: on paper they multiply and the overlap deepens toward the darker pigment, on ink they screen and it builds toward the light. While busy, consecutive washes sweep on opposite headings, so the overlap region grows and shrinks and the mixed tone moves across the painting — the mixing is the animation, not a side effect of it. A wide hueSpread is what gives a painting two pigments to mix in the first place. The play test asserts the mixing row paints on both grounds."
+      },
+      {
+        "name": "OnInk",
+        "note": "The ink ground, for dark surfaces: the same pigment on a dark paper, screening together instead of multiplying so the passes build toward the light. Painted on a light ground a dark sidebar avatar reads as a bright coin; this keeps its structure. The play test asserts both grounds render the same seeds."
+      },
+      {
+        "name": "Agents",
+        "note": "Several seeds paint one picture: each agent brings its own pigment to shared paper, which is the group counterpart of a facepile. Membership is the identity — the list is treated as a set, so reordering it paints the same picture, while adding or removing an agent repaints the group. The play test asserts the reported group sizes and that two same-size groups differing by one member paint different geometry."
+      },
+      {
+        "name": "TintedWheel",
+        "note": "One workspace, one narrowed hue wheel: hues restricts the palette while the seed still varies the pools; the second row pins a single hue so a whole surface reads as one colour. The play test asserts both rows render."
       }
     ]
   },
@@ -1090,6 +1194,49 @@
       {
         "name": "PointerResize",
         "note": "Pointer resizing captures the pointer on the separator itself and measures every move against the gesture's starting layout, so clamped drags never drift."
+      }
+    ]
+  },
+  "table": {
+    "title": "Components/Table",
+    "component": "Table",
+    "description": "A composable data-table kit. The core primitives mirror the familiar Table/TableHeader/TableBody/TableRow/TableHead/TableCell composition on a flat bordered shell; filtering, sorting, column visibility, and pagination are separate composable pieces — a toolbar with a search field, faceted filter selects, a disclosed advanced-filter panel, and a TableViewOptions column menu, a click-to-toggle TableSortButton for headers, and a windowed pagination bar — so hosts wire their own table state (or a headless table library) to exactly the chrome they need.",
+    "stories": [
+      {
+        "name": "AgentTraces",
+        "note": "The flagship composition: an agent-traces view assembled from the kit's separate pieces. The toolbar holds the live search and the Filters disclosure; the disclosed panel carries the faceted trace-type, agent, and status selects with a clear control; the shell stacks the table over a windowed pagination bar. All filter and page state lives in the host."
+      },
+      {
+        "name": "Invoices",
+        "note": "The core primitives alone: header, body, and footer row groups on the flat shell, with a caption under the rows. The composition matches the familiar Table/TableHeader/TableBody layering, so a host can adopt the primitives without the toolbar or pagination pieces."
+      },
+      {
+        "name": "SortableColumns",
+        "note": "A sortable column: the header cell carries `aria-sort` and renders a TableSortButton, which shows the active direction (or a neutral glyph while unsorted). The host owns the sort state and reorders its rows."
+      },
+      {
+        "name": "Pagination",
+        "note": "The pagination bar under a long result set: previous/next chevrons around a windowed set of numbered pages — the first page, the last page, and the current page's neighbors, with collapsed runs shown as ellipses — plus a muted result summary on the left."
+      },
+      {
+        "name": "EmptyState",
+        "note": "The TableEmpty row spans every column with a centered icon, title, and hint — the resting state a filtered-out or unpopulated table shows inside the shell."
+      },
+      {
+        "name": "SelectionAndColumns",
+        "note": "Row selection and column management composed from the primitives: a Checkbox in the header cell drives select-all and one per row drives its own state, each sortable column header is a TableSortButton that toggles ascending and descending on click, and the toolbar pairs a search with TableViewOptions for column visibility. Selection is measured against the rows currently shown, so filtering leaves the header checkbox honest, and the count below the toolbar is a debounced status region. The table renders from the visible-column list, so a restored column returns to its place in column order rather than the end. The Trace column is locked visible."
+      },
+      {
+        "name": "OverflowingColumns",
+        "note": "A table wider than its container. The scroll container only becomes keyboard focusable while the content actually overflows — measured, not assumed — so its off-screen columns stay reachable without a pointer, and it takes the `containerLabel` name so the focusable region is announced. A table that fits adds no tab stop at all."
+      },
+      {
+        "name": "CappedHeight",
+        "note": "A scrolling body: `containerClassName` caps the scroll container's height, since the table element is not the scroll port, and `TableHeader`'s `sticky` pins the column headers while the rows scroll beneath them. Overflow is measured on both axes, so a table whose columns all fit but whose rows do not still becomes keyboard focusable and reachable."
+      },
+      {
+        "name": "PageOutOfRange",
+        "note": "A guard for the window between a filter shrinking the result set and the host resetting its page. `page` is clamped into range for every control, so an out-of-range page still marks a real page current and Next cannot step further out."
       }
     ]
   },
