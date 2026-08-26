@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     template: "%s · Nessa Labs",
   },
   description:
-    "An applied AI lab. Research, agents, and nessa-ui.",
+    "An applied AI lab building agents and the interfaces they run in. Home of nessa-ui.",
   openGraph: {
     title: "Nessa Labs",
     description: "The AI stack for modern humans.",

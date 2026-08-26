@@ -11,8 +11,8 @@ export default function ResearchPage() {
         Research
       </h1>
       <p className="mt-4 text-base leading-7 text-muted-foreground">
-        Papers, evaluations, and open weights from the lab. We publish what we
-        can, when it is reproducible.
+        Papers, evaluations and open weights. Work is published here once it
+        reproduces.
       </p>
     </section>
   );

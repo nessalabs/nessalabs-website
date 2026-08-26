@@ -11,8 +11,8 @@ export default function AgentsPage() {
         Agents
       </h1>
       <p className="mt-4 text-base leading-7 text-muted-foreground">
-        Long-running agents with real memory, wired into the surfaces you
-        already use.
+        Long-running agents that keep their state between sessions. Nothing is
+        published here yet.
       </p>
     </section>
   );
