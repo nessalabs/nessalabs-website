@@ -1,0 +1,13 @@
+<!--
+  The brand mark from the site header: the ◼ that sits beside "nessalabs".
+
+  One flat fill, no prefers-color-scheme swap. A favicon is painted by browser
+  chrome rather than by the page, and the query resolves there inconsistently,
+  so a two-tone icon risks painting black on a dark tab strip. This grey sits
+  between the muted-foreground token's light and dark values — oklch(0.52 0 0)
+  and oklch(0.708 0 0) — which is the register the header mark already uses,
+  and clears 3:1 against both a white tab strip and a near-black one.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="6" y="6" width="20" height="20" rx="2" fill="#8a8a8a" />
+</svg>
