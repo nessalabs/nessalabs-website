@@ -8,21 +8,21 @@ import { groups, registry } from "@/registry";
 export const metadata: Metadata = {
   title: "Components",
   description:
-    "nessa-ui: accessible React components and tokens for building AI products.",
+    "Accessible React components and tokens for building AI products.",
 };
 
 const principles = [
   {
-    title: "Interaction, not appearance",
-    body: "What ships is the hard part: drag models, pan and zoom, streaming, focus and keyboard paths.",
+    title: "Behaviour first",
+    body: "The library owns the drag models, pan and zoom, streaming, focus order and keyboard paths.",
   },
   {
     title: "You render the content",
-    body: "Calendar events, Gantt bars, board cards and canvas nodes are yours, through render props and children.",
+    body: "Calendar events, Gantt bars, board cards and canvas nodes are rendered by the consumer, through render props and children.",
   },
   {
     title: "Compound parts",
-    body: "Surfaces are assembled from parts, so you can rearrange one without forking it.",
+    body: "Every surface is assembled from named parts, so one can be rearranged without forking the component.",
   },
   {
     title: "Styling stays open",
@@ -49,18 +49,17 @@ export default function ComponentsOverviewPage() {
       </div>
       <h1 className="text-3xl font-semibold tracking-tight">Components</h1>
       <p className="mt-4 text-base leading-7 text-muted-foreground">
-        Accessible React components and tokens for people building AI products:
-        primitives, agent surfaces, and composites. Built for Nessa, published
-        for anyone who wants to ship these surfaces without rebuilding them.
+        nessa-ui is a set of accessible React components and tokens for AI
+        products. It covers primitives, content blocks, agent surfaces and
+        composites.
       </p>
       <p className="mt-3 text-base leading-7 text-muted-foreground">
-        Closer to Radix than to a theme. Components own the behaviour and hand
-        you the presentation: <code className="text-foreground">renderEvent</code>{" "}
-        and <code className="text-foreground">renderTask</code> for the calendar
-        and Gantt, node and card children for the canvas and board, compound
-        parts everywhere else. Unlike Radix they arrive with a working default
-        skin, painted in tokens rather than fixed color, so you can ship first
-        and restyle after.
+        Components own the behaviour and hand back the presentation:{" "}
+        <code className="text-foreground">renderEvent</code> and{" "}
+        <code className="text-foreground">renderTask</code> for the calendar and
+        Gantt, node and card children for the canvas and board, compound parts
+        everywhere else. Unlike an unstyled primitives library, each component
+        arrives with a default skin painted in tokens rather than fixed colour.
       </p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -83,9 +82,9 @@ export default function ComponentsOverviewPage() {
         <div className="min-w-0">
           <div className="font-medium">Agent harness</div>
           <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-            A full agent app assembled from these components: sidebar, split
-            panes, transcript, composer, board, calendar, workflow canvas and a
-            terminal dock. Its source is one click away inside the app.
+            An agent app assembled from these components: sidebar, split panes,
+            transcript, composer, board, calendar, workflow canvas and a
+            terminal dock. The source of each surface opens inside the app.
           </p>
         </div>
         <ArrowRight
@@ -96,8 +95,8 @@ export default function ComponentsOverviewPage() {
 
       <h2 className="mt-12 mb-4 text-lg font-semibold">Installation</h2>
       <p className="mb-4 text-sm leading-6 text-muted-foreground">
-        Install the package, or take the source the shadcn way. Either path is
-        the same code, and it lives at{" "}
+        Install the package, or copy the source into your project. Both paths
+        give the same code, which lives at{" "}
         <a
           href="https://github.com/nessalabs/nessa_ui"
           target="_blank"
@@ -112,7 +111,7 @@ export default function ComponentsOverviewPage() {
         lang="bash"
         code={`npm install @nessa-ui/react
 
-# or take the source, shadcn-style
+# or copy the source into your project
 npx shadcn@latest add https://nessalabs.ai/r/tool-call.json`}
       />
 
@@ -148,7 +147,7 @@ npx shadcn@latest add https://nessalabs.ai/r/tool-call.json`}
 
       <h2 className="mt-14 mb-2 text-lg font-semibold">Attribution</h2>
       <p className="mb-4 text-sm text-muted-foreground">
-        Open-source work nessa-ui builds on.
+        Open-source work nessa-ui is built on.
       </p>
       <div className="divide-y divide-border rounded-xl border border-border">
         {attribution.map((item) => (

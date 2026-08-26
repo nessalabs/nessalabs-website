@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import {
   Geist,
   Geist_Mono,
@@ -52,7 +51,7 @@ export const metadata: Metadata = {
     template: "%s · Nessa Labs",
   },
   description:
-    "An applied AI lab. Research, agents, and nessa-ui.",
+    "An applied AI lab building agents and the interfaces they run in. Open-source components and free courses on both.",
   openGraph: {
     title: "Nessa Labs",
     description: "The AI stack for modern humans.",
@@ -71,13 +70,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${jetbrains.variable} ${inter.variable} ${geist.variable} ${geistMono.variable} ${plexMono.variable} ${sourceSerif.variable}`}
     >
+      {/* Parser-blocking and ahead of the body, so the stored theme is on
+          <html> before anything paints. next/script cannot do this job: even
+          at beforeInteractive it queues the source for the framework runtime
+          to run after hydration, which is a full flash of the wrong palette on
+          every document load. */}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-screen antialiased">
-        {/* Applies the stored theme before first paint. */}
-        <Script
-          id="nessa-theme"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeScript }}
-        />
         <ThemeProvider>
           <SiteNav />
           <main>{children}</main>

@@ -10,6 +10,7 @@ import { Brand } from "./brand";
 
 const links = [
   { href: "/ui/components", label: "Components" },
+  { href: "/courses", label: "Courses" },
   { href: "/research", label: "Research" },
   { href: "/agents", label: "Agents" },
 ];
