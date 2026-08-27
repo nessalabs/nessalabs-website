@@ -144,6 +144,41 @@ const motifs: Record<string, React.ReactNode> = {
       <rect x="72" y="14" width="24" height="38" rx="5" />
     </>
   ),
+  checkbox: (
+    <>
+      <rect x="20" y="20" width="26" height="26" rx="6" />
+      <path d="M27 33l5 5 9-11" />
+      <path d="M56 26h38M56 40h24" />
+    </>
+  ),
+  menu: (
+    <>
+      <rect x="22" y="14" width="52" height="44" rx="7" />
+      <path d="M32 26h32M32 36h32M32 46h20" />
+      <path d="M78 34l8 6-8 6" />
+    </>
+  ),
+  pages: (
+    <>
+      <rect x="12" y="26" width="18" height="18" rx="6" />
+      <rect x="34" y="26" width="18" height="18" rx="6" />
+      <rect x="78" y="26" width="18" height="18" rx="6" />
+      <path d="M60 35h1M68 35h1" />
+    </>
+  ),
+  ruler: (
+    <>
+      <path d="M12 22h84" />
+      <path d="M12 22v10M33 22v6M54 22v10M75 22v6M96 22v10" />
+      <path d="M12 46h30M54 46h20" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="12" y="14" width="84" height="44" rx="6" />
+      <path d="M12 26h84M12 40h84M40 14v44M68 14v44" />
+    </>
+  ),
   canvas: (
     <>
       <rect x="12" y="18" width="28" height="18" rx="5" />
@@ -160,6 +195,10 @@ const bySlug: Record<string, keyof typeof motifs> = {
   card: "card",
   input: "input",
   "segmented-control": "segmented",
+  checkbox: "checkbox",
+  "dropdown-menu": "menu",
+  pagination: "pages",
+  "timeline-header": "ruler",
   "random-avatar": "avatar",
   "code-block": "code",
   "json-tree": "tree",
@@ -178,6 +217,7 @@ const bySlug: Record<string, keyof typeof motifs> = {
   "event-calendar": "calendar",
   "gantt-chart": "gantt",
   kanban: "board",
+  table: "grid",
   "workflow-canvas": "canvas",
 };
 

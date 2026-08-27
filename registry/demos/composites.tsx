@@ -8,12 +8,14 @@ import {
   Database,
   Filter,
   Rows2,
+  SearchX,
   Shuffle,
   Sparkles,
   Webhook,
   X,
 } from "lucide-react";
 import {
+  Checkbox,
   EventCalendar,
   EventCalendarGrid,
   EventCalendarToolbar,
@@ -29,6 +31,22 @@ import {
   SplitViewOrientation,
   SplitViewPanel,
   SplitViewSeparator,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableEmpty,
+  TableFilterSelect,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TablePagination,
+  TableRow,
+  TableSearchField,
+  TableShell,
+  TableSortButton,
+  TableToolbar,
+  TableViewOptions,
   WorkflowCanvas,
   WorkflowCanvasEdge,
   WorkflowCanvasEdges,
@@ -40,6 +58,7 @@ import {
   type EventCalendarEvent,
   type GanttChartTask,
   type KanbanMove,
+  type TableSortDirection,
 } from "@nessa-ui/react";
 
 /** A fixed "now" so the previews read the same on every visit. */
@@ -978,5 +997,290 @@ export function SplitViewWorkspaceDemo() {
     >
       {render(root)}
     </div>
+  );
+}
+
+/* ── Table ─────────────────────────────────────────────────────────────── */
+
+interface TraceRow {
+  id: string;
+  agent: string;
+  kind: string;
+  status: "Passed" | "Failed" | "Running";
+  seconds: number;
+  tokens: number;
+}
+
+const traces: TraceRow[] = [
+  { id: "TR-4192", agent: "Research Desk", kind: "Retrieval", status: "Passed", seconds: 72, tokens: 18420 },
+  { id: "TR-4193", agent: "Inbox Manager", kind: "Tool call", status: "Passed", seconds: 14, tokens: 2140 },
+  { id: "TR-4194", agent: "Sales Outbound", kind: "Handoff", status: "Failed", seconds: 8, tokens: 960 },
+  { id: "TR-4195", agent: "Talent Scout", kind: "Retrieval", status: "Running", seconds: 41, tokens: 7310 },
+  { id: "TR-4196", agent: "Chief", kind: "Reflection", status: "Passed", seconds: 26, tokens: 5180 },
+  { id: "TR-4197", agent: "Account Manager", kind: "Tool call", status: "Failed", seconds: 3, tokens: 480 },
+  { id: "TR-4198", agent: "Research Desk", kind: "Handoff", status: "Passed", seconds: 55, tokens: 12030 },
+  { id: "TR-4199", agent: "Inbox Manager", kind: "Retrieval", status: "Passed", seconds: 19, tokens: 3260 },
+  { id: "TR-4200", agent: "Chief", kind: "Tool call", status: "Running", seconds: 11, tokens: 1740 },
+];
+
+const tokens = (value: number) => value.toLocaleString("en-GB");
+
+/**
+ * The core primitives alone: header, body and footer row groups on the flat
+ * shell, with a caption under the rows.
+ */
+export function TableDemo() {
+  const rows = traces.slice(0, 5);
+  const total = rows.reduce((sum, row) => sum + row.tokens, 0);
+
+  return (
+    <TableShell className="w-2xl max-w-full">
+      <Table containerLabel="Recent traces">
+        <TableCaption>Token spend across the five most recent traces.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Trace</TableHead>
+            <TableHead>Agent</TableHead>
+            <TableHead>Kind</TableHead>
+            <TableHead className="text-right">Tokens</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell className="font-mono">{row.id}</TableCell>
+              <TableCell>{row.agent}</TableCell>
+              <TableCell>{row.kind}</TableCell>
+              <TableCell className="text-right font-mono">
+                {tokens(row.tokens)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>Total</TableCell>
+            <TableCell className="text-right font-mono">{tokens(total)}</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </TableShell>
+  );
+}
+
+const statusOptions = [
+  { value: "all", label: "All statuses" },
+  { value: "Passed", label: "Passed" },
+  { value: "Failed", label: "Failed" },
+  { value: "Running", label: "Running" },
+];
+
+const traceColumns = [
+  { id: "agent", label: "Agent" },
+  { id: "kind", label: "Kind" },
+  { id: "status", label: "Status" },
+  { id: "tokens", label: "Tokens" },
+];
+
+/**
+ * The separate pieces wired to one host's state: a search field and a status
+ * facet in the toolbar, a column menu, a sortable header, and a selection
+ * column. Selection is measured against the rows currently shown, so filtering
+ * leaves the header box honest.
+ */
+export function TableWorkbenchDemo() {
+  const [query, setQuery] = React.useState("");
+  const [status, setStatus] = React.useState("all");
+  const [visible, setVisible] = React.useState(["agent", "kind", "status", "tokens"]);
+  const [direction, setDirection] = React.useState<TableSortDirection>("descending");
+  const [selected, setSelected] = React.useState<string[]>([]);
+
+  const rows = traces
+    .filter(
+      (row) =>
+        (status === "all" || row.status === status) &&
+        `${row.id} ${row.agent} ${row.kind}`
+          .toLowerCase()
+          .includes(query.trim().toLowerCase())
+    )
+    .sort((a, b) =>
+      direction === "ascending" ? a.tokens - b.tokens : b.tokens - a.tokens
+    );
+
+  const shown = rows.map((row) => row.id);
+  const allSelected = shown.length > 0 && shown.every((id) => selected.includes(id));
+  const someSelected = shown.some((id) => selected.includes(id)) && !allSelected;
+
+  return (
+    <div className="flex w-2xl max-w-full flex-col gap-3">
+      <TableToolbar>
+        <TableSearchField
+          aria-label="Search traces"
+          placeholder="Search traces"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <TableFilterSelect
+          label="Status"
+          options={statusOptions}
+          value={status}
+          onValueChange={setStatus}
+        />
+        <TableViewOptions
+          className="ml-auto"
+          columns={traceColumns}
+          value={visible}
+          onValueChange={setVisible}
+        />
+      </TableToolbar>
+
+      <TableShell>
+        <Table containerLabel="Traces">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-9">
+                <Checkbox
+                  aria-label="Select every trace shown"
+                  checked={allSelected}
+                  indeterminate={someSelected}
+                  onChange={() => setSelected(allSelected ? [] : shown)}
+                />
+              </TableHead>
+              <TableHead>Trace</TableHead>
+              {visible.includes("agent") ? <TableHead>Agent</TableHead> : null}
+              {visible.includes("kind") ? <TableHead>Kind</TableHead> : null}
+              {visible.includes("status") ? <TableHead>Status</TableHead> : null}
+              {visible.includes("tokens") ? (
+                <TableHead className="text-right" aria-sort={direction}>
+                  <TableSortButton
+                    direction={direction}
+                    onClick={() =>
+                      setDirection(
+                        direction === "ascending" ? "descending" : "ascending"
+                      )
+                    }
+                  >
+                    Tokens
+                  </TableSortButton>
+                </TableHead>
+              ) : null}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={selected.includes(row.id) ? "selected" : undefined}
+              >
+                <TableCell>
+                  <Checkbox
+                    aria-label={`Select ${row.id}`}
+                    checked={selected.includes(row.id)}
+                    onChange={(event) =>
+                      setSelected((current) =>
+                        event.target.checked
+                          ? [...current, row.id]
+                          : current.filter((id) => id !== row.id)
+                      )
+                    }
+                  />
+                </TableCell>
+                <TableCell className="font-mono">{row.id}</TableCell>
+                {visible.includes("agent") ? <TableCell>{row.agent}</TableCell> : null}
+                {visible.includes("kind") ? <TableCell>{row.kind}</TableCell> : null}
+                {visible.includes("status") ? <TableCell>{row.status}</TableCell> : null}
+                {visible.includes("tokens") ? (
+                  <TableCell className="text-right font-mono">
+                    {tokens(row.tokens)}
+                  </TableCell>
+                ) : null}
+              </TableRow>
+            ))}
+            {rows.length === 0 ? (
+              <TableEmpty colSpan={visible.length + 2}>
+                <SearchX aria-hidden="true" className="size-5" />
+                <span className="text-sm font-medium text-foreground">No traces</span>
+                <span className="text-xs">Clear the search or the status filter.</span>
+              </TableEmpty>
+            ) : null}
+          </TableBody>
+        </Table>
+      </TableShell>
+    </div>
+  );
+}
+
+const PAGE_SIZE = 4;
+
+/**
+ * The pager under a long result set. `page` is the host's state, and the bar
+ * clamps it into range for every control, so a page left behind by a shrinking
+ * result set still marks a real page.
+ */
+export function TablePaginationDemo() {
+  const [page, setPage] = React.useState(1);
+  const pageCount = Math.ceil(traces.length / PAGE_SIZE);
+  const start = (page - 1) * PAGE_SIZE;
+  const rows = traces.slice(start, start + PAGE_SIZE);
+
+  return (
+    <TableShell className="w-2xl max-w-full">
+      <Table containerLabel="Traces">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Trace</TableHead>
+            <TableHead>Agent</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Tokens</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell className="font-mono">{row.id}</TableCell>
+              <TableCell>{row.agent}</TableCell>
+              <TableCell>{row.status}</TableCell>
+              <TableCell className="text-right font-mono">
+                {tokens(row.tokens)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <TablePagination
+        page={page}
+        pageCount={pageCount}
+        onPageChange={setPage}
+        summary={`Showing ${start + 1}–${start + rows.length} of ${traces.length} traces`}
+      />
+    </TableShell>
+  );
+}
+
+/**
+ * The row a table shows instead of data: one cell spanning every column, with
+ * an icon, a title and a hint.
+ */
+export function TableEmptyDemo() {
+  return (
+    <TableShell className="w-2xl max-w-full">
+      <Table containerLabel="Traces">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Trace</TableHead>
+            <TableHead>Agent</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Tokens</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableEmpty colSpan={4}>
+            <SearchX aria-hidden="true" className="size-5" />
+            <span className="text-sm font-medium text-foreground">No traces yet</span>
+            <span className="text-xs">Runs appear here once an agent starts work.</span>
+          </TableEmpty>
+        </TableBody>
+      </Table>
+    </TableShell>
   );
 }

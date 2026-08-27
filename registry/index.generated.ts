@@ -157,6 +157,54 @@ export const catalog: CatalogEntry[] = [
     ]
   },
   {
+    "slug": "checkbox",
+    "name": "Checkbox",
+    "group": "Primitives",
+    "description": "A real `input type=\"checkbox\"` styled in place, so keyboard and form semantics stay native and FormData sees the value. Supports the mixed state through `indeterminate`: the DOM flag is a property rather than an attribute, and the browser clears it on every click, so the component restores it synchronously on click as well as after each render — which makes it the control for a select-all whose rows are only partly selected.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Use the controls to compare the unchecked, checked, mixed, and disabled boxes."
+      },
+      {
+        "name": "States",
+        "note": "Every state side by side. The mixed box draws a dash and is reported as mixed natively, through the DOM indeterminate property; checked and mixed share the same primary wash and border, and a disabled control fades as a whole."
+      },
+      {
+        "name": "SelectAll",
+        "note": "The select-all pattern: the header box is checked when every row is selected and mixed when only some are, so one glance distinguishes \"all\" from \"some\". Toggling it selects or clears every row."
+      }
+    ]
+  },
+  {
+    "slug": "pagination",
+    "name": "Pagination",
+    "group": "Primitives",
+    "description": "Composable pagination controls: a nav landmark (Pagination) wrapping a list (PaginationContent) of items (PaginationItem) that hold compact page buttons (PaginationLink, marked current with aria-current and a ring border), previous/next controls, and a collapsed-run ellipsis. Page state and the windowing rule both live with the host — the example below computes its own page window.",
+    "stories": [
+      {
+        "name": "Windowed",
+        "note": "A host-controlled composition over many pages: the windowed range keeps the first page, the last page, and the current page's neighbors, collapsing the rest into ellipses. The active page carries aria-current and the accent treatment."
+      },
+      {
+        "name": "FewPages",
+        "note": "With seven or fewer pages every page renders directly — no ellipsis — while previous/next stay at the edges."
+      }
+    ]
+  },
+  {
+    "slug": "timeline-header",
+    "name": "TimelineHeader",
+    "group": "Primitives",
+    "description": "The band a horizontal scale lives on: pixel-offset cells with hairline dividers, and labels that pin at a chosen inset while any part of their cell is in view. Born as the GanttChart's two-tier time header and extracted — like PopoverSurface and SegmentedControl before it — so any horizontally scrolled surface (rulers, grouped table headers, audio timelines) can reuse the layout. The band is purely presentational: the consumer owns the scroll container, tier heights, and whether the scale is aria-hidden decoration.",
+    "stories": [
+      {
+        "name": "PinnedScale",
+        "note": "A two-tier ruler inside an ordinary horizontal scroller: quarter labels pin eight pixels from the viewport's left edge while any part of their quarter is in view, and week ticks scroll freely underneath. The play test scrolls the container past a quarter's own left edge and proves the pin by measured positions — the label holds at the inset while its cell's edge has left the viewport — then confirms the label yields once its quarter runs out."
+      }
+    ]
+  },
+  {
     "slug": "popover-surface",
     "name": "PopoverSurface",
     "group": "Primitives",
@@ -249,6 +297,22 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "NucleoIcons",
         "note": "Items dressed with Nessa's tracked Nucleo icons in the 16px slot: plain items with shortcuts, a Layout section of checkbox items that pair an icon with the check indicator and keep the menu open while several are toggled, and a destructive Delete item in the destructive semantic color. The play test opens the menu, toggles both sidebar checkboxes without the menu closing, verifies the destructive item resolves a different computed color than a default item, and closes with Escape."
+      }
+    ]
+  },
+  {
+    "slug": "dropdown-menu",
+    "name": "DropdownMenu",
+    "group": "Navigation",
+    "description": "A composable action menu on the popover surface. The trigger projects onto any Nessa button; the content composes groups with labels, plain items, checkbox and radio items with leading indicators, separators, shortcut hints, and nested submenus. The accent wash always means \"this row is under the pointer or keyboard\" — checked state is shown only by the item indicators.",
+    "stories": [
+      {
+        "name": "Composition",
+        "note": "The full composition: labeled groups of plain items with shortcut hints, checkbox items, a submenu holding a radio group, separators between sections, and a destructive item. State for the checkbox and radio items lives with the host."
+      },
+      {
+        "name": "Submenu",
+        "note": "The nested submenu path: hovering or activating the sub-trigger opens the sub-content beside the menu, here holding a single-select radio group whose selection is marked by the leading dot indicator only."
       }
     ]
   },
@@ -1150,6 +1214,30 @@ export const catalog: CatalogEntry[] = [
         "note": "The moveDependents option: while it is on, the built-in confirmation asks per move — Move all takes every transitive dependent along by the same day count (simplest finish-to-start push scheduling), Only this reschedules just the task — and names how many tasks would follow; while it is off, arrows stay purely visual and the dialog shows its plain Move. The host owns the toggle (a toolbar button here), the built-in ask is only the example: renderMoveConfirm plus confirm({ moveDependents }) and the context's dependentTaskIds let hosts build their own chooser. The play test commits a Move all and asserts Composites followed by computed offset, then an Only this and proves the chain stayed put."
       },
       {
+        "name": "DependencyTypes",
+        "note": "All four industry relation types on one plan, plus a lag. `dependsOn` takes a bare id as the finish-to-start shorthand or `{ taskId, type, lagDays }` for the rest, and each arrow leaves and arrives at the edges its relation names — so a start-to-start link runs left edge to left edge rather than pretending to be finish-to-start. Shown with `linkable={false}`: a read-only plan's arrows announce as images and add no tab stops. The play test asserts one arrow per relation, reads their announcements, and verifies the routing by each path's own endpoints."
+      },
+      {
+        "name": "CriticalPath",
+        "note": "Critical-path highlighting, on from the start here and toggled from the toolbar. Float is derived from the dependency graph — a task with none left cannot slip without pushing the plan's finish — so the chain that carries the finish takes the destructive treatment while everything with slack stays in its own tone. The play test asserts the toggle's pressed state, that a chain task is marked and a slack task is not, and that turning it off clears the marks."
+      },
+      {
+        "name": "DependencyLinking",
+        "note": "Dependency editing is on by default: every bar grows a link handle at each edge — drag one onto another task to draw a relation, or activate it and pick the target from the keyboard. Links that would close a loop are refused, so the target never lights up. Selecting an arrow and pressing Delete removes it; `linkable={false}` turns all of it off for a read-only plan. The play test draws a link with the keyboard path, asserts the new arrow exists, then selects and deletes it."
+      },
+      {
+        "name": "QuickCreate",
+        "note": "Dragging across empty lane background proposes a new task's dates and opens the host's own quick-create card through `renderQuickCreate` — the chart owns the gesture, the highlight, placement and Escape, the host owns every pixel of the card and resolves it with `createTask`/`cancel`. Providing the prop also gives every lane a keyboard surface: arrow keys choose days, Shift extends the selection, Enter opens the card. A task drawn on a group's lane joins that group. The play test exercises both paths and asserts each created task lands with its chosen dates by computed width."
+      },
+      {
+        "name": "TaskColumns",
+        "note": "The task list takes host-defined columns beside the name; `ganttChartDateColumns` covers the usual start/finish/duration trio, and any column can render whatever it likes from the task (here an owner read from `meta`). The hairline between the list and the timeline is a real window splitter — focusable, value-reporting, resizable by drag or arrow keys, following the SplitView separator's contract. The play test reads a leaf row's duration cell and a summary's rolled-up finish, then steps the splitter and asserts the pinned column's computed width followed."
+      },
+      {
+        "name": "DependencyViolations",
+        "note": "A relation the dates contradict draws dashed in the critical treatment, so a plan that has drifted out of sequence says so instead of drawing a confident arrow backwards. Here Build starts three days before Spec finishes. Nothing is auto-corrected — hosts read the same list through the exported `dependencyViolations` helper and decide what to do. The play test asserts the arrow renders dashed while a satisfied one does not."
+      },
+      {
         "name": "CustomTaskContent",
         "note": "renderTask replaces every bar's interior — here a name with a live percent readout — while the chart keeps geometry, drag, and selection; taskClassName layers styling policy (dimming completed work) without touching the task data. The play test asserts the custom interior renders inside a bar the chart still positions."
       },
@@ -1192,6 +1280,50 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "StressBoard",
         "note": "Three hundred and twenty cards across four scrollable columns. The drag store notifies only the dragged card and the hovered column's indicator, so the rest of the board stays inert while a card moves — and a drop across columns lands at the exact insertion point."
+      }
+    ]
+  },
+  {
+    "slug": "table",
+    "name": "Table",
+    "group": "Composites",
+    "description": "A composable data-table kit. The core primitives mirror the familiar Table/TableHeader/TableBody/TableRow/TableHead/TableCell composition on a flat bordered shell; filtering, sorting, column visibility, and pagination are separate composable pieces — a toolbar with a search field, faceted filter selects, a disclosed advanced-filter panel, and a TableViewOptions column menu, a click-to-toggle TableSortButton for headers, and a windowed pagination bar — so hosts wire their own table state (or a headless table library) to exactly the chrome they need.",
+    "stories": [
+      {
+        "name": "AgentTraces",
+        "note": "The flagship composition: an agent-traces view assembled from the kit's separate pieces. The toolbar holds the live search and the Filters disclosure; the disclosed panel carries the faceted trace-type, agent, and status selects with a clear control; the shell stacks the table over a windowed pagination bar. All filter and page state lives in the host."
+      },
+      {
+        "name": "Invoices",
+        "note": "The core primitives alone: header, body, and footer row groups on the flat shell, with a caption under the rows. The composition matches the familiar Table/TableHeader/TableBody layering, so a host can adopt the primitives without the toolbar or pagination pieces."
+      },
+      {
+        "name": "SortableColumns",
+        "note": "A sortable column: the header cell carries `aria-sort` and renders a TableSortButton, which shows the active direction (or a neutral glyph while unsorted). The host owns the sort state and reorders its rows."
+      },
+      {
+        "name": "Pagination",
+        "note": "The pagination bar under a long result set: previous/next chevrons around a windowed set of numbered pages — the first page, the last page, and the current page's neighbors, with collapsed runs shown as ellipses — plus a muted result summary on the left."
+      },
+      {
+        "name": "EmptyState",
+        "note": "The TableEmpty row spans every column with a centered icon, title, and hint — the resting state a filtered-out or unpopulated table shows inside the shell."
+      },
+      {
+        "name": "SelectionAndColumns",
+        "note": "Row selection and column management composed from the primitives: a Checkbox in the header cell drives select-all and one per row drives its own state, each sortable column header is a TableSortButton that toggles ascending and descending on click, and the toolbar pairs a search with TableViewOptions for column visibility. Selection is measured against the rows currently shown, so filtering leaves the header checkbox honest, and the count below the toolbar is a debounced status region. The table renders from the visible-column list, so a restored column returns to its place in column order rather than the end. The Trace column is locked visible."
+      },
+      {
+        "name": "OverflowingColumns",
+        "note": "A table wider than its container. The scroll container only becomes keyboard focusable while the content actually overflows — measured, not assumed — so its off-screen columns stay reachable without a pointer, and it takes the `containerLabel` name so the focusable region is announced. A table that fits adds no tab stop at all."
+      },
+      {
+        "name": "CappedHeight",
+        "note": "A scrolling body: `containerClassName` caps the scroll container's height, since the table element is not the scroll port, and `TableHeader`'s `sticky` pins the column headers while the rows scroll beneath them. Overflow is measured on both axes, so a table whose columns all fit but whose rows do not still becomes keyboard focusable and reachable."
+      },
+      {
+        "name": "PageOutOfRange",
+        "note": "A guard for the window between a filter shrinking the result set and the host resetting its page. `page` is clamped into range for every control, so an out-of-range page still marks a real page current and Next cannot step further out."
       }
     ]
   },
