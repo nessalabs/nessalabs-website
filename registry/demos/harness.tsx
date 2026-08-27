@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   ArrowLeft,
   Calendar,
+  ChartGantt,
   Check,
   Columns2,
   Copy,
@@ -50,6 +51,7 @@ import {
   AppShellPaneDragHandle,
   AppShellWorkspace,
   Button,
+  Input,
   ChatComposer,
   ChatComposerAction,
   ChatComposerActions,
@@ -99,6 +101,10 @@ import {
   EventCalendar,
   EventCalendarGrid,
   EventCalendarToolbar,
+  GanttChart,
+  GanttChartGrid,
+  GanttChartToolbar,
+  ganttChartDateColumns,
   KanbanBoard,
   KanbanCard,
   KanbanColumn,
@@ -114,6 +120,7 @@ import {
   ModelPicker,
   ModelThinkingControl,
   PaneSplitDirection,
+  PopoverSurface,
   SectionedListbox,
   SegmentedControl,
   SegmentedControlOption,
@@ -137,6 +144,8 @@ import {
   type ModelPickerValue,
   type AppShellLayout,
   type EventCalendarEvent,
+  type GanttChartQuickCreateContext,
+  type GanttChartTask,
   type PaneNode,
   type SectionedListboxSection,
 } from "@nessa-ui/react";
@@ -202,7 +211,7 @@ const threads: Thread[] = [
               "| --- | --- | --- |",
               "| Primitives | Button, Input, Badge, Card, SegmentedControl | palette, radius, density |",
               "| Agent surfaces | Message, ToolCall, ToolApproval, ChatComposer, ConversationRail | copy, model list, policy |",
-              "| Workspaces | AppShell, SplitView, Kanban, EventCalendar, WorkflowCanvas | data, persistence |",
+              "| Workspaces | AppShell, SplitView, Kanban, EventCalendar, GanttChart, WorkflowCanvas | data, persistence |",
               "",
               "Every surface is a compound component with `data-slot` attributes, so",
               "restyling is a class away and nothing is locked behind a variant prop.",
@@ -908,6 +917,7 @@ const views: {
   })),
   { id: "view:board", label: "Board", icon: KanbanSquare },
   { id: "view:calendar", label: "Calendar", icon: Calendar },
+  { id: "view:timeline", label: "Timeline", icon: ChartGantt },
   { id: "view:workflow", label: "Workflow", icon: Workflow },
 ];
 
@@ -1840,6 +1850,190 @@ function CalendarView() {
   );
 }
 
+/**
+ * The plan behind the board: the same sprint work, laid out in time. Summary
+ * rows roll up from their children, so only the leaf tasks carry dates, and
+ * `moveDependents` pushes the chain when a task is dragged or nudged.
+ */
+const timelineTasks: GanttChartTask[] = [
+  { id: "retrieval", name: "Retrieval v3", start: at(7, 10), end: at(7, 29) },
+  {
+    id: "index-rebuild",
+    name: "Rebuild index",
+    start: at(7, 10),
+    end: at(7, 19),
+    progress: 0.7,
+    parentId: "retrieval",
+  },
+  {
+    id: "encoder",
+    name: "Encoder swap",
+    start: at(7, 19),
+    end: at(7, 29),
+    progress: 0.2,
+    parentId: "retrieval",
+    dependsOn: ["index-rebuild"],
+  },
+  {
+    id: "cutover",
+    name: "Cutover",
+    start: at(7, 31),
+    end: at(7, 31),
+    parentId: "retrieval",
+    dependsOn: ["encoder"],
+  },
+  { id: "evals", name: "Eval harness", start: at(7, 12), end: at(8, 4) },
+  {
+    id: "sweep-4192",
+    name: "Sweep 4192",
+    start: at(7, 12),
+    end: at(7, 21),
+    progress: 0.55,
+    parentId: "evals",
+  },
+  {
+    id: "safety-pass",
+    name: "Safety pass",
+    start: at(7, 24),
+    end: at(8, 1),
+    tone: "secondary",
+    parentId: "evals",
+    dependsOn: ["sweep-4192"],
+  },
+  {
+    id: "model-freeze",
+    name: "Model freeze",
+    start: at(8, 2),
+    end: at(8, 2),
+    tone: "destructive",
+    parentId: "evals",
+    dependsOn: ["safety-pass"],
+  },
+  {
+    id: "docs-sprint",
+    name: "Docs sprint",
+    start: at(7, 26),
+    end: at(8, 8),
+    progress: 0.1,
+    tone: "muted",
+  },
+];
+
+/**
+ * The grid wraps its scroller in a plain block and caps it at 480px, and
+ * sizes its body to the rows it has — so in a tall pane it stops halfway
+ * down. Give the wrapper and the scroller the pane's height, then stretch
+ * the underlay, so the column lines and the today marker run to the bottom
+ * rather than stopping under the last task.
+ */
+const fillPaneChartClassName = cn(
+  "flex min-h-0 flex-1 flex-col border-0",
+  "[&>[data-slot=gantt-chart-grid]]:flex [&>[data-slot=gantt-chart-grid]]:min-h-0 [&>[data-slot=gantt-chart-grid]]:flex-1 [&>[data-slot=gantt-chart-grid]]:flex-col",
+);
+
+const fillPaneGridClassName = cn(
+  "min-h-0 flex-1",
+  "[&>[data-slot=gantt-chart-canvas]]:flex [&>[data-slot=gantt-chart-canvas]]:min-h-full [&>[data-slot=gantt-chart-canvas]]:flex-col",
+  "[&_[data-slot=gantt-chart-header]]:shrink-0",
+  "[&_[data-slot=gantt-chart-body]]:flex-1",
+  "[&_[data-slot=gantt-chart-underlay]]:h-full!",
+);
+
+function TimelineQuickCreate({
+  context,
+}: {
+  context: GanttChartQuickCreateContext;
+}) {
+  const [name, setName] = React.useState("");
+  const format = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+
+  return (
+    <PopoverSurface
+      radius="lg"
+      role="dialog"
+      aria-label="Add task"
+      className="flex w-60 flex-col gap-2 p-3"
+    >
+      <p className="text-xs text-muted-foreground">
+        {format.format(context.range.start)} –{" "}
+        {format.format(new Date(context.range.end.getTime() - 86_400_000))}
+      </p>
+      <Input
+        autoFocus
+        aria-label="Task name"
+        placeholder="Task name"
+        className="h-7"
+        value={name}
+        onChange={(changeEvent) => setName(changeEvent.target.value)}
+        onKeyDown={(keyEvent) => {
+          if (keyEvent.key === "Enter") {
+            keyEvent.preventDefault();
+            context.createTask(name ? { name } : undefined);
+          }
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          className="h-7"
+          onClick={() => context.createTask(name ? { name } : undefined)}
+        >
+          Add task
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7"
+          onClick={context.cancel}
+        >
+          Cancel
+        </Button>
+      </div>
+    </PopoverSurface>
+  );
+}
+
+function TimelineView() {
+  const [tasks, setTasks] = React.useState(timelineTasks);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
+        <span>Sprint 24 plan</span>
+        <span>{tasks.length} tasks</span>
+      </div>
+
+      <GanttChart
+        className={fillPaneChartClassName}
+        tasks={tasks}
+        onTasksChange={setTasks}
+        now={harnessNow}
+        locale="en-US"
+        defaultScale="week"
+        rowHeight={40}
+        defaultTaskListWidth={300}
+        // Start and finish only: a harness pane is narrower than a planning
+        // tool's window, and the duration column would eat the names. The
+        // task list's splitter is there when a plan needs more room.
+        columns={ganttChartDateColumns("en-US").slice(0, 2)}
+        moveDependents
+        renderQuickCreate={(context) => (
+          <TimelineQuickCreate context={context} />
+        )}
+      >
+        <GanttChartToolbar />
+        <GanttChartGrid
+          className={fillPaneGridClassName}
+          style={{ maxHeight: "none" }}
+        />
+      </GanttChart>
+    </div>
+  );
+}
+
 interface WorkflowJob {
   id: string;
   title: string;
@@ -2384,6 +2578,7 @@ function SettingsSection({
 function PaneBody({ viewId }: { viewId: string | undefined }) {
   if (viewId === "view:board") return <BoardView />;
   if (viewId === "view:calendar") return <CalendarView />;
+  if (viewId === "view:timeline") return <TimelineView />;
   if (viewId === "view:workflow") return <WorkflowView />;
   if (viewId?.startsWith("chat:")) return <ChatPane viewId={viewId} />;
 

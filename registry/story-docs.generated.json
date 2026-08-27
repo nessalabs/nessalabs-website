@@ -425,6 +425,30 @@
         "note": "The moveDependents option: while it is on, the built-in confirmation asks per move — Move all takes every transitive dependent along by the same day count (simplest finish-to-start push scheduling), Only this reschedules just the task — and names how many tasks would follow; while it is off, arrows stay purely visual and the dialog shows its plain Move. The host owns the toggle (a toolbar button here), the built-in ask is only the example: renderMoveConfirm plus confirm({ moveDependents }) and the context's dependentTaskIds let hosts build their own chooser. The play test commits a Move all and asserts Composites followed by computed offset, then an Only this and proves the chain stayed put."
       },
       {
+        "name": "DependencyTypes",
+        "note": "All four industry relation types on one plan, plus a lag. `dependsOn` takes a bare id as the finish-to-start shorthand or `{ taskId, type, lagDays }` for the rest, and each arrow leaves and arrives at the edges its relation names — so a start-to-start link runs left edge to left edge rather than pretending to be finish-to-start. Shown with `linkable={false}`: a read-only plan's arrows announce as images and add no tab stops. The play test asserts one arrow per relation, reads their announcements, and verifies the routing by each path's own endpoints."
+      },
+      {
+        "name": "CriticalPath",
+        "note": "Critical-path highlighting, on from the start here and toggled from the toolbar. Float is derived from the dependency graph — a task with none left cannot slip without pushing the plan's finish — so the chain that carries the finish takes the destructive treatment while everything with slack stays in its own tone. The play test asserts the toggle's pressed state, that a chain task is marked and a slack task is not, and that turning it off clears the marks."
+      },
+      {
+        "name": "DependencyLinking",
+        "note": "Dependency editing is on by default: every bar grows a link handle at each edge — drag one onto another task to draw a relation, or activate it and pick the target from the keyboard. Links that would close a loop are refused, so the target never lights up. Selecting an arrow and pressing Delete removes it; `linkable={false}` turns all of it off for a read-only plan. The play test draws a link with the keyboard path, asserts the new arrow exists, then selects and deletes it."
+      },
+      {
+        "name": "QuickCreate",
+        "note": "Dragging across empty lane background proposes a new task's dates and opens the host's own quick-create card through `renderQuickCreate` — the chart owns the gesture, the highlight, placement and Escape, the host owns every pixel of the card and resolves it with `createTask`/`cancel`. Providing the prop also gives every lane a keyboard surface: arrow keys choose days, Shift extends the selection, Enter opens the card. A task drawn on a group's lane joins that group. The play test exercises both paths and asserts each created task lands with its chosen dates by computed width."
+      },
+      {
+        "name": "TaskColumns",
+        "note": "The task list takes host-defined columns beside the name; `ganttChartDateColumns` covers the usual start/finish/duration trio, and any column can render whatever it likes from the task (here an owner read from `meta`). The hairline between the list and the timeline is a real window splitter — focusable, value-reporting, resizable by drag or arrow keys, following the SplitView separator's contract. The play test reads a leaf row's duration cell and a summary's rolled-up finish, then steps the splitter and asserts the pinned column's computed width followed."
+      },
+      {
+        "name": "DependencyViolations",
+        "note": "A relation the dates contradict draws dashed in the critical treatment, so a plan that has drifted out of sequence says so instead of drawing a confident arrow backwards. Here Build starts three days before Spec finishes. Nothing is auto-corrected — hosts read the same list through the exported `dependencyViolations` helper and decide what to do. The play test asserts the arrow renders dashed while a satisfied one does not."
+      },
+      {
         "name": "CustomTaskContent",
         "note": "renderTask replaces every bar's interior — here a name with a live percent readout — while the chart keeps geometry, drag, and selection; taskClassName layers styling policy (dimming completed work) without touching the task data. The play test asserts the custom interior renders inside a bar the chart still positions."
       },
@@ -1237,6 +1261,17 @@
       {
         "name": "PageOutOfRange",
         "note": "A guard for the window between a filter shrinking the result set and the host resetting its page. `page` is clamped into range for every control, so an out-of-range page still marks a real page current and Next cannot step further out."
+      }
+    ]
+  },
+  "timeline-header": {
+    "title": "Components/TimelineHeader",
+    "component": "TimelineHeader",
+    "description": "The band a horizontal scale lives on: pixel-offset cells with hairline dividers, and labels that pin at a chosen inset while any part of their cell is in view. Born as the GanttChart's two-tier time header and extracted — like PopoverSurface and SegmentedControl before it — so any horizontally scrolled surface (rulers, grouped table headers, audio timelines) can reuse the layout. The band is purely presentational: the consumer owns the scroll container, tier heights, and whether the scale is aria-hidden decoration.",
+    "stories": [
+      {
+        "name": "PinnedScale",
+        "note": "A two-tier ruler inside an ordinary horizontal scroller: quarter labels pin eight pixels from the viewport's left edge while any part of their quarter is in view, and week ticks scroll freely underneath. The play test scrolls the container past a quarter's own left edge and proves the pin by measured positions — the label holds at the inset while its cell's edge has left the viewport — then confirms the label yields once its quarter runs out."
       }
     ]
   },
