@@ -14,12 +14,16 @@ import {
   X,
 } from "lucide-react";
 import {
+  Button,
   EventCalendar,
   EventCalendarGrid,
   EventCalendarToolbar,
   GanttChart,
   GanttChartGrid,
   GanttChartToolbar,
+  Input,
+  PopoverSurface,
+  ganttChartDateColumns,
   KanbanBoard,
   KanbanCard,
   KanbanColumn,
@@ -38,6 +42,7 @@ import {
   WorkflowCanvasSurface,
   applyKanbanMove,
   type EventCalendarEvent,
+  type GanttChartQuickCreateContext,
   type GanttChartTask,
   type KanbanMove,
 } from "@nessa-ui/react";
@@ -112,20 +117,20 @@ export function EventCalendarDemo({
 /* ── GanttChart ────────────────────────────────────────────────────────── */
 
 const ganttTasks: GanttChartTask[] = [
-  { id: "design", name: "Design", start: day(7, 3), end: day(7, 22) },
+  { id: "design", name: "Design", start: day(7, 3), end: day(7, 29) },
   {
     id: "discovery",
     name: "Discovery & audit",
     start: day(7, 3),
-    end: day(7, 15),
+    end: day(7, 16),
     progress: 1,
     parentId: "design",
   },
   {
     id: "visual-language",
     name: "Visual language",
-    start: day(7, 10),
-    end: day(7, 22),
+    start: day(7, 16),
+    end: day(7, 29),
     progress: 0.75,
     parentId: "design",
     dependsOn: ["discovery"],
@@ -133,17 +138,17 @@ const ganttTasks: GanttChartTask[] = [
   {
     id: "design-review",
     name: "Design review",
-    start: day(7, 21),
-    end: day(7, 21),
+    start: day(7, 29),
+    end: day(7, 29),
     parentId: "design",
     dependsOn: ["visual-language"],
   },
-  { id: "engineering", name: "Engineering", start: day(7, 17), end: day(9, 3) },
+  { id: "engineering", name: "Engineering", start: day(7, 30), end: day(8, 28) },
   {
     id: "primitives",
     name: "Primitives",
-    start: day(7, 17),
-    end: day(7, 29),
+    start: day(7, 30),
+    end: day(8, 12),
     progress: 0.6,
     parentId: "engineering",
     dependsOn: ["design-review"],
@@ -151,8 +156,8 @@ const ganttTasks: GanttChartTask[] = [
   {
     id: "composites",
     name: "Composites",
-    start: day(7, 31),
-    end: day(8, 19),
+    start: day(8, 12),
+    end: day(8, 28),
     progress: 0.15,
     parentId: "engineering",
     dependsOn: ["primitives"],
@@ -175,6 +180,86 @@ export function GanttChartDemo({ scale }: { scale?: "day" | "week" | "month" }) 
       now={NOW}
       defaultTasks={ganttTasks}
       defaultScale={scale}
+    >
+      <GanttChartToolbar />
+      <GanttChartGrid />
+    </GanttChart>
+  );
+}
+
+/**
+ * The card is the host's, and so is every pixel of it: the chart owns the
+ * drag, the highlight, the placement and Escape, then hands the proposed
+ * range over and waits for `createTask` or `cancel`.
+ */
+function QuickCreateCard({
+  context,
+}: {
+  context: GanttChartQuickCreateContext;
+}) {
+  const [name, setName] = React.useState("");
+  const format = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+
+  return (
+    <PopoverSurface
+      radius="lg"
+      role="dialog"
+      aria-label="Add task"
+      className="flex w-60 flex-col gap-2 p-3"
+    >
+      <p className="text-xs text-muted-foreground">
+        {format.format(context.range.start)} –{" "}
+        {format.format(new Date(context.range.end.getTime() - 86_400_000))}
+      </p>
+      <Input
+        autoFocus
+        aria-label="Task name"
+        placeholder="Task name"
+        className="h-7"
+        value={name}
+        onChange={(changeEvent) => setName(changeEvent.target.value)}
+        onKeyDown={(keyEvent) => {
+          if (keyEvent.key === "Enter") {
+            keyEvent.preventDefault();
+            context.createTask(name ? { name } : undefined);
+          }
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          className="h-7"
+          onClick={() => context.createTask(name ? { name } : undefined)}
+        >
+          Add task
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7"
+          onClick={context.cancel}
+        >
+          Cancel
+        </Button>
+      </div>
+    </PopoverSurface>
+  );
+}
+
+export function GanttChartPlanningDemo() {
+  return (
+    <GanttChart
+      className="w-full"
+      now={NOW}
+      defaultTasks={ganttTasks}
+      defaultScale="day"
+      columns={ganttChartDateColumns("en-US")}
+      taskListWidth={420}
+      defaultShowCriticalPath
+      renderQuickCreate={(context) => <QuickCreateCard context={context} />}
     >
       <GanttChartToolbar />
       <GanttChartGrid />

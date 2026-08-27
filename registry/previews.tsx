@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   EventCalendarDemo,
   GanttChartDemo,
+  GanttChartPlanningDemo,
   KanbanDemo,
   SplitViewDemo,
   SplitViewWorkspaceDemo,
@@ -105,6 +106,7 @@ export const previews: Record<string, React.ReactNode> = {
   // composites
   "event-calendar": <EventCalendarDemo />,
   "gantt-chart": <GanttChartDemo />,
+  "gantt-chart-planning": <GanttChartPlanningDemo />,
   kanban: <KanbanDemo />,
   "split-view": <SplitViewDemo />,
   "split-view-workspace": <SplitViewWorkspaceDemo />,
