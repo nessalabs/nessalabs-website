@@ -4,7 +4,7 @@ import { HarnessView } from "@/components/site/harness-view";
 export const metadata: Metadata = {
   title: "Harness",
   description:
-    "A working agent harness assembled from nessa-ui: shell, panes, chat, board, calendar and canvas.",
+    "A working agent harness assembled from nessa-ui: shell, panes, chat, board, calendar, timeline and canvas.",
 };
 
 export default function HarnessPage() {

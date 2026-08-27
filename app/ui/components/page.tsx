@@ -83,8 +83,8 @@ export default function ComponentsOverviewPage() {
           <div className="font-medium">Agent harness</div>
           <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
             An agent app assembled from these components: sidebar, split panes,
-            transcript, composer, board, calendar, workflow canvas and a
-            terminal dock. The source of each surface opens inside the app.
+            transcript, composer, board, calendar, Gantt timeline, workflow
+            canvas and a terminal dock. The source of each surface opens inside the app.
           </p>
         </div>
         <ArrowRight

@@ -241,7 +241,13 @@ const documented: {
     slug: "gantt-chart",
     group: "Composites",
     description:
-      "A project timeline with summary roll-ups, milestones and dependency arrows. Bars reschedule by drag or keyboard.",
+      "A project timeline of bars, milestones and typed dependency arrows. Tasks are drawn, linked and rescheduled by drag or keyboard.",
+    examples: [
+      {
+        id: "gantt-chart-planning",
+        title: "Date columns, the critical path, and a task drawn on an empty lane",
+      },
+    ],
   },
   {
     slug: "split-view",
