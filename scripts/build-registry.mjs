@@ -21,12 +21,16 @@ const catalog = [
   ["input", "Input", "Primitives", "input"],
   ["segmented-control", "SegmentedControl", "Primitives", "segmented-control"],
   ["random-avatar", "RandomAvatar", "Primitives", "random-avatar"],
+  ["checkbox", "Checkbox", "Primitives", "checkbox"],
+  ["pagination", "Pagination", "Primitives", "pagination"],
+  ["timeline-header", "TimelineHeader", "Primitives", "timeline-header"],
   ["popover-surface", "PopoverSurface", "Primitives", "popover-surface"],
 
   // Listboxes & menus
   ["searchable-listbox", "SearchableListbox", "Navigation", "searchable-listbox"],
   ["sectioned-listbox", "SectionedListbox", "Navigation", "sectioned-listbox"],
   ["context-menu", "ContextMenu", "Navigation", "context-menu"],
+  ["dropdown-menu", "DropdownMenu", "Navigation", "dropdown-menu"],
   ["conversation-rail", "ConversationRail", "Navigation", "conversation-rail"],
   ["sidebar", "Sidebar", "Navigation", "sidebar"],
 
@@ -60,6 +64,7 @@ const catalog = [
   ["event-calendar", "EventCalendar", "Composites", "event-calendar"],
   ["gantt-chart", "GanttChart", "Composites", "gantt-chart"],
   ["kanban", "KanbanBoard", "Composites", "kanban"],
+  ["table", "Table", "Composites", "table"],
   ["workflow-canvas", "WorkflowCanvas", "Composites", "workflow-canvas"],
 ];
 

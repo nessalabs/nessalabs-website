@@ -10,8 +10,23 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Checkbox,
   CodeBlock,
   DiffStat,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
   FileDiffCard,
   FileDiffCardHeader,
   FileDiffCardHeading,
@@ -25,6 +40,13 @@ import {
   MathBlock,
   MermaidDiagram,
   MessageMarkdown,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
   RandomAvatar,
   Reference,
   ReferenceCard,
@@ -32,6 +54,9 @@ import {
   ReferenceTrigger,
   SegmentedControl,
   SegmentedControlOption,
+  TimelineHeader,
+  TimelineHeaderCell,
+  tablePaginationRange,
 } from "@nessa-ui/react";
 
 export function ButtonDemo() {
@@ -83,6 +108,206 @@ export function SegmentedControlDemo() {
       <SegmentedControlOption value="week">Week</SegmentedControlOption>
       <SegmentedControlOption value="month">Month</SegmentedControlOption>
     </SegmentedControl>
+  );
+}
+
+const traceKinds = ["Tool call", "Retrieval", "Handoff", "Reflection"];
+
+/**
+ * The select-all pattern the mixed state exists for: the header box is checked
+ * when every kind is selected and mixed when only some are, so one glance
+ * separates "all" from "some".
+ */
+export function CheckboxDemo() {
+  const [selected, setSelected] = React.useState(["Retrieval"]);
+  const all = selected.length === traceKinds.length;
+
+  return (
+    <div className="w-full max-w-xs">
+      <label className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium">
+        <Checkbox
+          checked={all}
+          indeterminate={selected.length > 0 && !all}
+          onChange={() => setSelected(all ? [] : traceKinds)}
+        />
+        Every trace kind
+      </label>
+      <ul className="flex flex-col border-t border-border pt-1">
+        {traceKinds.map((kind) => (
+          <li key={kind}>
+            <label className="flex items-center gap-3 rounded-lg p-2 text-sm">
+              <Checkbox
+                checked={selected.includes(kind)}
+                onChange={(event) =>
+                  setSelected((current) =>
+                    event.target.checked
+                      ? [...current, kind]
+                      : current.filter((entry) => entry !== kind)
+                  )
+                }
+              />
+              {kind}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * The four states side by side. Checked and mixed share one wash and differ
+ * only in their glyph; a disabled control fades as a whole.
+ */
+export function CheckboxStatesDemo() {
+  return (
+    <div className="flex flex-wrap items-center gap-6 text-sm">
+      <label className="flex items-center gap-2">
+        <Checkbox checked={false} readOnly /> Unchecked
+      </label>
+      <label className="flex items-center gap-2">
+        <Checkbox checked readOnly /> Checked
+      </label>
+      <label className="flex items-center gap-2">
+        <Checkbox checked={false} indeterminate readOnly /> Mixed
+      </label>
+      <label className="flex items-center gap-2">
+        <Checkbox checked readOnly disabled /> Disabled
+      </label>
+    </div>
+  );
+}
+
+/**
+ * The whole composition on one menu: labelled groups with shortcut hints, a
+ * checkbox item, a submenu holding a radio group, and a destructive item.
+ * Selection is marked by the leading indicators, never by the accent wash.
+ */
+export function DropdownMenuDemo() {
+  const [dense, setDense] = React.useState(true);
+  const [grouping, setGrouping] = React.useState("agent");
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">View</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuLabel>Trace list</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            Refresh
+            <DropdownMenuShortcut>⌘R</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            Export CSV
+            <DropdownMenuShortcut>⌘E</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem checked={dense} onCheckedChange={setDense}>
+          Dense rows
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger inset>Group by</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup value={grouping} onValueChange={setGrouping}>
+              <DropdownMenuRadioItem value="agent">Agent</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="status">Status</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="day">Day</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive">Delete view</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * Twelve pages behind a seven-slot window. The window keeps the first page,
+ * the last page and the current page's neighbours, collapsing the rest into
+ * ellipses; `tablePaginationRange` computes it, and the page itself is state
+ * the host holds.
+ */
+export function PaginationDemo() {
+  const [page, setPage] = React.useState(4);
+  const pageCount = 12;
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+          />
+        </PaginationItem>
+        {tablePaginationRange(page, pageCount).map((item, index) => (
+          <PaginationItem key={item === "ellipsis" ? `gap-${index}` : item}>
+            {item === "ellipsis" ? (
+              <PaginationEllipsis />
+            ) : (
+              <PaginationLink
+                aria-label={`Page ${item}`}
+                isActive={item === page}
+                onClick={() => setPage(item)}
+              >
+                {item}
+              </PaginationLink>
+            )}
+          </PaginationItem>
+        ))}
+        <PaginationItem>
+          <PaginationNext
+            disabled={page >= pageCount}
+            onClick={() => setPage(page + 1)}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
+const WEEK_WIDTH = 32;
+const QUARTER_WEEKS = 13;
+const quarters = ["Q1", "Q2", "Q3", "Q4"];
+
+/**
+ * A two-tier ruler inside an ordinary horizontal scroller. Scroll it sideways:
+ * each quarter label pins eight pixels from the viewport's left edge while any
+ * part of its quarter is still in view, and the week ticks scroll underneath.
+ */
+export function TimelineHeaderDemo() {
+  const weeks = QUARTER_WEEKS * quarters.length;
+
+  return (
+    <div className="w-full max-w-lg overflow-x-auto rounded-lg border border-border">
+      <TimelineHeader className="h-14" style={{ width: weeks * WEEK_WIDTH }}>
+        {quarters.map((quarter, index) => (
+          <TimelineHeaderCell
+            key={quarter}
+            start={index * QUARTER_WEEKS * WEEK_WIDTH}
+            width={QUARTER_WEEKS * WEEK_WIDTH}
+            pinLabelInset={8}
+            className="top-0 h-7 font-medium text-foreground"
+          >
+            {quarter}
+          </TimelineHeaderCell>
+        ))}
+        {Array.from({ length: weeks }, (_, week) => (
+          <TimelineHeaderCell
+            key={week}
+            start={week * WEEK_WIDTH}
+            width={WEEK_WIDTH}
+            className="bottom-0 h-7 justify-center"
+          >
+            {(week % QUARTER_WEEKS) + 1}
+          </TimelineHeaderCell>
+        ))}
+      </TimelineHeader>
+    </div>
   );
 }
 

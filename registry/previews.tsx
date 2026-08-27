@@ -8,6 +8,10 @@ import {
   KanbanDemo,
   SplitViewDemo,
   SplitViewWorkspaceDemo,
+  TableDemo,
+  TableEmptyDemo,
+  TablePaginationDemo,
+  TableWorkbenchDemo,
   WorkflowCanvasDemo,
   WorkflowCanvasNestedDemo,
   WorkflowCanvasPaletteDemo,
@@ -37,7 +41,10 @@ import {
   BadgeDemo,
   ButtonDemo,
   CardDemo,
+  CheckboxDemo,
+  CheckboxStatesDemo,
   CodeBlockDemo,
+  DropdownMenuDemo,
   FileDiffDemo,
   FileDiffScrollDemo,
   MermaidDiagramDemo,
@@ -45,12 +52,14 @@ import {
   JsonTreeDemo,
   MathBlockDemo,
   MessageMarkdownDemo,
+  PaginationDemo,
   RandomAvatarDemo,
   RandomAvatarGroupDemo,
   RandomAvatarToneDemo,
   RandomAvatarWorkingDemo,
   ReferenceDemo,
   SegmentedControlDemo,
+  TimelineHeaderDemo,
 } from "./demos/content";
 
 /**
@@ -68,6 +77,11 @@ export const previews: Record<string, React.ReactNode> = {
   "random-avatar-group": <RandomAvatarGroupDemo />,
   "random-avatar-working": <RandomAvatarWorkingDemo />,
   "random-avatar-tones": <RandomAvatarToneDemo />,
+  checkbox: <CheckboxDemo />,
+  "checkbox-states": <CheckboxStatesDemo />,
+  "dropdown-menu": <DropdownMenuDemo />,
+  pagination: <PaginationDemo />,
+  "timeline-header": <TimelineHeaderDemo />,
 
   // content
   "code-block": <CodeBlockDemo />,
@@ -113,4 +127,8 @@ export const previews: Record<string, React.ReactNode> = {
   "workflow-canvas": <WorkflowCanvasDemo />,
   "workflow-canvas-nested": <WorkflowCanvasNestedDemo />,
   "workflow-canvas-palette": <WorkflowCanvasPaletteDemo />,
+  table: <TableDemo />,
+  "table-workbench": <TableWorkbenchDemo />,
+  "table-pagination": <TablePaginationDemo />,
+  "table-empty": <TableEmptyDemo />,
 };

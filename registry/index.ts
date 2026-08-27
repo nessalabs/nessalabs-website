@@ -74,6 +74,33 @@ const documented: {
       },
     ],
   },
+  {
+    slug: "checkbox",
+    group: "Primitives",
+    description:
+      "A checkbox built on a real input, with a mixed state for a set that is only partly selected.",
+    examples: [
+      { id: "checkbox-states", title: "Unchecked, checked, mixed and disabled" },
+    ],
+  },
+  {
+    slug: "dropdown-menu",
+    group: "Primitives",
+    description:
+      "A menu of actions anchored to a trigger, with checkbox and radio items, shortcut hints and submenus.",
+  },
+  {
+    slug: "pagination",
+    group: "Primitives",
+    description:
+      "A nav of numbered page buttons between previous and next controls. The host computes the window and holds the page.",
+  },
+  {
+    slug: "timeline-header",
+    group: "Primitives",
+    description:
+      "A band for a horizontal scale, whose pixel-offset cells can pin their labels as the scroll passes them.",
+  },
 
   {
     slug: "code-block",
@@ -239,6 +266,20 @@ const documented: {
     group: "Composites",
     description:
       "A board of columns and draggable cards. Moves report through onCardMove.",
+  },
+  {
+    slug: "table",
+    group: "Composites",
+    description:
+      "A data table on a flat bordered shell, with the toolbar, sorting, column menu and pager as separate pieces.",
+    examples: [
+      {
+        id: "table-workbench",
+        title: "Search, a status facet, a column menu, a sortable column and row selection",
+      },
+      { id: "table-pagination", title: "The pager under a long result set" },
+      { id: "table-empty", title: "The row shown instead of data" },
+    ],
   },
   {
     slug: "workflow-canvas",
