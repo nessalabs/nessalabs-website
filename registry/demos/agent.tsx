@@ -1153,7 +1153,7 @@ export function AgentActivityDemo() {
   const sheetId = React.useId();
 
   return (
-    <div className="relative h-96 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-background p-4">
+    <div className="relative h-80 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-background p-4">
       <div className="flex flex-col gap-3">
         <AgentActivityCue>{formatAgentThoughtSummary(1)}</AgentActivityCue>
         <AgentActivity>
@@ -1232,7 +1232,7 @@ export function AgentDetailsDemo() {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="relative h-[32rem] w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-background">
+    <div className="relative h-96 w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-background">
       <Button
         variant="outline"
         className="absolute left-1/2 top-8 -translate-x-1/2"

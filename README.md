@@ -4,12 +4,15 @@ The Nessa Labs website — homepage plus the **nessa-ui** component documentatio
 at `/ui/components`.
 
 nessa-ui is a behaviour-first React component system: primitives (button, input,
-select, switch, badge, avatar, tooltip…) plus the composites that usually cost a
-week each — a resizable application shell, split panes, a sortable/searchable
-data table, a pointer-driven board, a day/week/month/year calendar, a
-pan-and-zoom node canvas, a Gantt chart, and the agent surfaces (streaming
+select, switch, badge, avatar, tooltip, tabs, drawer, sheet…) plus the
+composites that usually cost a week each — a resizable application shell, split
+panes, a sortable/searchable data table, a pointer-driven board, a
+day/week/month/year calendar, a pan-and-zoom node canvas, a Gantt chart, the
+chart kit (pie, radar, flow, price, stock quote), the agent surfaces (streaming
 chat, composer with queue steering, tool calls, permission prompts, JSON trees,
-diff summaries, model picker).
+diff summaries, model picker, activity cues, conversation history) and the
+iMessage-style chat surfaces (pill composer, bubbles, tabs, tray, overlay,
+annotations).
 
 What ships is the interaction model. Styling is the consumer's: every component
 takes `className`, the interactive ones take `classNames` for their parts and a
@@ -27,6 +30,10 @@ The site documents **@nessa-ui/react**, the real package from the nessa-ui
 repo. Its source is vendored into `nessa-ui/` by `npm run sync:ui`, which
 copies `packages/react/src` and rewrites the package's own `@/…` imports.
 Nothing in this repo re-implements a component.
+
+The same script vendors `@nessa-ui/agent-stream` into `agent-stream/`, because
+the React package re-exports it. Both are resolved through tsconfig paths of
+the same name, so the app imports them exactly as a published consumer would.
 
 Publishing `@nessa-ui/react` to npm would replace the vendoring with a plain
 dependency — that is the intended end state, and the only reason it is vendored
