@@ -358,7 +358,9 @@ export function SheetContainedDemo() {
 const outlineSections: PageOutlineItemData[] = [
   { id: "installation", label: "Installation", depth: 0 },
   { id: "package-manager", label: "Package manager", depth: 1 },
-  { id: "peer-dependencies", label: "Peer dependencies", depth: 2 },
+  { id: "pnpm", label: "pnpm", depth: 2 },
+  { id: "peer-dependencies", label: "Peer dependencies", depth: 3 },
+  { id: "npm", label: "npm", depth: 2 },
   { id: "manual-setup", label: "Manual setup", depth: 1 },
   { id: "usage", label: "Usage", depth: 0 },
   { id: "rendering", label: "Rendering", depth: 1 },
@@ -371,7 +373,12 @@ const outlineSections: PageOutlineItemData[] = [
 const outlineCopy =
   "The rail traces the heading hierarchy rather than sitting straight, so depth stays legible without indenting the type. Scroll and the pulse travels the rail to the section being read.";
 
-export function PageOutlineDemo() {
+/** The guide the outline sits beside: the scroller is the spy's container. */
+function OutlineGuide({
+  outline,
+}: {
+  outline: (scrollRef: React.RefObject<HTMLDivElement | null>) => React.ReactNode;
+}) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   return (
@@ -399,14 +406,71 @@ export function PageOutlineDemo() {
           })}
         </article>
         <div className="sticky top-0 w-56 flex-none border-l border-border py-6 pl-4 pr-3">
-          <PageOutline
-            items={outlineSections}
-            scrollContainerRef={scrollRef}
-            aria-label="On this page"
-          />
+          {outline(scrollRef)}
         </div>
       </div>
     </div>
+  );
+}
+
+export function PageOutlineDemo() {
+  return (
+    <OutlineGuide
+      outline={(scrollRef) => (
+        <PageOutline
+          items={outlineSections}
+          scrollContainerRef={scrollRef}
+          scrollOffset={64}
+          aria-label="On this page"
+        />
+      )}
+    />
+  );
+}
+
+export function PageOutlineCollapseDemo() {
+  return (
+    <OutlineGuide
+      outline={(scrollRef) => (
+        <PageOutline
+          items={outlineSections}
+          scrollContainerRef={scrollRef}
+          scrollOffset={64}
+          collapse="auto"
+          aria-label="On this page"
+        />
+      )}
+    />
+  );
+}
+
+export function PageOutlineMarkerDemo() {
+  return (
+    <OutlineGuide
+      outline={(scrollRef) => (
+        <PageOutline
+          items={outlineSections}
+          scrollContainerRef={scrollRef}
+          scrollOffset={64}
+          aria-label="On this page"
+          // Drawn centred on 0,0 pointing toward positive y; the outline
+          // translates and rotates it along the rail every frame, so it banks
+          // through the jogs instead of cutting the corner.
+          marker={
+            <g>
+              <path
+                d="M-3.5 -6 Q0 -9 3.5 -6 L3.5 4 Q3.5 7 0 7 Q-3.5 7 -3.5 4 Z"
+                className="fill-foreground"
+              />
+              <circle cx="-3.5" cy="-1" r="1.4" className="fill-background" />
+              <circle cx="3.5" cy="-1" r="1.4" className="fill-background" />
+              <circle cx="-3.5" cy="4" r="1.4" className="fill-background" />
+              <circle cx="3.5" cy="4" r="1.4" className="fill-background" />
+            </g>
+          }
+        />
+      )}
+    />
   );
 }
 

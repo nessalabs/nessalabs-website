@@ -229,6 +229,13 @@ const documented: {
     group: "Content",
     description:
       "A section outline on a rail that jogs with heading depth, tracking the section being read.",
+    examples: [
+      {
+        id: "page-outline-collapse",
+        title: "collapse=\"auto\" folds every branch but the settled one",
+      },
+      { id: "page-outline-marker", title: "A host marker banking along the rail" },
+    ],
   },
 
   {
