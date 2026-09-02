@@ -315,31 +315,42 @@ export function SheetDemo() {
 }
 
 export function SheetContainedDemo() {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
+  const [queued, setQueued] = React.useState(0);
 
   return (
-    <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-border bg-background p-4">
-      <p className="m-0 text-sm text-muted-foreground">
-        The chrome around a non-modal sheet stays reachable.
-      </p>
-      <Button variant="outline" className="mt-3" onClick={() => setOpen(true)}>
-        Show details
-      </Button>
-      {open ? (
-        <Sheet label="Run details" modal={false} onClose={() => setOpen(false)}>
-          <SheetHandle />
-          <SheetHeader>
-            <SheetExpand />
-            <SheetTitle>Run details</SheetTitle>
-            <SheetClose className="col-start-3 justify-self-end" />
-          </SheetHeader>
-          <SheetBody>
-            <p className="m-0 text-sm">
-              Started 4 minutes ago, 12 tool calls, 3 files touched.
-            </p>
-          </SheetBody>
-        </Sheet>
-      ) : null}
+    <div className="flex w-full flex-col gap-3">
+      {/* Outside the ancestor the sheet fills. A non-modal sheet covers its
+          own siblings and leaves this row clickable and in the tab order —
+          which is the whole difference, so the row has to live out here. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" onClick={() => setQueued((n) => n + 1)}>
+          Queue another run
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          {queued} queued, with the sheet open
+        </span>
+      </div>
+      <div className="relative h-72 w-full overflow-hidden rounded-2xl border border-border bg-background p-4">
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Show details
+        </Button>
+        {open ? (
+          <Sheet label="Run details" modal={false} onClose={() => setOpen(false)}>
+            <SheetHandle />
+            <SheetHeader>
+              <SheetExpand />
+              <SheetTitle>Run details</SheetTitle>
+              <SheetClose className="col-start-3 justify-self-end" />
+            </SheetHeader>
+            <SheetBody>
+              <p className="m-0 text-sm">
+                Started 4 minutes ago, 12 tool calls, 3 files touched.
+              </p>
+            </SheetBody>
+          </Sheet>
+        ) : null}
+      </div>
     </div>
   );
 }

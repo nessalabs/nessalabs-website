@@ -1,7 +1,12 @@
-@import "tailwindcss";
-
-/* The library's own tokens and component sources. */
-@import "../nessa-ui/theme.css";
+/*
+ * The library's own entry, exactly as a published consumer imports
+ * `@nessa-ui/react/app.css`: Preflight, then styles.css — which pulls in
+ * Tailwind's theme and utilities, the token chain, and the `nessa-helpers`
+ * layer. Importing `tailwindcss` and `theme.css` separately, as this file used
+ * to, left that layer out, so every `nessa-text-*` class the library's own
+ * components size their type with resolved to nothing and fell back to 16px.
+ */
+@import "../nessa-ui/app.css";
 @source "../nessa-ui";
 
 /*
