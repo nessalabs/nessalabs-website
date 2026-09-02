@@ -3,6 +3,8 @@ import { Slot } from "radix-ui"
 
 import { cn } from "../../lib/utils"
 
+import { sidebarActionVariants } from "./sidebar-action"
+
 /** @responsibility Organizes related Sidebar content under an optional label and action. */
 
 /**
@@ -32,7 +34,7 @@ function SidebarGroupLabel({ className, ...props }: React.ComponentProps<"h2">) 
     <h2
       data-slot="sidebar-group-label"
       className={cn(
-        "flex min-h-8 shrink-0 items-center px-2.5 text-xs font-medium text-sidebar-foreground/60 transition-[height,margin,opacity] duration-200 group-data-[state=collapsed]/sidebar:-mt-8 group-data-[state=collapsed]/sidebar:opacity-0",
+        "flex min-h-8 shrink-0 items-center px-2.5 nessa-text-2 font-medium text-sidebar-foreground/60 transition-[height,margin,opacity] duration-200 group-data-[state=collapsed]/sidebar:-mt-8 group-data-[state=collapsed]/sidebar:opacity-0",
         className,
       )}
       {...props}
@@ -68,7 +70,10 @@ function SidebarGroupAction({
       data-slot="sidebar-group-action"
       data-sidebar="group-action"
       className={cn(
-        "absolute end-2 top-2.5 inline-flex size-7 items-center justify-center rounded-md border-0 bg-transparent p-0 text-sidebar-foreground/60 outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring group-data-[state=collapsed]/sidebar:hidden [&>svg]:size-4 [&>svg]:shrink-0",
+        sidebarActionVariants({ size: "md" }),
+        // Placement stays with the caller; only the control's own
+        // presentation is shared.
+        "absolute end-2 top-2.5 group-data-[state=collapsed]/sidebar:hidden",
         className,
       )}
       {...props}
@@ -89,7 +94,7 @@ function SidebarGroupContent({
   return (
     <div
       data-slot="sidebar-group-content"
-      className={cn("w-full text-sm", className)}
+      className={cn("w-full nessa-text-4", className)}
       {...props}
     />
   )

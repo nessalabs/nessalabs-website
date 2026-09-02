@@ -11,7 +11,11 @@ export {
   CardHeader,
   CardTitle,
 } from "./components/card"
-export { Checkbox, type CheckboxProps } from "./components/checkbox"
+export {
+  Checkbox,
+  checkboxCheckPath,
+  type CheckboxProps,
+} from "./components/checkbox"
 export {
   ConversationRail,
   ConversationRailItem,
@@ -24,6 +28,21 @@ export {
   type ConversationRailProps,
   type ConversationRailTriggerProps,
 } from "./components/conversation-rail"
+export {
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  useDrawer,
+  type DrawerContentProps,
+  type DrawerProps,
+  type DrawerSide,
+} from "./components/drawer"
 export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -108,6 +127,12 @@ export {
 } from "./components/gantt-chart"
 export { Input } from "./components/input"
 export {
+  PageOutline,
+  type PageOutlineItemData,
+  type PageOutlineMarkerState,
+  type PageOutlineProps,
+} from "./components/page-outline"
+export {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -124,11 +149,52 @@ export {
   type TimelineHeaderProps,
 } from "./components/timeline-header"
 export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  tabsListVariants,
+  type TabsContentProps,
+  type TabsListProps,
+  type TabsProps,
+  type TabsTriggerProps,
+} from "./components/tabs"
+export {
   SegmentedControl,
   SegmentedControlOption,
+  segmentedShellVariants,
   type SegmentedControlOptionProps,
   type SegmentedControlProps,
 } from "./components/segmented-control"
+export {
+  PriceChart,
+  priceChartBarValue,
+  priceChartDefaultLabels,
+  priceChartHasCandles,
+  priceChartSelectionChange,
+  priceChartSeriesTone,
+  priceChartTone,
+  priceChartToneVariants,
+  type PriceChartBar,
+  type PriceChartChange,
+  type PriceChartLabels,
+  type PriceChartProps,
+  type PriceChartSelection,
+  type PriceChartSelectionContext,
+  type PriceChartTone,
+  type PriceChartView,
+} from "./components/price-chart"
+export {
+  StockQuote,
+  stockQuoteDefaultLabels,
+  stockQuoteDefaultRanges,
+  type StockQuoteExtendedHours,
+  type StockQuoteLabels,
+  type StockQuoteProps,
+  type StockQuoteRange,
+  type StockQuoteStat,
+  type StockQuoteStatus,
+} from "./components/stock-quote"
 export {
   PopoverSurface,
   popoverSurfaceVariants,
@@ -184,6 +250,7 @@ export {
   CodeBlock,
   CodeBlockProvider,
   CopyButton,
+  preloadCodeHighlighter,
   useCodeBlockConfig,
   type CodeBlockConfig,
   type CodeBlockMode,
@@ -195,6 +262,17 @@ export {
   GeneratingSurface,
   type GeneratingSurfaceProps,
 } from "./components/generating-surface"
+export {
+  TranscriptDivider,
+  type TranscriptDividerProps,
+} from "./components/transcript-divider"
+export {
+  GradientSurface,
+  gradientSurfacePatterns,
+  gradientSurfacePresets,
+  type GradientSurfacePattern,
+  type GradientSurfaceProps,
+} from "./components/gradient-surface"
 export {
   MermaidDiagram,
   type MermaidDiagramProps,
@@ -309,12 +387,14 @@ export {
   ChatComposerAction,
   ChatComposerActions,
   ChatComposerAttachment,
+  ChatComposerAttachmentIcon,
   ChatComposerAttachments,
   ChatComposerFooter,
   ChatComposerInput,
   ChatComposerSubmit,
   ChatComposerTrigger,
   type ChatComposerBorderMode,
+  type ChatComposerFileDrop,
   type ChatComposerActionProps,
   type ChatComposerAttachmentKind,
   type ChatComposerAttachmentProps,
@@ -332,6 +412,67 @@ export {
   type ChatComposerEditorHandle,
   type ChatComposerEditorProps,
 } from "./components/chat-composer-editor"
+export {
+  ChatAttachmentStack,
+  ChatAttachmentTile,
+  ChatAttachmentViewer,
+  ChatBubble,
+  ChatBubbleEditor,
+  ChatMessage,
+  ChatMessageAction,
+  ChatMessageActions,
+  ChatMessageQuote,
+  ChatMessageReceipt,
+  ChatReactionPicker,
+  chatReactionOptions,
+  ChatTypingIndicator,
+  type ChatAttachmentStackProps,
+  type ChatAttachmentTileProps,
+  type ChatAttachmentViewerProps,
+  type ChatBubbleEditorProps,
+  type ChatBubbleProps,
+  type ChatMessageProps,
+  type ChatMessageTone,
+  type ChatReactionOption,
+  type ChatReactionPickerProps,
+  type ChatTypingIndicatorProps,
+} from "./components/chat-bubbles"
+export {
+  ChatTabs,
+  type ChatTabItem,
+  type ChatTabKind,
+  type ChatTabsProps,
+} from "./components/chat-tabs"
+export {
+  ChatOverlay,
+  ChatOverlayBack,
+  ChatOverlayBody,
+  ChatOverlaySummary,
+  useChatOverlay,
+  type ChatOverlayProps,
+} from "./components/chat-overlay"
+export {
+  ChatAnnotationBadge,
+  ChatAnnotationComment,
+  ChatAnnotationList,
+  ChatAnnotationThread,
+  type ChatAnnotation,
+  type ChatAnnotationBadgeProps,
+  type ChatAnnotationThreadProps,
+} from "./components/chat-annotations"
+export {
+  ChatTray,
+  ChatTrayChip,
+  type ChatTrayChipProps,
+  type ChatTrayItem,
+  type ChatTrayProps,
+} from "./components/chat-tray"
+export {
+  PillComposer,
+  PillComposerRow,
+  type PillComposerProps,
+  type PillComposerRimVariant,
+} from "./components/pill-composer"
 export {
   DiffStat,
   FileDiffCard,
@@ -353,11 +494,22 @@ export {
   type FileDiffPathProps,
 } from "./components/file-diff-list"
 export {
+  FileDropZone,
+  fileDropZoneDefaultLabel,
+  type FileDropRejection,
+  type FileDropRejectionReason,
+  type FileDropZoneProps,
+  type FileDropZoneState,
+} from "./components/file-drop-zone"
+export {
   ComposerDeliveryMode,
   ComposerQueue,
+  ComposerQueueBadge,
   ComposerQueueItem,
   type ComposerDeliveryModeProps,
   type ComposerDeliveryModeValue,
+  type ComposerQueueAppearance,
+  type ComposerQueueBadgeProps,
   type ComposerQueueProps,
   type ComposerQueueItemProps,
 } from "./components/composer-queue"
@@ -369,6 +521,54 @@ export {
   type ComposerAccessModeProps,
   type ComposerAccessModeValue,
 } from "./components/composer-access-mode"
+export {
+  Sheet,
+  SheetAction,
+  SheetBody,
+  SheetClose,
+  SheetExpand,
+  SheetHandle,
+  SheetHeader,
+  SheetTitle,
+  useSheet,
+  type SheetHeaderProps,
+  type SheetProps,
+  type SheetTitleProps,
+} from "./components/sheet"
+export {
+  AgentActivity,
+  AgentActivityCard,
+  AgentActivityContent,
+  AgentActivityCue,
+  AgentActivityTrigger,
+  formatAgentActivitySummary,
+  formatAgentThoughtSummary,
+  type AgentActivityCardProps,
+  type AgentActivityContentProps,
+  type AgentActivityCounts,
+  type AgentActivityCueProps,
+  type AgentActivityProps,
+  type AgentActivityStatus,
+  type AgentActivityTriggerProps,
+} from "./components/agent-activity"
+export {
+  AgentDetails,
+  AgentDetailsAction,
+  AgentDetailsActions,
+  AgentDetailsField,
+  AgentDetailsProject,
+  AgentDetailsSection,
+  type AgentDetailsActionProps,
+  type AgentDetailsFieldProps,
+  type AgentDetailsProjectProps,
+  type AgentDetailsProps,
+  type AgentDetailsSectionProps,
+} from "./components/agent-details"
+export {
+  ConversationHistory,
+  type ConversationHistoryEntry,
+  type ConversationHistoryProps,
+} from "./components/conversation-history"
 export {
   ToolCall,
   ToolCallContent,
@@ -422,6 +622,7 @@ export {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
+  SidebarAction,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuSkeleton,
@@ -430,8 +631,11 @@ export {
   SidebarSide,
   SidebarTrigger,
   SidebarVariant,
+  sidebarActionVariants,
   sidebarMenuItemVariants,
   useSidebar,
+  type SidebarActionProps,
+  type SidebarActionSize,
   type SidebarMenuItemProps,
   type SidebarMenuProps,
   type SidebarMenuSkeletonProps,
@@ -530,6 +734,15 @@ export {
   type TableViewOptionsProps,
 } from "./components/table"
 export {
+  TaskList,
+  TaskListItem,
+  taskListDefaultLabels,
+  type TaskListItemProps,
+  type TaskListItemStatus,
+  type TaskListLabels,
+  type TaskListProps,
+} from "./components/task-list"
+export {
   AppShell,
   AppShellBody,
   AppShellDock,
@@ -599,6 +812,18 @@ export {
   type SplitPaneOptions,
   type WorkspaceLayout,
 } from "./lib/app-shell-layout"
+/**
+ * Re-exported, not owned. The parser lives in `@nessa-ui/agent-stream`, which
+ * has no dependencies and no React, so a Node process or a non-React host can
+ * consume it without this package's rendering tree. Both entries are re-exported
+ * here so an existing React host sees no change; new code should import from
+ * `@nessa-ui/agent-stream` directly.
+ *
+ * Two star-exports are safe only because the surfaces are disjoint: the main
+ * entry stops at the agent message and the subpath carries the fold alone.
+ */
+export * from "@nessa-ui/agent-stream"
+export * from "@nessa-ui/agent-stream/transcript"
 export {
   WorkflowCanvas,
   WorkflowCanvasConnectionLine,
@@ -657,4 +882,114 @@ export {
   type RandomAvatarTone,
   type RandomAvatarToneRange,
 } from "./components/random-avatar"
+export {
+  FlowChart,
+  computeFlowChartLayout,
+  flowChartCenterlinePath,
+  flowChartLinkId,
+  flowChartPalette,
+  flowChartRibbonPath,
+  type FlowChartAlign,
+  type FlowChartLink,
+  type FlowChartNode,
+  type FlowChartHoverContext,
+  type FlowChartNodeContext,
+  type FlowChartProps,
+  type FlowChartLayout,
+  type FlowChartLayoutIssue,
+  type FlowChartLayoutLink,
+  type FlowChartLayoutNode,
+  type FlowChartLayoutOptions,
+  type FlowChartLinkInput,
+  type FlowChartNodeInput,
+} from "./components/flow-chart"
+export {
+  RadarChart,
+  computeRadarChartLayout,
+  radarChartOutlinePath,
+  radarChartPalette,
+  radarChartPoint,
+  radarChartRingPath,
+  type RadarChartAxis,
+  type RadarChartAxisContext,
+  type RadarChartAxisInput,
+  type RadarChartHoverContext,
+  type RadarChartLayout,
+  type RadarChartLayoutAxis,
+  type RadarChartLayoutIssue,
+  type RadarChartLayoutOptions,
+  type RadarChartLayoutPoint,
+  type RadarChartLayoutSeries,
+  type RadarChartProps,
+  type RadarChartReading,
+  type RadarChartScale,
+  type RadarChartSeries,
+  type RadarChartSeriesContext,
+  type RadarChartSeriesInput,
+} from "./components/radar-chart"
+export {
+  PieChart,
+  computePieChartLayout,
+  pieChartCentroid,
+  pieChartLeaderPath,
+  pieChartPalette,
+  pieChartSlicePath,
+  type PieChartCenterContext,
+  type PieChartHoverContext,
+  type PieChartLayout,
+  type PieChartLayoutIssue,
+  type PieChartLayoutOptions,
+  type PieChartLayoutSlice,
+  type PieChartProps,
+  type PieChartSlice,
+  type PieChartSliceContext,
+  type PieChartSliceInput,
+  type PieChartSort,
+} from "./components/pie-chart"
+export {
+  FilePreview,
+  FilePreviewAudio,
+  FilePreviewContent,
+  FilePreviewCsv,
+  FilePreviewFallback,
+  FilePreviewHeader,
+  FilePreviewImage,
+  FilePreviewJson,
+  FilePreviewMarkdown,
+  FilePreviewPdf,
+  FilePreviewText,
+  FilePreviewTextLoading,
+  FilePreviewVideo,
+  defaultFilePreviewRenderers,
+  delimiterFor,
+  detectFileKind,
+  fileExtension,
+  filePreviewAudioExtensions,
+  filePreviewCsvExtensions,
+  filePreviewDocxExtensions,
+  filePreviewImageExtensions,
+  filePreviewJsonExtensions,
+  filePreviewMarkdownExtensions,
+  filePreviewPdfExtensions,
+  filePreviewPptxExtensions,
+  filePreviewRawImageExtensions,
+  filePreviewTextExtensions,
+  filePreviewVideoExtensions,
+  filePreviewXlsxExtensions,
+  formatFileSize,
+  parseDelimitedText,
+  useFilePreviewContext,
+  useFileText,
+  type FilePreviewContentProps,
+  type FilePreviewContextValue,
+  type FilePreviewFallbackProps,
+  type FilePreviewFile,
+  type FilePreviewHeaderProps,
+  type FilePreviewKind,
+  type FilePreviewProps,
+  type FilePreviewRenderer,
+  type FilePreviewRendererMap,
+  type FilePreviewRendererProps,
+  type FileTextState,
+} from "./components/file-preview"
 export { cn } from "./lib/utils"

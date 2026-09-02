@@ -187,6 +187,154 @@ const motifs: Record<string, React.ReactNode> = {
       <circle cx="53" cy="18" r="3" />
     </>
   ),
+  tabs: (
+    <>
+      <path d="M12 30h22a6 6 0 006-6v-6a6 6 0 016-6h14a6 6 0 016 6v6a6 6 0 006 6h22" />
+      <path d="M12 44h84" />
+    </>
+  ),
+  checklist: (
+    <>
+      <circle cx="22" cy="20" r="6" />
+      <circle cx="22" cy="36" r="6" />
+      <circle cx="22" cy="52" r="6" />
+      <path d="M19 20l2 2 4-5" />
+      <path d="M38 20h52M38 36h40M38 52h30" />
+    </>
+  ),
+  panel: (
+    <>
+      <rect x="12" y="14" width="84" height="44" rx="6" />
+      <path d="M64 14v44" />
+      <path d="M72 26h16M72 34h12" />
+    </>
+  ),
+  sheet: (
+    <>
+      <rect x="18" y="14" width="72" height="44" rx="8" />
+      <path d="M18 32h72" />
+      <path d="M46 24h16" />
+    </>
+  ),
+  wash: (
+    <>
+      <rect x="12" y="14" width="84" height="44" rx="8" />
+      <path d="M18 44c14-10 26 4 40-4s20-14 32-8" />
+      <path d="M18 52c14-10 26 4 40-4s20-14 32-8" />
+    </>
+  ),
+  outline: (
+    <>
+      <path d="M22 14v14h10v14h-10v14" />
+      <path d="M40 14h44M46 28h38M40 42h34M46 56h30" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M30 12h30l16 16v32H30z" />
+      <path d="M60 12v16h16" />
+      <path d="M38 40h30M38 48h20" />
+    </>
+  ),
+  drop: (
+    <>
+      <rect x="16" y="14" width="76" height="44" rx="8" strokeDasharray="6 5" />
+      <path d="M54 24v18M46 34l8 8 8-8" />
+    </>
+  ),
+  pie: (
+    <>
+      <circle cx="54" cy="36" r="24" />
+      <path d="M54 12v24l20 12" />
+    </>
+  ),
+  radar: (
+    <>
+      <path d="M54 12l24 18-9 28H39l-9-28z" />
+      <path d="M54 22l14 11-5 17H45l-5-17z" />
+      <path d="M54 12v46M30 30h48" />
+    </>
+  ),
+  flow: (
+    <>
+      <rect x="14" y="16" width="8" height="40" rx="3" />
+      <rect x="86" y="14" width="8" height="20" rx="3" />
+      <rect x="86" y="40" width="8" height="18" rx="3" />
+      <path d="M22 26c26 0 38-4 64-4M22 46c26 0 38 4 64 4" />
+    </>
+  ),
+  price: (
+    <>
+      <path d="M12 48l16-12 12 8 14-20 16 14 14-18 12 10" />
+      <path d="M12 58h84" />
+    </>
+  ),
+  quote: (
+    <>
+      <rect x="12" y="14" width="84" height="44" rx="6" />
+      <path d="M20 26h22M20 34h14" />
+      <path d="M52 44l10-8 8 6 10-14 8 8" />
+    </>
+  ),
+  activity: (
+    <>
+      <circle cx="24" cy="24" r="8" />
+      <path d="M40 24h54" />
+      <rect x="14" y="40" width="80" height="18" rx="8" />
+    </>
+  ),
+  roster: (
+    <>
+      <rect x="12" y="14" width="84" height="14" rx="7" />
+      <circle cx="24" cy="42" r="7" />
+      <circle cx="24" cy="58" r="7" />
+      <path d="M38 40h56M38 46h34M38 56h56M38 62h30" />
+    </>
+  ),
+  divider: (
+    <>
+      <path d="M12 36h30M66 36h30" />
+      <rect x="44" y="30" width="20" height="12" rx="6" />
+      <path d="M20 18h40M48 54h40" />
+    </>
+  ),
+  pill: (
+    <>
+      <rect x="12" y="22" width="84" height="26" rx="13" />
+      <circle cx="26" cy="35" r="4" />
+      <path d="M38 35h32" />
+      <circle cx="82" cy="35" r="6" />
+    </>
+  ),
+  bubbles: (
+    <>
+      <rect x="12" y="14" width="46" height="18" rx="9" />
+      <rect x="46" y="38" width="48" height="18" rx="9" />
+      <circle cx="60" cy="14" r="6" />
+    </>
+  ),
+  tray: (
+    <>
+      <rect x="12" y="18" width="34" height="16" rx="8" />
+      <rect x="52" y="18" width="20" height="16" rx="8" />
+      <path d="M80 26h14" />
+      <rect x="12" y="42" width="84" height="16" rx="8" />
+    </>
+  ),
+  overlay: (
+    <>
+      <rect x="12" y="14" width="84" height="44" rx="8" />
+      <rect x="24" y="22" width="60" height="24" rx="6" />
+      <path d="M46 52h16" />
+    </>
+  ),
+  annotation: (
+    <>
+      <path d="M16 18v18" />
+      <rect x="24" y="14" width="48" height="16" rx="8" />
+      <rect x="44" y="38" width="50" height="16" rx="8" />
+    </>
+  ),
 };
 
 const bySlug: Record<string, keyof typeof motifs> = {
@@ -219,6 +367,29 @@ const bySlug: Record<string, keyof typeof motifs> = {
   kanban: "board",
   table: "grid",
   "workflow-canvas": "canvas",
+  tabs: "tabs",
+  "task-list": "checklist",
+  drawer: "panel",
+  sheet: "sheet",
+  "gradient-surface": "wash",
+  "page-outline": "outline",
+  "file-preview": "file",
+  "file-drop-zone": "drop",
+  "pie-chart": "pie",
+  "radar-chart": "radar",
+  "flow-chart": "flow",
+  "price-chart": "price",
+  "stock-quote": "quote",
+  "agent-activity": "activity",
+  "agent-details": "panel",
+  "conversation-history": "roster",
+  "transcript-divider": "divider",
+  "pill-composer": "pill",
+  "chat-bubbles": "bubbles",
+  "chat-tabs": "tabs",
+  "chat-tray": "tray",
+  "chat-overlay": "overlay",
+  "chat-annotations": "annotation",
 };
 
 export function CardArt({ slug }: { slug: string }) {

@@ -3,7 +3,9 @@ import { catalog } from "./index.generated";
 export const groups = [
   "Primitives",
   "Content",
+  "Charts",
   "Agent surfaces",
+  "Chat surfaces",
   "Composites",
 ] as const;
 
@@ -101,6 +103,53 @@ const documented: {
     description:
       "A band for a horizontal scale, whose pixel-offset cells can pin their labels as the scroll passes them.",
   },
+  {
+    slug: "tabs",
+    group: "Primitives",
+    description:
+      "A tablist that swaps one panel for another, with roving focus and arrow-key movement.",
+    examples: [{ id: "tabs-pill", title: "The pill strip, shared with SegmentedControl" }],
+  },
+  {
+    slug: "task-list",
+    group: "Primitives",
+    description:
+      "A list of task rows, each carrying a todo, active, done or failed status.",
+    examples: [
+      {
+        id: "task-list-checklist",
+        title: "onStatusChange turns each row into a real checkbox",
+      },
+    ],
+  },
+  {
+    slug: "drawer",
+    group: "Primitives",
+    description:
+      "A modal panel anchored to one edge of the viewport, sliding in on the motion tokens.",
+    examples: [
+      { id: "drawer-resizable", title: "A left drawer resized by drag or arrow keys" },
+    ],
+  },
+  {
+    slug: "sheet",
+    group: "Primitives",
+    description:
+      "A bottom sheet that rises over its nearest positioned ancestor and fills it when dragged up.",
+    examples: [
+      { id: "sheet-contained", title: "modal={false}, leaving the chrome around it reachable" },
+    ],
+  },
+  {
+    slug: "gradient-surface",
+    group: "Primitives",
+    description:
+      "A gradient backdrop built from a palette, under an optional hairline pattern and a grain layer.",
+    examples: [
+      { id: "gradient-surface-palettes", title: "The six preset palettes" },
+      { id: "gradient-surface-patterns", title: "Contours, waves, rings and none" },
+    ],
+  },
 
   {
     slug: "code-block",
@@ -156,6 +205,78 @@ const documented: {
     examples: [
       { id: "file-diff-scroll", title: "Twelve files, collapsed and scrollable" },
     ],
+  },
+  {
+    slug: "file-preview",
+    group: "Content",
+    description:
+      "A previewer that renders a file by its detected kind, through renderers the host can replace.",
+    examples: [
+      { id: "file-preview-fallback", title: "An unregistered kind, kept reachable by download" },
+    ],
+  },
+  {
+    slug: "file-drop-zone",
+    group: "Content",
+    description:
+      "A wrapper that turns whatever it contains into a file drop target, reporting the files it accepts.",
+    examples: [
+      { id: "file-drop-zone-limits", title: "accept, maxSize and maxFiles, with every refusal reported" },
+    ],
+  },
+  {
+    slug: "page-outline",
+    group: "Content",
+    description:
+      "A section outline on a rail that jogs with heading depth, tracking the section being read.",
+  },
+
+  {
+    slug: "pie-chart",
+    group: "Charts",
+    description:
+      "A pie or donut of one wedge per slice, where hovering isolates a wedge and clicking selects it.",
+    examples: [
+      { id: "pie-chart-donut", title: "A donut centre reading the total, then the engaged slice" },
+      { id: "pie-chart-gauge", title: "A narrowed sweep, as a gauge" },
+    ],
+  },
+  {
+    slug: "radar-chart",
+    group: "Charts",
+    description:
+      "A radar of values on spokes, one closed outline per series, with a probe along each axis.",
+    examples: [
+      {
+        id: "radar-chart-per-axis",
+        title: "Per-axis normalisation, straight edges and every dot drawn",
+      },
+    ],
+  },
+  {
+    slug: "flow-chart",
+    group: "Charts",
+    description:
+      "A flow diagram of node bars joined by ribbons whose thickness carries the flow.",
+    examples: [
+      { id: "flow-chart-vertical", title: "Vertical columns, with ribbons blending source into target" },
+    ],
+  },
+  {
+    slug: "price-chart",
+    group: "Charts",
+    description:
+      "A price plot with a scrubbable cursor and price and time scales, drawn as a line or candles.",
+    examples: [
+      { id: "price-chart-candles", title: "Open, high, low and close on the same scale" },
+      { id: "price-chart-sparklines", title: "Axes off, as a watchlist sparkline" },
+    ],
+  },
+  {
+    slug: "stock-quote",
+    group: "Charts",
+    description:
+      "A quote panel of price, change, range controls and key figures around a scrubbable price chart.",
   },
 
   {
@@ -229,6 +350,82 @@ const documented: {
     slug: "model-picker",
     group: "Agent surfaces",
     description: "A model chooser grouped by provider, with search.",
+  },
+  {
+    slug: "agent-activity",
+    group: "Agent surfaces",
+    description:
+      "A collapsed cue for a stretch of agent work, opening its thinking and tool calls elsewhere.",
+    examples: [
+      { id: "agent-activity-card", title: "A live cue, and the card for a delegated run" },
+    ],
+  },
+  {
+    slug: "agent-details",
+    group: "Agent surfaces",
+    description:
+      "A panel naming an agent conversation, with compact actions and a section of project fields.",
+  },
+  {
+    slug: "conversation-history",
+    group: "Agent surfaces",
+    description:
+      "A searchable roster of conversations, each row painted from the avatar of its project.",
+  },
+  {
+    slug: "transcript-divider",
+    group: "Agent surfaces",
+    description:
+      "A labelled hairline across a transcript, marking a day boundary, a model swap or a compaction.",
+    examples: [
+      { id: "transcript-divider-detail", title: "detail turns the label into a disclosure" },
+    ],
+  },
+
+  {
+    slug: "pill-composer",
+    group: "Chat surfaces",
+    description:
+      "A pill-shaped composer for small chat surfaces, with a light travelling its rim while the agent works.",
+  },
+  {
+    slug: "chat-bubbles",
+    group: "Chat surfaces",
+    description:
+      "A bubble transcript built from message, quote, reaction, receipt and attachment parts.",
+    examples: [
+      { id: "chat-bubbles-typing", title: "The indicator that pulses while the agent answers" },
+    ],
+  },
+  {
+    slug: "chat-tabs",
+    group: "Chat surfaces",
+    description:
+      "A strip of pill tabs for a chat window, with busy dots, attention badges and close controls.",
+  },
+  {
+    slug: "chat-tray",
+    group: "Chat surfaces",
+    description:
+      "A single row of everything attached to the message being written, collapsing its tail into a count.",
+    examples: [
+      { id: "chat-tray-collapse", title: "collapseAfter names three chips before the count" },
+    ],
+  },
+  {
+    slug: "chat-overlay",
+    group: "Chat surfaces",
+    description:
+      "A reading view that takes over a chat's transcript while the tab strip and composer stay in use.",
+  },
+  {
+    slug: "chat-annotations",
+    group: "Chat surfaces",
+    description:
+      "Passages lifted from a document and the reader's comments on them, read as short conversations.",
+    examples: [
+      { id: "chat-annotations-sent", title: "A sent message compressing its whole set into one chip" },
+    ],
   },
 
   {

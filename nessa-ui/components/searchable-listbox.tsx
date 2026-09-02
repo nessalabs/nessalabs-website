@@ -222,7 +222,7 @@ function SearchableListbox<Item>({
           // outline here reads as a permanent box around the search row for as
           // long as the surface is open. The caret indicates focus, and the
           // wrapping row owns the surface treatment.
-          className="h-full min-w-0 flex-1 appearance-none bg-transparent font-sans text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50"
+          className="h-full min-w-0 flex-1 appearance-none bg-transparent font-sans nessa-text-4 text-foreground outline-none placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50"
         />
       </label>
       <div
@@ -236,7 +236,7 @@ function SearchableListbox<Item>({
         {loading ? (
           <div
             data-slot="searchable-listbox-loading"
-            className="flex min-h-28 items-center justify-center gap-2 px-3 text-sm text-muted-foreground"
+            className="flex min-h-28 items-center justify-center gap-2 px-3 nessa-text-4 text-muted-foreground"
             role="status"
           >
             <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
@@ -277,7 +277,10 @@ function SearchableListbox<Item>({
                     if (!itemDisabled) onValueChange?.(itemId, item)
                   }}
                   className={cn(
-                    "w-full rounded-xl text-start font-sans outline-none transition-colors focus-visible:bg-accent focus-visible:[outline-style:solid] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:opacity-45",
+                    // Rows carry real padding and a text level by default so a
+                    // bare renderItem gets a finished row; content-styled
+                    // consumers strip it back via optionClassName.
+                    "w-full rounded-2xl px-2.5 py-2 text-start font-sans nessa-text-4 outline-none transition-colors focus-visible:bg-accent focus-visible:[outline-style:solid] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:opacity-45",
                     highlighted && "bg-accent/70",
                     optionClassName,
                   )}
@@ -290,7 +293,7 @@ function SearchableListbox<Item>({
         ) : (
           <div
             data-slot="searchable-listbox-empty"
-            className="flex min-h-28 items-center justify-center px-3 text-sm text-muted-foreground"
+            className="flex min-h-28 items-center justify-center px-3 nessa-text-4 text-muted-foreground"
             role="status"
           >
             {emptyMessage}

@@ -19,14 +19,32 @@ const sourceRepo = process.argv[2] ?? "/Users/code/Documents/nessa";
 const from = join(sourceRepo, "packages/react/src");
 const to = join(root, "nessa-ui");
 
-if (!statSync(from, { throwIfNoEntry: false })) {
-  console.error(`No nessa-ui source at ${from}`);
-  process.exit(1);
+/**
+ * The React package re-exports @nessa-ui/agent-stream, a dependency-free
+ * sibling workspace package. It is unpublished like the React one, so it is
+ * vendored beside it and resolved through the tsconfig path of the same name.
+ * Tests stay behind: they pull in a runner this app does not have.
+ */
+const streamFrom = join(sourceRepo, "packages/agent-stream/src");
+const streamTo = join(root, "agent-stream");
+
+for (const dir of [from, streamFrom]) {
+  if (!statSync(dir, { throwIfNoEntry: false })) {
+    console.error(`No nessa-ui source at ${dir}`);
+    process.exit(1);
+  }
 }
 
 rmSync(to, { recursive: true, force: true });
 mkdirSync(to, { recursive: true });
 cpSync(from, to, { recursive: true });
+
+rmSync(streamTo, { recursive: true, force: true });
+mkdirSync(streamTo, { recursive: true });
+cpSync(streamFrom, streamTo, {
+  recursive: true,
+  filter: (source) => !/\.test\.tsx?$/.test(source),
+});
 
 /** Rewrite the package's own "@/…" imports to paths that resolve here. */
 function rewrite(dir) {
@@ -50,6 +68,7 @@ function rewrite(dir) {
 }
 
 rewrite(to);
+rewrite(streamTo);
 
 const version = JSON.parse(
   readFileSync(join(sourceRepo, "packages/react/package.json"), "utf8")
@@ -65,4 +84,14 @@ nessa-ui repo and re-run \`npm run sync:ui\`.
 `
 );
 
-console.log(`synced @nessa-ui/react@${version} → nessa-ui/`);
+writeFileSync(
+  join(streamTo, "VENDORED.md"),
+  `# Vendored @nessa-ui/agent-stream
+
+Copied from \`packages/agent-stream/src\` by \`scripts/sync-nessa-ui.mjs\`,
+because @nessa-ui/react re-exports it. Do not edit these files here — change
+them in the nessa-ui repo and re-run \`npm run sync:ui\`.
+`
+);
+
+console.log(`synced @nessa-ui/react@${version} → nessa-ui/, @nessa-ui/agent-stream → agent-stream/`);

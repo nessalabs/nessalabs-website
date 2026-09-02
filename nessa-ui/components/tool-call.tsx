@@ -101,8 +101,8 @@ function cssDurationInMilliseconds(value: string, fallback: number) {
  * The moving highlight is painted with theme tokens — muted-foreground body,
  * foreground crest — so it reads in both schemes without `dark:` variants.
  */
-const toolCallShimmerGradient =
-  "linear-gradient(90deg, var(--muted-foreground) 0%, var(--muted-foreground) 38%, var(--foreground) 50%, var(--muted-foreground) 62%, var(--muted-foreground) 100%)"
+const toolCallShimmerClasses =
+  "data-[shimmer=true]:[background-image:linear-gradient(90deg,var(--muted-foreground)_0%,var(--muted-foreground)_38%,var(--foreground)_50%,var(--muted-foreground)_62%,var(--muted-foreground)_100%)] data-[shimmer=true]:bg-[length:200%_100%] data-[shimmer=true]:bg-[position:150%_0] data-[shimmer=true]:bg-clip-text data-[shimmer=true]:[-webkit-background-clip:text] data-[shimmer=true]:text-transparent"
 
 /**
  * Renders the trigger label, sweeping a highlight across the text while
@@ -142,19 +142,7 @@ function ToolCallShimmer({
       ref={ref}
       data-slot="tool-call-shimmer"
       data-shimmer={shimmering ? "true" : undefined}
-      className="min-w-0 truncate text-left"
-      style={
-        shimmering
-          ? {
-              backgroundImage: toolCallShimmerGradient,
-              backgroundSize: "200% 100%",
-              backgroundPosition: "150% 0",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }
-          : undefined
-      }
+      className={cn("min-w-0 truncate text-left", toolCallShimmerClasses)}
     >
       {children}
     </span>
@@ -196,7 +184,7 @@ function ToolCallTrigger({
     <Collapsible.Trigger
       data-slot="tool-call-trigger"
       className={cn(
-        "flex w-fit min-w-0 max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-sm text-muted-foreground outline-none transition-colors [transition-duration:var(--nessa-motion-duration-fast)] [transition-timing-function:var(--nessa-motion-easing-standard)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
+        "flex w-fit min-w-0 max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 nessa-text-4 text-muted-foreground outline-none transition-colors [transition-duration:var(--nessa-motion-duration-fast)] [transition-timing-function:var(--nessa-motion-easing-standard)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
         "group-data-[status=error]/tool-call:text-destructive",
         className,
       )}
@@ -212,7 +200,7 @@ function ToolCallTrigger({
       )}
       <ToolCallShimmer active={status === "running"}>{children}</ToolCallShimmer>
       {meta != null && (
-        <span className="min-w-0 truncate text-xs font-normal text-muted-foreground">
+        <span className="min-w-0 truncate nessa-text-2 font-normal text-muted-foreground">
           {meta}
         </span>
       )}
@@ -252,7 +240,7 @@ function ToolCallContent({ className, ...props }: ToolCallContentProps) {
 function toolCallPanelContent(content: React.ReactNode) {
   if (typeof content !== "string") return content
   return (
-    <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-5 text-foreground">
+    <pre className="whitespace-pre-wrap break-words font-mono nessa-text-2 leading-5 text-foreground">
       {content}
     </pre>
   )
@@ -320,7 +308,7 @@ function ToolCallTabs({
           <Tabs.Trigger
             key={pane.value}
             value={pane.value}
-            className="rounded-md px-2 py-0.5 text-xs font-medium text-muted-foreground outline-none transition-colors [transition-duration:var(--nessa-motion-duration-fast)] [transition-timing-function:var(--nessa-motion-easing-standard)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:bg-muted data-[state=active]:text-foreground motion-reduce:transition-none"
+            className="rounded-md px-2 py-0.5 nessa-text-2 font-medium text-muted-foreground outline-none transition-colors [transition-duration:var(--nessa-motion-duration-fast)] [transition-timing-function:var(--nessa-motion-easing-standard)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:bg-muted data-[state=active]:text-foreground motion-reduce:transition-none"
           >
             {pane.label}
           </Tabs.Trigger>
@@ -435,17 +423,18 @@ function ToolCallDiff({
     <div
       data-slot="tool-call-diff"
       className={cn(
-        "w-full min-w-0 max-w-full overflow-hidden rounded-xl text-[0.8125rem] leading-6",
+        "w-full min-w-0 max-w-full overflow-hidden rounded-xl nessa-text-3 leading-6",
         className,
       )}
       // Custom properties inherit through Pierre's shadow root. The dark
-      // addition green is deepened from Pierre's #5ecc71, and the dark row
-      // washes carry a stronger share of the change color than Pierre's 80/20
-      // mix so added and deleted lines read clearly green and red on the
-      // near-black ground; hosts can override any of these via style.
+      // addition green is deepened from Pierre's #5ecc71 (the
+      // --nessa-diff-dark-addition token), and the dark row washes carry a
+      // stronger share of the change color than Pierre's 80/20 mix so added
+      // and deleted lines read clearly green and red on the near-black
+      // ground; hosts can override any of these via style or the theme.
       style={
         {
-          "--diffs-dark-addition-color": "#2ea043",
+          "--diffs-dark-addition-color": "var(--nessa-diff-dark-addition)",
           "--diffs-bg-addition-override":
             "light-dark(color-mix(in lab, var(--diffs-bg) 88%, var(--diffs-addition-base)), color-mix(in lab, var(--diffs-bg) 68%, var(--diffs-addition-base)))",
           "--diffs-bg-deletion-override":
@@ -485,7 +474,7 @@ function ToolCallFile({
 }: ToolCallFileProps) {
   const interactive = onClick != null
   const chipClassName = cn(
-    "inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
+    "inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 nessa-text-2 text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
     interactive &&
       "cursor-pointer transition-colors [transition-duration:var(--nessa-motion-duration-fast)] [transition-timing-function:var(--nessa-motion-easing-standard)] hover:border-ring/40 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
     className,

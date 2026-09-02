@@ -97,6 +97,10 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "Controlled",
         "note": "A controlled switcher whose host owns the value and mirrors it below. The play test clicks through both options and asserts the mirrored value tracks the selection."
+      },
+      {
+        "name": "Bare",
+        "note": "The `bare` shell: the same options with no strip around them, for a row already framed by its container — the range tabs inside a chart's control bar are the case it was added for. Selection reads from the pressed option alone, so the control still tells a person what is chosen without a border to sit in."
       }
     ]
   },
@@ -217,6 +221,70 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "Elevations",
         "note": "The elevation and radius variants side by side: md shadow with lg radius for tight inline popups, xl shadow with 2xl radius for larger floating panels such as picker popovers. The play test asserts the two surfaces resolve different computed shadows."
+      }
+    ]
+  },
+  {
+    "slug": "tabs",
+    "name": "Tabs",
+    "group": "Primitives",
+    "description": "A real tablist: Radix supplies the tab, tablist and tabpanel roles, roving focus, arrow-key movement along the list's orientation, and Home and End, while Nessa supplies the presentation. Use it wherever one region swaps between named views — unlike SegmentedControl, which is a role=group of pressed buttons for toggling a setting rather than swapping a panel. Selection is uncontrolled through defaultValue or host-controlled through value and onValueChange, orientation is horizontal or vertical, and activationMode chooses whether arrowing selects as it goes or waits for Enter.",
+    "stories": [
+      {
+        "name": "Underline",
+        "note": "The default presentation: a rule under the whole strip that the selected tab overdraws, so the indicator reads as part of one continuous line. Each tab takes an optional leading icon and a trailing badge for a count. The play test proves the roles and roving focus are real — one tab stop for the whole list, arrow keys move and select, and the selected tab is the only one with tabindex 0."
+      },
+      {
+        "name": "Pill",
+        "note": "The pill presentation: the same bordered strip SegmentedControl renders, from the same recipe and agreeing with it on the selected treatment — the two read as one control, so they must not diverge. Use Tabs when the strip swaps a panel and SegmentedControl when it toggles a setting. The tabs share the width equally."
+      },
+      {
+        "name": "VerticalManualActivation",
+        "note": "Vertical orientation with manual activation: arrow keys move focus down the list without selecting, and Enter or Space commits. Use manual activation when showing a panel is expensive — a fetch, a heavy render — so arrowing past a tab does not trigger it. The indicator moves to the list's inline-end edge and follows the writing direction."
+      }
+    ]
+  },
+  {
+    "slug": "task-list",
+    "name": "TaskList",
+    "group": "Primitives",
+    "description": "A list of tasks for agent plan steps and personal checklists. The root is a plain ul stacking TaskListItem rows; each row carries a status — todo, active, done, or failed — drawn as a circular indicator matched to the Checkbox's stroke style, with the label as children and muted trailing detail through meta. Rows are read-only by default, announcing their status through visually hidden text, which is the shape agent transcripts stream; passing onStatusChange turns a todo/done row into a real circular checkbox with native keyboard and form semantics, and an icon prop turns an agenda-style row into a presentational entry drawn with the host's own glyph, outside the status contract. The list owns no task state: hosts render rows from their own data and apply toggles themselves.",
+    "stories": [
+      {
+        "name": "AgentPlan",
+        "note": "An agent's plan streaming through its lifecycle: finished steps strike and mute, the running step spins a dashed indicator and is aria-busy, a failed step crosses out in the destructive tone, and pending steps wait as outlined circles. Every row is read-only — these states belong to the agent, not the reader — and each announces its status through visually hidden text, which the play test asserts alongside the data-status and aria-busy contract."
+      },
+      {
+        "name": "InteractiveChecklist",
+        "note": "A person's checklist: onStatusChange turns each todo/done row into a real circular checkbox whose label is the whole row, so clicking the text toggles it too. The rows render only what status says — the host applies each reported change to its own state — and a disabled row fades and stops responding. inputProps carries name and value onto the native input, so a wrapping form sees the done rows in its FormData; the play test toggles rows through the checkbox role and asserts checked state, data-status, and the submitted values follow."
+      },
+      {
+        "name": "DailyBriefCard",
+        "note": "The card composition the component was drawn for: a daily brief stacking an agenda and a checklist inside one Card. The agenda rows are read-only with host icons — a video glyph for calls, the spinning active indicator for the block in progress — and times as meta detail; the tasks below are interactive circular checkboxes. The headings are plain host copy: the list deliberately ships no summary chrome."
+      },
+      {
+        "name": "Localized",
+        "note": "The labels prop re-voices the visually hidden status announcements — here in German — for read-only rows. Only the strings the list itself produces go through labels; row content is always host copy."
+      }
+    ]
+  },
+  {
+    "slug": "gradient-surface",
+    "name": "GradientSurface",
+    "group": "Primitives",
+    "description": "A decorative gradient backdrop for heroes, empty states, and banners. The wash is built from a swappable palette — deepest colour first, each later colour a soft radial bloom with the brightest one centred — so changing the whole mood is one `colors` array. Over the wash sits an optional hairline drawing (`contours`, soft wobbled topographic rings; `waves`; or `rings`), and over the whole frame — content included — a film-grain layer that makes the flat CSS gradient read as printed. Everything is deterministic CSS and inline SVG: no images to fetch, identical markup on server and client. The surface sizes itself from the box and crops the drawing rather than stretching it; text contrast on top belongs to the host.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "Palettes",
+        "note": "The preset library, one card per palette, all under the same contour drawing: the palette alone carries the identity. Each preset is just a colour array — `gradientSurfacePresets.ocean` and friends — so a custom brand palette drops in the same way."
+      },
+      {
+        "name": "Patterns",
+        "note": "One palette under each drawing — contours, waves, rings, and none — to show the pattern is a texture layer, independent of the colours beneath it. `none` keeps the wash and the grain and drops only the lines."
       }
     ]
   },
@@ -377,6 +445,74 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "Stress500Rows",
         "note": null
+      }
+    ]
+  },
+  {
+    "slug": "page-outline",
+    "name": "PageOutline",
+    "group": "Navigation",
+    "description": "A scroll-spy section outline drawn along a rail that jogs sideways to trace the heading hierarchy, so depth reads from the line itself rather than from type size. A comet pulse travels the rail — through its corners, since every pulse layer is a dash window on the rail's own path — to whichever section crosses the reading line, easing symmetrically so it arrives rather than crawling. Sections come from an items array, or the outline derives them from the headings of any rendered element via contentRef, which is what makes a markdown surface work with no markdown awareness in the component; scraped content is watched for mutations so streaming output keeps the outline current. collapse=\"auto\" folds entries deeper than the second level except in the branch the reader has settled in — nothing folds mid-scroll, only where scrolling comes to rest, and rows hiding folded branches carry a count. A marker node replaces the comet with host-supplied SVG content that the outline translates and rotates along the path each frame. The root fills the box its host provides and scrolls its own rows when the box is shorter than the list.",
+    "stories": [
+      {
+        "name": "Default",
+        "note": "The outline beside a guide, fed an items array. The rail jogs one column per depth level and the comet pulse rests centered on the active row; clicking a row scrolls the container to that section and moves the pulse along the rail to it. The play test clicks a deep entry and asserts the active row follows."
+      },
+      {
+        "name": "FromContent",
+        "note": "No items array: the outline derives its sections from the headings rendered inside contentRef — the shape any markdown renderer produces — assigning slugs to headings that lack ids and mapping heading levels to rail depths. The play test asserts the scraped rows match the document's headings."
+      },
+      {
+        "name": "AutoCollapse",
+        "note": "collapse=\"auto\": entries deeper than the second level fold away except inside the branch the reader has settled in, and rows hiding folded descendants carry a count badge. Folding is settle-driven — passing sections mid-scroll changes nothing; only where scrolling comes to rest reshapes the outline. The play test asserts deep rows outside the settled branch are folded and their ancestors carry counts."
+      },
+      {
+        "name": "CustomMarker",
+        "note": "A host-supplied marker instead of the comet: the marker prop takes SVG content drawn centered on 0,0 pointing toward positive y, and the outline translates and rotates it along the rail each frame — through the jogs, banking with the path tangent. data-traveling and --page-outline-speed are published on the marker group so the host can style motion states. The play test asserts the custom marker group is present and the comet layers are not."
+      }
+    ]
+  },
+  {
+    "slug": "drawer",
+    "name": "Drawer",
+    "group": "Navigation",
+    "description": "A modal panel anchored to one edge of the viewport — the layer other Nessa components are composed onto for a record's detail view, a filter panel, or a form. Radix Dialog supplies the focus trap, Escape and outside-press dismissal, and the aria wiring; Nessa supplies the surface, the edge slide on the motion tokens, and the sizing contract. The panel slides in from its side and holds that transition on the way out, so closing is animated rather than cut. Size is a CSS length along the drawer's own axis, controlled with size or left to defaultSize, and resizable adds a drag- and keyboard-operable handle on the inner edge between minSize and maxSize.",
+    "stories": [
+      {
+        "name": "SidePanel",
+        "note": null
+      },
+      {
+        "name": "Resizable",
+        "note": "A drawer the reader can widen: resizable puts an ARIA window-splitter handle on the inner edge, operable by drag and by keyboard, and clamped between minSize and maxSize. The play test drives it both ways — an arrow step, End for the maximum, then a pointer drag and a drag that overshoots the minimum — and asserts the rendered width and the reported aria-valuenow move together, since the handle reports the size layout actually resolved rather than the size that was requested. A double-click restores defaultSize, and a drawer dismissed mid-drag ends the gesture with it, so the next one does not resize on a hover."
+      },
+      {
+        "name": "Sides",
+        "note": "Every edge from one panel, with resizing on a switch: side moves the drawer and its slide follows the edge it is anchored to, while size measures width on the left and right and height on the top and bottom. Resizable puts the handle on whichever edge faces the page, so the same toggle works from all four. This one is controlled — the host owns the open state, the edge, and the toggle — and hides the built-in close affordance in favour of its own footer action. The play test opens all four in turn and asserts each panel is flush against the edge it was given, then turns resizing on and drives the handle from the keyboard."
+      },
+      {
+        "name": "OpenerRemoved",
+        "note": "The drawer returns focus to whatever opened it, which usually needs no thought — but a drawer whose own action deletes the row that opened it has nowhere to return to, and focus would land on the document body. onReturnFocus is the escape hatch: the host says where focus belongs when the opener is gone. The play test opens the drawer from a row, deletes that row from inside the drawer, and asserts focus lands on the host's fallback rather than on the body."
+      }
+    ]
+  },
+  {
+    "slug": "sheet",
+    "name": "Sheet",
+    "group": "Navigation",
+    "description": "A bottom sheet that rises over its nearest positioned ancestor: a modal dialog with a backdrop, a grab bar, a header of close or expand plus a centered title and optional Done, and a scrolling body. The drawer lifts a short way from the bottom on open; dragging the grab bar up (or SheetExpand) interpolates height into a filled extra-details surface over the same ancestor, and dragging down or Minimize recedes it. Escape, the backdrop, SheetClose, and SheetAction all dismiss it. Focus moves into the panel on open and returns to the opener on close; siblings it covers go inert. Pass modal={false} for a contained extra-details surface that leaves surrounding chrome reachable.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Open the sheet from the host button. Expand fills the ancestor; the circular close control and Escape both dismiss it, and focus returns to the opener."
+      },
+      {
+        "name": "ExpandToggle",
+        "note": "SheetExpand grows the drawer into a filled extra-details surface over the same ancestor; Minimize recedes it. Dragging the grab bar up expands, dragging it down minimizes, and dragging down from the drawer dismisses. Escape and Done still dismiss."
+      },
+      {
+        "name": "DoneAction",
+        "note": "A trailing Done control is the other header dismiss pattern — the queue sheet uses it instead of a close glyph."
       }
     ]
   },
@@ -544,6 +680,270 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "AgentTurnComposition",
         "note": "App-fidelity composition of an agent edit turn in dark mode: aggregate stats beside the card icon and undo/review actions in the header. Rows stay chrome-free here; per-row actions remain an opt-in shown in Hover Row Actions."
+      }
+    ]
+  },
+  {
+    "slug": "file-preview",
+    "name": "FilePreview",
+    "group": "Content",
+    "description": "A composable file previewer built around a renderer registry: the root detects the file's kind (MIME type first, extension fallback) and delegates rendering to the strategy registered for that kind. Images render through a script-inert img element with loading and error states; PDFs render through the browser's built-in viewer via an object embed with a download fallback for environments without an inline viewer; unknown kinds fall back to a surface that keeps the file reachable through a download link. Consumers override built-in renderers or register whole new kinds through the renderers prop — no library change needed. Sources can be plain URLs (file) or a File/Blob (blob), whose object URL lifecycle is managed internally.",
+    "stories": [
+      {
+        "name": "ImagePreview",
+        "note": "A raster image with header chrome: file name, formatted size, and a download link. The image renderer keeps the picture contained inside the content box."
+      },
+      {
+        "name": "SvgPreview",
+        "note": "SVG sources render through the same img-based renderer, which keeps any scripts inside the SVG inert."
+      },
+      {
+        "name": "PdfPreview",
+        "note": "PDFs delegate to the browser's built-in viewer through an object embed — Chromium, WebView2, and WKWebView all render inline, and environments without an inline viewer see the embed's download fallback instead."
+      },
+      {
+        "name": "UnknownFileFallback",
+        "note": "A file with no registered renderer falls back to a surface that names the file and keeps it reachable through a download link."
+      },
+      {
+        "name": "CustomRenderer",
+        "note": "The registry is open: registering a renderer under a new kind (here \"text\", paired with the kind prop) delegates that file type to consumer code without any library change. The same mechanism overrides the built-in image or pdf strategies."
+      },
+      {
+        "name": "ImageError",
+        "note": "A source that fails to load surfaces the fallback with an error message and a download link, instead of a broken image glyph."
+      },
+      {
+        "name": "ComposedParts",
+        "note": "Explicit children opt into composition: the header takes extra action content, and the content part hosts the resolved renderer wherever it is placed."
+      },
+      {
+        "name": "MarkdownPreview",
+        "note": "Markdown files delegate to the library's own MessageMarkdown renderer, so previews match how markdown looks everywhere else in the app."
+      },
+      {
+        "name": "JsonPreview",
+        "note": "JSON files parse and delegate to JsonTree; contents that fail to parse still show as raw text through CodeBlock instead of erroring out."
+      },
+      {
+        "name": "CsvPreview",
+        "note": "CSV and TSV files parse through a small RFC 4180 parser and delegate to the Table kit, with the first row as a sticky header."
+      },
+      {
+        "name": "CsvPreviewTall",
+        "note": "A delimited file taller than the host's box scrolls inside the table shell — the body scrolls under the sticky header row instead of clipping at the shell edge."
+      },
+      {
+        "name": "CodePreview",
+        "note": "Text and code files delegate to CodeBlock with the file extension as the language, so code previews get syntax highlighting for free."
+      },
+      {
+        "name": "AudioPreview",
+        "note": "Audio files delegate playback to the browser's native audio element with its built-in controls."
+      },
+      {
+        "name": "OfficeFallback",
+        "note": "Office formats (docx, xlsx, pptx) are detected but detection-only: browsers cannot render them natively, so they reach the fallback with the right identity, and apps with a conversion pipeline register their own renderer for those kinds."
+      }
+    ]
+  },
+  {
+    "slug": "file-drop-zone",
+    "name": "FileDropZone",
+    "group": "Content",
+    "description": "A wrapper that turns whatever it contains into a file drop target. Drag files or folders anywhere over the wrapped subtree and the zone hands the host a filtered File list through onFiles; the host stores them as attachments and renders them however it likes. The zone owns only the drag protocol: depth-counted enter and leave bookkeeping so nested children cannot flicker the state, dropEffect and the preventDefault that stops the browser from navigating to the file, recursive folder expansion through the directory-entry API, the accept, maxSize, maxFiles, and multiple rules with every refusal reported through onRejectedFiles. It holds no file state of its own, and it draws nothing: the drag affordance belongs to the children, which can be a function of the live drag state, and the root always mirrors that state as data-dragging. asChild goes further and merges the whole protocol onto the child element, so wrapping a component adds no DOM at all — that is how ChatComposer takes its drops. The zone stays a plain region and owns no controls: dropping is a pointer gesture, so the keyboard path to the same files is a browse control the host renders and wires to the same handler.",
+    "stories": [
+      {
+        "name": "ComposerAttachments",
+        "note": "The flagship composition: a composer taking the zone through its fileDrop prop, so a file dropped anywhere over it — the input, the footer, the attachment row — becomes an attachment pill. The zone merges onto the composer's own form, adding no element and no chrome: the drag shows as the composer lighting its border, the way focus does. Dropping is a pointer gesture, so the host pairs it with a keyboard-reachable attach button feeding the same handler. The play test asserts the border really repaints on dragenter, drops two files, removes one, and checks that both what was attached and what was refused reach a live region — the half of the story a reader cannot see the pills for."
+      },
+      {
+        "name": "BrowseOrDrop",
+        "note": "An empty-state gallery that draws its own drag affordance: the zone renders nothing, and the function child styles the dashed frame from the live isDragging flag. The zone stays a plain region — dropping is a pointer gesture with no keyboard equivalent, so the keyboard path is a real button the host owns, feeding the same handler. The play test drags over a nested child and asserts the state survives the child's own dragleave, which is the bug a naive single-flag implementation ships with."
+      },
+      {
+        "name": "AcceptAndLimits",
+        "note": "The rules the zone applies before the host ever sees a file: accept filters by type or extension, maxSize caps each file, and maxFiles caps the drop. Nothing is refused silently — every refusal arrives through onRejectedFiles with the rule that caused it, so the host can say why. The play test drops four files and asserts each lands on the side its rule dictates."
+      },
+      {
+        "name": "Disabled",
+        "note": "A zone that refuses drops while the host is busy or read-only: the overlay it would otherwise show stays away, a drop that lands anyway delivers nothing, and the drag reports dropEffect none so the pointer shows the no-drop cursor. The play test asserts the first two against a zone that really does carry an overlay, so both would fail if the disabled guard were removed; the cursor is left untested because a synthetic DataTransfer refuses dropEffect writes outside a real drag. A disabled zone also claims nothing, so a zone wrapping this one still takes the drop."
+      },
+      {
+        "name": "NestedZones",
+        "note": "Zones nest, and the innermost one owns the drop: a file dropped on the card attaches to the card alone, never to the page zone around it as well. Each drag event is claimed by the first zone to see it, so ancestors neither double-deliver nor double-count their enter and leave depth. A drop target the host writes itself is not a zone and cannot be claimed, so it owns its region by stopping propagation — and because a drop is never followed by a dragleave, the zone reads that drop in the capture phase, which no descendant can stop, so its drag state cannot be stranded on. The play test covers all three: the card, the page, and the host's own target."
+      },
+      {
+        "name": "Folders",
+        "note": "Dropped folders are walked to their files, and the files hold the folder's place in the drop rather than trailing behind every loose file — which is what maxFiles cuts along. A folder that turns out to be empty is reported back as a folder rejection, so a drop that produces nothing still tells the host why. The play test drives the real entry API with stubbed directory entries, the only way to reach this path from a browser test."
+      }
+    ]
+  },
+  {
+    "slug": "pie-chart",
+    "name": "PieChart",
+    "group": "Charts",
+    "description": "A pie or donut chart: one wedge per slice, sized to its share of the total, filling whatever box the host gives it on both axes. Slices take a slot from the design system's categorical chart ramp — overridable per slice, or disableable to an all-neutral wash. The ramp is a token per theme, so every slot is contrast-correct against its own surface, and its slot order is what keeps neighbouring wedges separable under colour-vision deficiency. Every wedge is a keyboard-focusable button: hovering one isolates it and recedes the rest, clicking (or Enter or Space) makes the isolation stick as a selection and eases the wedge out of the ring — Command- or Ctrl-clicking toggles further slices into it — and the selection is host-controllable through `selectedSliceIds`. A donut's centre reads the **total at rest and the engaged slice while one is hovered, focused, or solely selected**, so the chart answers \"how much is this?\" without a tooltip. A long tail can be rolled into one bucket with `groupThreshold`, whose members stay reachable through `renderHoverDetail`, and narrowing the sweep with `startAngle`/`endAngle` turns the same component into a gauge.",
+    "stories": [
+      {
+        "name": "TicketMix",
+        "note": "A quarter of support tickets by surface. Labels park in the gutter on leader lines, each carrying its share. The play test clicks a wedge and proves the sticky isolation by computed style — the chosen wedge holds full strength, the rest recede — checks it eased out of the ring, Command-clicks a second slice into the selection, and clears everything with Escape."
+      },
+      {
+        "name": "DonutCenter",
+        "note": "The donut centre is the chart's readout. At rest it holds the total; hover, focus, or a sole selection swaps it to that slice's value and name, and letting go restores the total — so the common question is answered without a tooltip ever appearing. `renderCenter` replaces the default with anything the host wants. The play test reads the resting total, hovers a wedge, asserts the centre swapped, and asserts it restores on leave."
+      },
+      {
+        "name": "RolledUpTail",
+        "note": "`groupThreshold` rolls every slice under a share into one trailing bucket, so a long tail of slivers stops shredding the ring. The bucket keeps its true share of the circle and carries its members, which `renderHoverDetail` lists on hover — the detail is folded away, not lost. A lone below-threshold slice is never bucketed: a bucket of one would only rename it. The play test proves five wedges are drawn from eight sources and that hovering the bucket names all five it swallowed."
+      },
+      {
+        "name": "Gauge",
+        "note": "Narrowing the sweep turns the same component into a gauge: a half turn from nine o'clock to three, a deep hole, and a `renderCenter` that reads the headline number. The layout fits the swept region rather than the whole circle, so the arc uses the host's whole box instead of hanging in the top half of it. Everything else still applies — the arcs are focusable buttons, hover isolates, and a click sticks. The play test proves the drawn ring is twice as wide as it is tall and reaches both sides of the box."
+      },
+      {
+        "name": "InsideLabels",
+        "note": "`labels=\"inside\"` writes each name on its own wedge, which suits a solid pie with few, chunky slices. `labelMinShare` keeps a wedge too thin to carry a label legible by moving its reading to hover detail instead of overprinting the neighbour. The play test proves the sub-threshold slice draws a wedge but no label."
+      },
+      {
+        "name": "StreamedData",
+        "note": "The chart under an agent streaming its data: surfaces arrive over a few seconds, and the newest one lands before it has been counted. A zero-value slice is reported through `onLayoutIssues` and dropped rather than claiming a wedge of the ring, and each new frame morphs the existing wedges and labels to their new geometry (token-duration transitions; reduced motion snaps). The panel underneath is the `slices` prop verbatim for the current frame — the chart takes typed arrays, not a wire format, so this is literally the value being handed to it — which makes the geometry and the payload readable against each other. A wedge keeps its colour as the ring reorders around it — slots are assigned in input order, never by rank, so a surface being overtaken never repaints. Every band around the chart holds a fixed height and clamps its text to one line: a status line that grew to two would shrink the plot and re-lay the ring out on the frame it appeared, which reads as the chart flinching rather than as data arriving. The play test waits out the stream and asserts every surface arrived and the data verified clean."
+      },
+      {
+        "name": "Configured",
+        "note": "The configuration surface: `palette={null}` returns the chart to the all-neutral wash and one slice opts back into colour explicitly, the sweep starts a quarter turn round, slices are sorted smallest first, and a generous pad separates them. The play test proves the neutral slices carry no tint while the highlighted one does, and that the ascending sort put the smallest wedge first."
+      }
+    ]
+  },
+  {
+    "slug": "radar-chart",
+    "name": "RadarChart",
+    "group": "Charts",
+    "description": "A radar chart: values plotted along spokes radiating from one centre, one closed outline per series. Series take a slot from the design system's categorical chart ramp — overridable per series, or disableable to an all-neutral wash — and the area wash is derived from each outline's own colour, so a custom tint stays coherent. The ramp is a token per theme, so every slot is contrast-correct against its own surface, and its slot order is what keeps neighbouring series separable under colour-vision deficiency. The chart fills whatever box the host gives it on both axes. Every outline is a keyboard-focusable button: hovering one isolates it and recedes the rest, clicking (or Enter or Space) makes the isolation stick as a selection — Command- or Ctrl-clicking toggles further series into it — and the selection is host-controllable through `selectedSeriesIds`. Hovering a spoke instead **probes that axis**: the spoke lights up, every series is marked where it crosses, and `renderHoverDetail` receives the readings ranked, so one axis can be compared across series without isolating anything. `scale` switches between one shared maximum (ring distance comparable everywhere) and per-axis normalisation (shape reads as rank), and `curve` controls how rounded the outline is — it defaults to a slight rounding, and the spline interpolates, so a value stays exactly on its own spoke at any setting.",
+    "stories": [
+      {
+        "name": "Scorecards",
+        "note": "Three candidates against one shared rubric. Every axis pins `max: 10`, so ring distance means the same thing on every spoke and the shapes are directly comparable. The play test clicks a series and proves the sticky isolation by computed style — the chosen outline holds full strength, the rest recede — Command-clicks a second series into the selection, and clears everything with Escape."
+      },
+      {
+        "name": "AxisProbe",
+        "note": "The axis probe. Hovering a spoke — or its label — lights the spoke, marks every series where it crosses, and hands `renderHoverDetail` the readings ranked largest first, so a single axis can be compared across series without isolating any of them. Series emphasis deliberately stays at rest during a probe: the point is the comparison. A spoke is not something a keyboard can point at, so the axis label is its handle: focusing it probes, and activating it with Enter or Space pins the probe so the comparison outlives the focus — Escape clears it. The play test hovers the Testing spoke and asserts the ranked card, leaves and asserts it goes away, then reaches the same probe from the keyboard, pins it, and clears it."
+      },
+      {
+        "name": "PerAxisScale",
+        "note": "`scale=\"axis\"` for readings that share no unit. Requests per second, milliseconds, dollars and a saturation ratio cannot sit on one scale — under the default shared maximum every axis but throughput would collapse onto the centre. Normalising each spoke against its own largest reading turns the shape into a rank comparison, and each axis label carries the value that reaches the outer ring so the absolute numbers stay on screen. The play test proves the two regions swap the outer ring axis by axis."
+      },
+      {
+        "name": "CurvedOutlines",
+        "note": "`curve` at its maximum, against the slight rounding every chart gets by default. With only four axes a hard polygon reads as a bare diamond; a curve gives the shape a silhouette the eye can hold. Because the spline is a closed Catmull-Rom it interpolates, so each vertex still sits exactly on its spoke at the value it reports — rounding changes the join, never the reading. The grid stays angular so the reading lines remain exact, and `curve={0}` returns the strict polygon. The play test proves the outline is drawn with curve commands rather than straight segments."
+      },
+      {
+        "name": "LinesOnly",
+        "note": "`fill={false}` drops the area wash so many series can share one plot without the washes muddying each other, and a circular grid keeps a busy chart calm. The outlines stay full-strength and interactive; hover still isolates. The play test proves every wash is transparent while the outlines keep their stroke."
+      },
+      {
+        "name": "StreamedData",
+        "note": "The chart under an agent streaming its data: scorecards arrive over a few seconds, and the newest one lands with most of its axes still missing. Those read as zero and are reported through `onLayoutIssues` rather than dropping the frame, and each new frame morphs the existing outlines to their new geometry (token-duration transitions; reduced motion snaps). The panel underneath is the `series` prop verbatim for the current frame — the chart takes typed arrays, not a wire format, so this is literally the value being handed to it — which makes the geometry and the payload readable against each other. Every band around the chart holds a fixed height and clamps its text to one line: a status line that grew to two would shrink the plot and re-lay the diagram out on the frame it appeared, which reads as the chart flinching rather than as data arriving. Once the stream settles, an empty issue set is the definitive success signal. The play test waits out the stream and asserts every series arrived and the data verified clean."
+      },
+      {
+        "name": "Configured",
+        "note": "The configuration surface: `palette={null}` returns the chart to the all-neutral wash and one series opts back into colour explicitly, `grid=\"none\"` strips the rings and spokes, the sweep starts a half step round so a label sits at the top-right, and a narrower gutter gives the plot more of the box. The play test proves the neutral series carries no tint while the highlighted one does, and that no grid ring was drawn."
+      }
+    ]
+  },
+  {
+    "slug": "flow-chart",
+    "name": "FlowChart",
+    "group": "Charts",
+    "description": "A flow diagram: node bars in columns joined by ribbons whose thickness is proportional to the flow they carry. Node bars take soft tints from a built-in palette — overridable per node, or disableable to an all-neutral wash — and every ribbon inherits its source's tint, so each origin's flows read as one family. The chart fills whatever box the host gives it on both axes. Every ribbon is a keyboard-focusable button: hovering a ribbon or bar isolates the connected flow, clicking (or Enter or Space) makes the isolation stick as a selection — Command- or Ctrl-clicking toggles further flows into it — and the selection is host-controllable through `selectedLinkIds`. `renderHoverDetail` floats any content the host wants beside the pointer, and columns come from longest-path layering so multi-stage flows lay out without configuration.",
+    "stories": [
+      {
+        "name": "MonthlyBudget",
+        "note": "A month of income flowing into spending categories. Every bar takes a tint from the default palette and each ribbon carries its source's colour; the sinks detail their share of spending inline through `renderNodeDetail`. The play test clicks a ribbon and proves the sticky isolation by computed style — the chosen ribbon deepens, the rest recede — Command-clicks a second flow into the selection, and clears everything with Escape."
+      },
+      {
+        "name": "HoverDetail",
+        "note": "`renderHoverDetail` floats whatever the host returns beside the pointer while a ribbon or bar is hovered — here a small stat card naming the flow and its share of the source's outgoings, or the node's totals. The play test hovers a ribbon and asserts the detail surface appears with the flow's numbers, then leaves and asserts it clears."
+      },
+      {
+        "name": "GradientLinks",
+        "note": "`linkColor=\"gradient\"` blends each ribbon from its source's tint into its target's — the canonical Sankey link styling — with \"source\" (the default) and \"target\" as the solid alternatives. Paired here with `iterations` running d3-style barycenter passes that reorder each column to untangle ribbon crossings. The play test reads a ribbon's computed fill and proves it resolves to an SVG gradient."
+      },
+      {
+        "name": "Vertical",
+        "note": "`orientation=\"vertical\"` runs the flow top-to-bottom: columns become rows, ribbons fall instead of sweep, source labels sit above the first row and sink labels below the last. Everything else — tints, hover isolation, selection, hover detail — behaves identically. The play test proves the transpose by measured geometry: three distinct row positions and bars wider than they are tall."
+      },
+      {
+        "name": "MultiStage",
+        "note": "A three-stage income statement — revenue streams through gross profit into what remains — showing the longest-path column layout: middle columns need no configuration and their labels sit beside the bars over the ribbons. The play test proves three distinct bar columns by measured x positions."
+      },
+      {
+        "name": "StreamedData",
+        "note": "The chart under an agent streaming its data: nodes and links arrive over a few seconds, with some frames carrying links whose endpoint has not landed yet — those simply wait instead of crashing the render, duplicate nodes keep their first occurrence, and even a transient cycle would place deterministically. Each new frame morphs the existing bars, ribbons, and labels to their new geometry (token-duration transitions; reduced motion snaps). `onLayoutIssues` reports what each frame tolerated, so once the stream settles an empty set is the definitive success signal — the status line above the chart says so. The play test waits out the stream and asserts every flow arrived and the data verified clean."
+      },
+      {
+        "name": "DeepBranching",
+        "note": "A stress test for the layout: four stages of many-to-many branching — sales channels fanning into business lines, business lines splitting between cost of revenue and gross profit, and gross profit fanning out again into spending and outcomes. Merges, splits, and pass-through sinks all come from longest-path layering with no configuration. The play test proves four distinct bar columns and that every node's ribbons stack to exactly its bar height."
+      },
+      {
+        "name": "Configured",
+        "note": "The configuration surface: `palette={null}` returns the chart to the all-neutral wash, one node opts back into colour explicitly, and thicker bars, a wider gap, a gentler curve, left alignment for terminal nodes, and custom formatting round it out. The play test proves the neutral ribbons run the quiet opacity ramp and the bars take the configured width."
+      }
+    ]
+  },
+  {
+    "slug": "price-chart",
+    "name": "PriceChart",
+    "group": "Charts",
+    "description": "A price plot in the language brokerage apps use: one hairline stroke in the market's colour, a dotted reference rule, a price scale down the right edge over faint gridlines, a time scale along the bottom, and a cursor that follows a finger, a pointer, or the arrow keys across the series. Switching the view to candles draws open/high/low/close bars over the same scale; dragging across the plot zooms into that window and re-labels both scales for it. The chart fills the box its host gives it and re-measures on resize, so one element serves a phone-width card and a full-width desk layout.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "One session of trade prices with the previous close as the dotted baseline: the line and its wash take the gain colour because the last print sits above that close. The cursor is a real control — the play test tabs to it, walks it with the arrow keys, and reads back the announced time and price, then hovers the plot with a pointer to prove the same cursor follows the mouse."
+      },
+      {
+        "name": "Candlesticks",
+        "note": "The same geometry drawn as open/high/low/close bars: each candle is toned by its own direction, so a red body inside a rising stretch stays legible. Candles are slot-centred rather than edge-to-edge, and both the cursor and the streaming marker follow that spacing. The play test walks to the last candle, reads its announced close, and checks the marker sits at the centre of its slot."
+      },
+      {
+        "name": "Sparklines",
+        "note": "The same component at watchlist size. Each row hands the chart a small box, turns the scales off and turns scrubbing off, so the plot exposes itself as one labelled image instead of a control — the shape a dense list wants. The falling row takes the loss colour from its own data with no configuration."
+      },
+      {
+        "name": "ZoomToSelection",
+        "note": "Dragging across the plot draws a window — a shaded band with the span and the move across it — and releasing zooms the chart into it. The clear control in the corner (or Escape) returns to the full series; a keyboard user draws the same window with Shift+Arrow and commits it with Enter. The play test drags out a window, proves the chart re-plots on those bars alone, then clears it."
+      },
+      {
+        "name": "NoData",
+        "note": "An empty series still occupies its box and says so, rather than collapsing or drawing an axis for prices that do not exist. The cursor stays present but disabled, so a keyboard user who reaches it hears the same thing the plot shows."
+      }
+    ]
+  },
+  {
+    "slug": "stock-quote",
+    "name": "StockQuote",
+    "group": "Charts",
+    "description": "A brokerage-style quote panel: ticker, name, the price in large type with its change in the market's colour, a scrubbable and zoomable PriceChart with its price and time scales, the range and chart-type controls, an after-hours line, and a strip of key figures. Hovering the chart replaces the headline with the bar under the cursor; dragging across it zooms into that window, and the headline reports the window until it is cleared. Trading state is announced rather than drawn — a live quote shows it by pulsing the newest point. The panel is a display surface — an agent or application feeds it prices as they arrive and reloads the series when the range changes — and it reflows from a phone-width card to a full-width desk layout on its own container's width.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "Phone",
+        "note": null
+      },
+      {
+        "name": "Watchlist",
+        "note": null
+      },
+      {
+        "name": "Streaming",
+        "note": null
+      },
+      {
+        "name": "Website",
+        "note": null
       }
     ]
   },
@@ -819,7 +1219,7 @@ export const catalog: CatalogEntry[] = [
     "slug": "composer-queue",
     "name": "ComposerQueue",
     "group": "Agent surfaces",
-    "description": "Pending-message rows for active agent runs, plus a delivery-mode control for choosing whether the next follow-up queues behind the run or steers it immediately. The host owns ordering and delivery semantics.",
+    "description": "Pending-message rows for active agent runs, plus a delivery-mode control for choosing whether the next follow-up queues behind the run or steers it immediately. A compact Queued N badge opens a plain sheet of wrapping rows; drag a row onto another to reorder, or promote one to the front. The host owns ordering and delivery semantics.",
     "stories": [
       {
         "name": "PendingMessages",
@@ -836,6 +1236,10 @@ export const catalog: CatalogEntry[] = [
       {
         "name": "ActiveRunComposition",
         "note": "Compose the queue above a compact ChatComposer during an active run; switching delivery mode changes host intent without disabling text entry."
+      },
+      {
+        "name": "QueuedSheet",
+        "note": "The compact Queued N pill opens a sheet of wrapping follow-ups. Drag one row onto another to reorder; each row can also promote to the front or be removed. Expand fills the ancestor and Minimize restores the drawer."
       }
     ]
   },
@@ -1064,6 +1468,198 @@ export const catalog: CatalogEntry[] = [
     ]
   },
   {
+    "slug": "agent-activity",
+    "name": "AgentActivity",
+    "group": "Agent surfaces",
+    "description": "Collapsed agent work in a transcript: a quiet cue such as “Explored 3 files, 2 searches” that opens the extra-details sheet with that beat’s thinking and tool calls, a named-task card for a delegated run, and a standalone thought or live “Exploring…” line. Exploring cues and named cards carry a RandomAvatar — busy (flooding paint) while that agent is working, still once it is not. The transcript stays a conversation; the tools never expand inline.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "A finished run of tools behind one cue. The trigger opens the extra-details sheet; the transcript line stays collapsed. Thought cues with details disclose the same way."
+      },
+      {
+        "name": "LiveAndCard",
+        "note": "While the agent is still working the cue shimmers, its RandomAvatar is busy, and the group is aria-busy. Clicking Exploring… opens the live tools in the extra-details sheet. A named beat — a spawned explorer — uses the card with that agent’s avatar instead of a counted summary."
+      }
+    ]
+  },
+  {
+    "slug": "agent-details",
+    "name": "AgentDetails",
+    "group": "Agent surfaces",
+    "description": "The identity of an agent conversation: a title, a row of compact actions (edit, pin, share), and an Info section for the project path, branch, model, runtime, and timestamps. The panel does not own how it is shown — the catalog mounts it in a Sheet; Expand and dragging the grab bar fill the chat window.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Open the details sheet from the host button. The Info section names the project and the facts the host already knows; Edit, Pin, and Share report through a status live region."
+      }
+    ]
+  },
+  {
+    "slug": "conversation-history",
+    "name": "ConversationHistory",
+    "group": "Agent surfaces",
+    "description": "A searchable roster of conversations: host-owned rows with a project-seeded RandomAvatar (same project, same painting), title, preview, project, pin, and relative time. Selecting a row reports its id.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Search narrows the roster. Selecting a row marks it aria-current. Conversations that share a project share a RandomAvatar painting; a row with no project falls back to its id. An empty query shows every conversation the host passed."
+      }
+    ]
+  },
+  {
+    "slug": "transcript-divider",
+    "name": "TranscriptDivider",
+    "group": "Agent surfaces",
+    "description": "A hairline rule across a transcript with a label sitting on it, marking a point in time rather than a piece of content: a day boundary, an unread mark, a model swap, a context compaction. It is deliberately not a card — what it marks happened *to* the conversation rather than being a step the agent took, so giving it a card's weight would put it in competition with the work either side of it. While `pending`, the label carries the same glyph-clipped shimmer ToolCall and GeneratingSurface use, because it means the same thing there: this is happening now. Given `detail`, the label becomes a disclosure so whatever the event produced — a compaction's summary — stays one line until a reader asks for it.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "Pending",
+        "note": null
+      },
+      {
+        "name": "InTranscript",
+        "note": null
+      },
+      {
+        "name": "WithDetail",
+        "note": null
+      }
+    ]
+  },
+  {
+    "slug": "pill-composer",
+    "name": "PillComposer",
+    "group": "Chat surfaces",
+    "description": "A compact, iMessage-style pill composer for small chat surfaces. It provides the ChatComposer slot context, so ChatComposerInput, ChatComposerAttachments, ChatComposerAction, and ChatComposerTrigger compose inside it unchanged, and it adds a working state: an iridescent light traveling the pill's rim at constant speed, led by a crisp head with a soft glow bleeding inward behind it. Toggling `generating` fades the light in and out so the composer reads as lighting up rather than switching.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "AgentSurfaces",
+        "note": null
+      },
+      {
+        "name": "Subagents",
+        "note": null
+      },
+      {
+        "name": "Annotations",
+        "note": null
+      },
+      {
+        "name": "Generating",
+        "note": null
+      },
+      {
+        "name": "Voice",
+        "note": null
+      },
+      {
+        "name": "ModelCommand",
+        "note": null
+      },
+      {
+        "name": "Attachments",
+        "note": null
+      }
+    ]
+  },
+  {
+    "slug": "chat-bubbles",
+    "name": "ChatBubbles",
+    "group": "Chat surfaces",
+    "description": "iMessage-style transcript primitives that compose with PillComposer: ChatMessage aligns a sent or received column and springs in on mount; ChatBubble is the colored bubble (a real button when it carries an onSelect action such as reply); ChatMessageQuote and ChatMessageReceipt add reply context and delivery state; ChatTypingIndicator pulses while the agent responds; ChatReactionPicker (with the exported chatReactionOptions) is the iMessage tapback row, cascading in per emoji and composing into ContextMenu hosts as keyboard-reachable menu items; and ChatAttachmentTile, ChatAttachmentStack, and ChatAttachmentViewer give every attachment kind one square-tile language — fanned into a one-direction stack when collapsed and filling the chat frame as a grid when opened.",
+    "stories": [
+      {
+        "name": "Conversation",
+        "note": null
+      },
+      {
+        "name": "Markdown",
+        "note": null
+      },
+      {
+        "name": "MarkdownStreaming",
+        "note": null
+      },
+      {
+        "name": "Typing",
+        "note": null
+      },
+      {
+        "name": "Attachments",
+        "note": null
+      }
+    ]
+  },
+  {
+    "slug": "chat-tabs",
+    "name": "ChatTabs",
+    "group": "Chat surfaces",
+    "description": "The floating chat window's tab strip: pill tabs on a horizontally scrolling tablist — the active tab washed and outlined in the chat accent — with a glowing dot for tabs whose agent is working, an attention badge for tabs that need the user, close controls on closeable tabs, and a trailing new-tab button. The selected tab is scrolled into the track. Arrow keys, Home, and End rove the tablist, and every focus outline draws inset so the scrolling track never clips it. Pair each tab with a `chat-tab-panel-<id>` panel; PillComposer's Playground shows it as the chat window's conversation switcher.",
+    "stories": [
+      {
+        "name": "Tabs",
+        "note": null
+      }
+    ]
+  },
+  {
+    "slug": "chat-tray",
+    "name": "ChatTray",
+    "group": "Chat surfaces",
+    "description": "The single row of everything attached to the message being written. A quoted passage, a large paste, a dropped file, and a chosen skill all end up on the same message, so they queue in the same place rather than in one pending stack per kind — the tray takes the composer's own attachment kinds as its vocabulary, and each chip wears that kind's glyph. However much it holds, the row stays one line: it shows the first chip (or the first few, through collapseAfter) and collapses the tail into a count that opens the whole set. The tray stores nothing and decides nothing about what a chip opens; hosts own the list and wire onOpenItem, onOpenAll, and onClear, which is what lets one row hold kinds that behave differently.",
+    "stories": [
+      {
+        "name": "CollapsedTail",
+        "note": "Four attachments of four different kinds, as the tray shows them by default: one chip stands for the set and the rest become a count. Pressing the chip opens what it stands for, pressing the count opens the whole set, and the discard control clears everything at once."
+      },
+      {
+        "name": "MoreChipsBeforeCollapsing",
+        "note": "A wider composer can afford to name more of what it is carrying: collapseAfter decides how many chips stand on their own before the tail becomes a count. Every chip truncates rather than wrapping, so the row keeps its height whatever the labels are."
+      }
+    ]
+  },
+  {
+    "slug": "chat-overlay",
+    "name": "ChatOverlay",
+    "group": "Chat surfaces",
+    "description": "A reading view that takes over a chat's transcript without disturbing the window around it. It fills its nearest positioned ancestor, so a host that positions the transcript region — rather than the whole chat frame — keeps its tab strip and composer visible and usable while the overlay is open: the reader can still switch conversations or keep typing. That is the difference from ChatAttachmentViewer, which owns a tile grid and a back arrow of its own; ChatOverlay is the bare surface for reading views such as a previewed file, one message's full text, or the annotations waiting to be sent. ChatOverlayBody is the scrolling content region and takes its layout from the host, ChatOverlayBack is the quiet centered way out, and ChatOverlaySummary captions the content. It is deliberately not a modal dialog: Tab is not trapped and the chat around it is not hidden, because the strip and composer beside it stay in use — but the siblings it is drawn over go inert while it is open, so nothing behind the view takes focus or a pointer. Focus moves into the view on open and returns to whatever opened it on close (or to wherever onReturnFocus says, for hosts whose opener hides behind the view), Escape closes it from anywhere inside, and it fades in only when motion is allowed.",
+    "stories": [
+      {
+        "name": "TranscriptTakeover",
+        "note": "Opening the view replaces the transcript and nothing else: the tab strip above and the composer below stay exactly where they were, so switching conversations or starting a message never needs the reading view dismissed first. Back — or Escape — returns the transcript, and focus goes back to the control that opened it."
+      },
+      {
+        "name": "CaptionedContent",
+        "note": "ChatOverlaySummary captions what is on screen — a file name, a count of what the view holds — in the quiet line above the way out. Escape closes the view from anywhere inside it, including after a click that landed on plain text, because the view itself can hold focus; a reader who scrolled deep into the content never has to travel back to a control."
+      }
+    ]
+  },
+  {
+    "slug": "chat-annotations",
+    "name": "ChatAnnotations",
+    "group": "Chat surfaces",
+    "description": "Passages lifted out of a document, and the reader's notes on them, read as short conversations. An annotation is not metadata bolted onto a chat: ChatAnnotationThread renders the lifted passage as the document's message and each comment as the reader's reply, so the same bubbles, sides, and rhythm carry both. A thread with onSelect makes its passage the target for the next comment; onEditComment swaps a comment into the in-bubble editor when its hover control is pressed; onRemove offers the discard control; and a view that passes none of them — the record of annotations already sent — renders the same thread read-only. Passing children replaces the passage's plain text, which is where a markdown renderer goes. ChatAnnotationList is the column they sit in, and ChatAnnotationBadge compresses a sent message's whole set into one quote chip, because a message that spilled every passage into the transcript would bury the conversation it belongs to. Hosts own the annotations; these components render and edit them.",
+    "stories": [
+      {
+        "name": "PendingAnnotations",
+        "note": "The editable view, before the annotations travel with a message: the passage is the document speaking and the comments answer it, selecting a passage marks it as the target for the next comment, hovering a comment reveals its edit control, and each thread can be discarded. Selecting an already-selected passage lets it go again."
+      },
+      {
+        "name": "SentRecord",
+        "note": "Once sent, the set rides the message as one badge rather than a run of bubbles, and opening it shows the same threads with every affordance withdrawn — nothing to select, edit, or discard in a record of what was already said."
+      }
+    ]
+  },
+  {
     "slug": "app-shell",
     "name": "AppShell",
     "group": "Composites",
@@ -1195,7 +1791,7 @@ export const catalog: CatalogEntry[] = [
       },
       {
         "name": "MonthScale",
-        "note": "The month scale compresses the plan to a portfolio overview: month columns under a year tier. The play test asserts a known bar's computed width matches the scale's four pixels per day."
+        "note": "The month scale compresses the plan to a portfolio overview: month columns under a year tier. A short plan never huddles in a corner — when a scale's natural width comes up under the viewport, the days stretch to fill the host's box. The play test asserts the fit (the lane spans the viewport) and that bar widths keep their day-count proportions."
       },
       {
         "name": "GroupCollapse",

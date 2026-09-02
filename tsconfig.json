@@ -28,6 +28,12 @@
       ],
       "@nessa-ui/react": [
         "./nessa-ui/index.ts"
+      ],
+      "@nessa-ui/agent-stream": [
+        "./agent-stream/contract.ts"
+      ],
+      "@nessa-ui/agent-stream/transcript": [
+        "./agent-stream/transcript/index.ts"
       ]
     }
   },

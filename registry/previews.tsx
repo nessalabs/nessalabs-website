@@ -36,6 +36,56 @@ import {
   SelectionTooltipDemo,
   SelectionTooltipShelfDemo,
 } from "./demos/agent";
+import {
+  AgentActivityCardDemo,
+  AgentActivityDemo,
+  AgentDetailsDemo,
+  ConversationHistoryDemo,
+  TranscriptDividerDemo,
+  TranscriptDividerDetailDemo,
+} from "./demos/agent";
+import {
+  FlowChartDemo,
+  FlowChartVerticalDemo,
+  PieChartDemo,
+  PieChartDonutDemo,
+  PieChartGaugeDemo,
+  PriceChartCandlesDemo,
+  PriceChartDemo,
+  PriceChartSparklineDemo,
+  RadarChartDemo,
+  RadarChartPerAxisDemo,
+  StockQuoteDemo,
+} from "./demos/charts";
+import {
+  ChatAnnotationsDemo,
+  ChatAnnotationsSentDemo,
+  ChatBubblesDemo,
+  ChatBubblesTypingDemo,
+  ChatOverlayDemo,
+  ChatTabsDemo,
+  ChatTrayCollapseDemo,
+  ChatTrayDemo,
+  PillComposerDemo,
+} from "./demos/chat";
+import {
+  DrawerDemo,
+  DrawerResizableDemo,
+  FileDropZoneDemo,
+  FileDropZoneLimitsDemo,
+  FilePreviewDemo,
+  FilePreviewFallbackDemo,
+  GradientSurfaceDemo,
+  GradientSurfacePalettesDemo,
+  GradientSurfacePatternsDemo,
+  PageOutlineDemo,
+  SheetContainedDemo,
+  SheetDemo,
+  TabsDemo,
+  TabsPillDemo,
+  TaskListChecklistDemo,
+  TaskListDemo,
+} from "./demos/surfaces";
 import { AgentHarness } from "./demos/harness";
 import {
   BadgeDemo,
@@ -82,6 +132,17 @@ export const previews: Record<string, React.ReactNode> = {
   "dropdown-menu": <DropdownMenuDemo />,
   pagination: <PaginationDemo />,
   "timeline-header": <TimelineHeaderDemo />,
+  tabs: <TabsDemo />,
+  "tabs-pill": <TabsPillDemo />,
+  "task-list": <TaskListDemo />,
+  "task-list-checklist": <TaskListChecklistDemo />,
+  "gradient-surface": <GradientSurfaceDemo />,
+  "gradient-surface-palettes": <GradientSurfacePalettesDemo />,
+  "gradient-surface-patterns": <GradientSurfacePatternsDemo />,
+  drawer: <DrawerDemo />,
+  "drawer-resizable": <DrawerResizableDemo />,
+  sheet: <SheetDemo />,
+  "sheet-contained": <SheetContainedDemo />,
 
   // content
   "code-block": <CodeBlockDemo />,
@@ -93,6 +154,24 @@ export const previews: Record<string, React.ReactNode> = {
   "file-diff-list": <FileDiffDemo />,
   "file-diff-scroll": <FileDiffScrollDemo />,
   "mermaid-diagram": <MermaidDiagramDemo />,
+  "page-outline": <PageOutlineDemo />,
+  "file-preview": <FilePreviewDemo />,
+  "file-preview-fallback": <FilePreviewFallbackDemo />,
+  "file-drop-zone": <FileDropZoneDemo />,
+  "file-drop-zone-limits": <FileDropZoneLimitsDemo />,
+
+  // charts
+  "pie-chart": <PieChartDemo />,
+  "pie-chart-donut": <PieChartDonutDemo />,
+  "pie-chart-gauge": <PieChartGaugeDemo />,
+  "radar-chart": <RadarChartDemo />,
+  "radar-chart-per-axis": <RadarChartPerAxisDemo />,
+  "flow-chart": <FlowChartDemo />,
+  "flow-chart-vertical": <FlowChartVerticalDemo />,
+  "price-chart": <PriceChartDemo />,
+  "price-chart-candles": <PriceChartCandlesDemo />,
+  "price-chart-sparklines": <PriceChartSparklineDemo />,
+  "stock-quote": <StockQuoteDemo />,
 
   // agent surfaces
   "conversation-rail": <ConversationRailDemo />,
@@ -113,6 +192,23 @@ export const previews: Record<string, React.ReactNode> = {
   "model-picker": <ModelPickerDemo />,
   "selection-tooltip": <SelectionTooltipDemo />,
   "selection-tooltip-shelf": <SelectionTooltipShelfDemo />,
+  "agent-activity": <AgentActivityDemo />,
+  "agent-activity-card": <AgentActivityCardDemo />,
+  "agent-details": <AgentDetailsDemo />,
+  "conversation-history": <ConversationHistoryDemo />,
+  "transcript-divider": <TranscriptDividerDemo />,
+  "transcript-divider-detail": <TranscriptDividerDetailDemo />,
+
+  // chat surfaces
+  "pill-composer": <PillComposerDemo />,
+  "chat-bubbles": <ChatBubblesDemo />,
+  "chat-bubbles-typing": <ChatBubblesTypingDemo />,
+  "chat-tabs": <ChatTabsDemo />,
+  "chat-tray": <ChatTrayDemo />,
+  "chat-tray-collapse": <ChatTrayCollapseDemo />,
+  "chat-overlay": <ChatOverlayDemo />,
+  "chat-annotations": <ChatAnnotationsDemo />,
+  "chat-annotations-sent": <ChatAnnotationsSentDemo />,
 
   // harness
   "agent-harness": <AgentHarness />,
