@@ -1,22 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { ThinkingIcon } from "../story-support/icons/nucleo";
+import {
+  ChatAddIcon,
+  CommentIcon,
+  ThinkingIcon,
+} from "../story-support/icons/nucleo";
 import {
   AtSign,
-  Bookmark,
   Pencil,
   Pin,
   Share,
   Copy,
   FileCode,
   FileSearch,
-  Flag,
   HelpCircle,
+  Highlighter,
   Languages,
+  Link,
   ListTree,
-  MessageSquare,
-  MessageSquarePlus,
   Mic,
   Plus,
   Shield,
@@ -501,16 +503,16 @@ export function SelectionTooltipDemo() {
   return (
     <SelectionTooltip>
       <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
-        <MessageSquare aria-hidden="true" />
+        <CommentIcon aria-hidden="true" />
         <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
       </SelectionTooltipAction>
       <SelectionTooltipSeparator />
       <SelectionTooltipAction aria-label="Add to chat" tooltip="Add to chat">
-        <MessageSquarePlus aria-hidden="true" />
+        <ChatAddIcon aria-hidden="true" />
         <SelectionTooltipLabel>Add to chat</SelectionTooltipLabel>
       </SelectionTooltipAction>
       <SelectionTooltipSeparator />
-      <SelectionTooltipMore />
+      {/* Shelf before More so expanding fills space to the left of the chevron. */}
       <SelectionTooltipShelf>
         <SelectionTooltipAction aria-label="Copy" tooltip="Copy">
           <Copy aria-hidden="true" />
@@ -521,10 +523,17 @@ export function SelectionTooltipDemo() {
         <SelectionTooltipAction aria-label="Improve" tooltip="Improve">
           <Sparkles aria-hidden="true" />
         </SelectionTooltipAction>
-        <SelectionTooltipAction aria-label="Explain" tooltip="Explain">
-          <HelpCircle aria-hidden="true" />
+        <SelectionTooltipAction aria-label="Translate" tooltip="Translate">
+          <Languages aria-hidden="true" />
+        </SelectionTooltipAction>
+        <SelectionTooltipAction aria-label="Highlight" tooltip="Highlight">
+          <Highlighter aria-hidden="true" />
+        </SelectionTooltipAction>
+        <SelectionTooltipAction aria-label="Copy link" tooltip="Copy link">
+          <Link aria-hidden="true" />
         </SelectionTooltipAction>
       </SelectionTooltipShelf>
+      <SelectionTooltipMore />
     </SelectionTooltip>
   );
 }
@@ -533,15 +542,15 @@ const shelfActions = [
   { label: "Copy", icon: Copy },
   { label: "Quote", icon: TextQuote },
   { label: "Improve", icon: Sparkles },
-  { label: "Explain", icon: HelpCircle },
   { label: "Translate", icon: Languages },
+  { label: "Highlight", icon: Highlighter },
+  { label: "Copy link", icon: Link },
+  { label: "Explain", icon: HelpCircle },
   { label: "Summarize", icon: ListTree },
   { label: "Find similar", icon: Search },
   { label: "Cite", icon: Quote },
   { label: "Rewrite", icon: Wand2 },
   { label: "Share", icon: Share2 },
-  { label: "Bookmark", icon: Bookmark },
-  { label: "Report", icon: Flag },
 ];
 
 /**
@@ -554,16 +563,15 @@ export function SelectionTooltipShelfDemo() {
   return (
     <SelectionTooltip>
       <SelectionTooltipAction aria-label="Comment" tooltip="Comment">
-        <MessageSquare aria-hidden="true" />
+        <CommentIcon aria-hidden="true" />
         <SelectionTooltipLabel>Comment</SelectionTooltipLabel>
       </SelectionTooltipAction>
       <SelectionTooltipSeparator />
       <SelectionTooltipAction aria-label="Add to chat" tooltip="Add to chat">
-        <MessageSquarePlus aria-hidden="true" />
+        <ChatAddIcon aria-hidden="true" />
         <SelectionTooltipLabel>Add to chat</SelectionTooltipLabel>
       </SelectionTooltipAction>
       <SelectionTooltipSeparator />
-      <SelectionTooltipMore />
       <SelectionTooltipShelf>
         {shelfActions.map(({ label, icon: Icon }) => (
           <SelectionTooltipAction key={label} aria-label={label} tooltip={label}>
@@ -571,6 +579,7 @@ export function SelectionTooltipShelfDemo() {
           </SelectionTooltipAction>
         ))}
       </SelectionTooltipShelf>
+      <SelectionTooltipMore />
     </SelectionTooltip>
   );
 }

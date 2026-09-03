@@ -32,7 +32,7 @@ export function ComponentPreview({ previewId }: { previewId: string }) {
         {tab === "preview" || !source ? (
           <div
             role="tabpanel"
-            className="flex min-h-52 w-full min-w-0 items-center justify-center overflow-x-auto rounded-xl border border-border bg-card p-6"
+          className="flex min-h-52 w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-6"
           >
             {preview ?? (
               <span className="text-sm text-muted-foreground">

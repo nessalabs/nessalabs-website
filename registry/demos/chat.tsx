@@ -143,7 +143,7 @@ function TrayExample({ collapseAfter }: { collapseAfter?: number }) {
   const [opened, setOpened] = React.useState<string | null>(null);
 
   return (
-    <div className="flex w-full max-w-md flex-col items-start gap-2 rounded-3xl border border-border bg-background p-3">
+    <div className="flex w-full max-w-md min-w-0 flex-col items-stretch gap-2 overflow-hidden rounded-3xl border border-border bg-background p-3">
       <ChatTray
         items={pending}
         collapseAfter={collapseAfter}

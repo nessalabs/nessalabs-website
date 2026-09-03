@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Undo2 } from "lucide-react";
+import { FileCopyIcon } from "../story-support/icons/nucleo";
 import {
   Badge,
   Button,
@@ -28,8 +29,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   FileDiffCard,
+  FileDiffCardActions,
   FileDiffCardHeader,
   FileDiffCardHeading,
+  FileDiffCardIcon,
   FileDiffCardTitle,
   FileDiffList,
   FileDiffListItem,
@@ -533,32 +536,45 @@ export function ReferenceDemo() {
 }
 
 const manyFiles = [
-  { path: "packages/react/src/retrieval/index.ts", additions: 84, deletions: 12 },
-  { path: "packages/react/src/retrieval/encoder.ts", additions: 31, deletions: 0 },
-  { path: "packages/react/src/retrieval/rerank.ts", additions: 18, deletions: 6 },
-  { path: "packages/react/src/retrieval/legacy.ts", additions: 0, deletions: 96 },
-  { path: "packages/react/src/index.ts", additions: 4, deletions: 1 },
-  { path: "apps/api/routes/search.ts", additions: 12, deletions: 4 },
-  { path: "apps/api/routes/embed.ts", additions: 22, deletions: 9 },
-  { path: "apps/api/lib/client.ts", additions: 7, deletions: 3 },
-  { path: "apps/worker/jobs/reindex.ts", additions: 41, deletions: 15 },
-  { path: "apps/worker/jobs/backfill.ts", additions: 9, deletions: 2 },
-  { path: "docs/retrieval.md", additions: 27, deletions: 3 },
-  { path: "docs/changelog.md", additions: 6, deletions: 0 },
+  { path: "packages/react/src/components/model-capability-controls.tsx", additions: 84, deletions: 13 },
+  { path: "apps/storybook/.storybook/preview.ts", additions: 2, deletions: 1 },
+  { path: "apps/storybook/stories/chat-composer.stories.tsx", additions: 60, deletions: 4 },
+  { path: "packages/react/src/theme.css", additions: 2, deletions: 1 },
+  { path: "validation/nessa/checks/theme-parity.ts", additions: 121, deletions: 16 },
+  { path: "validation/tests/theme-parity.test.ts", additions: 18, deletions: 3 },
+  { path: "registry.json", additions: 38, deletions: 0 },
+  { path: "docs/architecture/design-system-contract.md", additions: 15, deletions: 0 },
+  { path: "packages/react/README.md", additions: 7, deletions: 2 },
+  { path: "apps/storybook/stories/model-capability-controls.stories.tsx", additions: 247, deletions: 6 },
+  { path: "packages/react/src/index.ts", additions: 1, deletions: 0 },
+  { path: "validation/tests/model-capability-icons.test.ts", additions: 7, deletions: 1 },
+  { path: "apps/storybook/stories/sidebar-menu.stories.tsx", additions: 0, deletions: 1 },
+  { path: "validation/amendments.ts", additions: 20, deletions: 6 },
 ];
 
 /** Collapsed to three rows; expanding scrolls the rest under a height cap. */
 export function FileDiffScrollDemo() {
+  const totalAdditions = manyFiles.reduce((n, f) => n + f.additions, 0);
+  const totalDeletions = manyFiles.reduce((n, f) => n + f.deletions, 0);
   return (
     <FileDiffCard className="w-full max-w-2xl" itemCount={manyFiles.length}>
       <FileDiffCardHeader>
+        <FileDiffCardIcon>
+          <FileCopyIcon />
+        </FileDiffCardIcon>
         <FileDiffCardHeading>
-          <FileDiffCardTitle>Changes</FileDiffCardTitle>
+          <FileDiffCardTitle>Edited {manyFiles.length} files</FileDiffCardTitle>
+          <DiffStat additions={totalAdditions} deletions={totalDeletions} />
         </FileDiffCardHeading>
-        <DiffStat
-          additions={manyFiles.reduce((n, f) => n + f.additions, 0)}
-          deletions={manyFiles.reduce((n, f) => n + f.deletions, 0)}
-        />
+        <FileDiffCardActions>
+          <Button variant="ghost" size="sm">
+            Undo
+            <Undo2 aria-hidden="true" />
+          </Button>
+          <Button variant="secondary" size="sm">
+            Review
+          </Button>
+        </FileDiffCardActions>
       </FileDiffCardHeader>
       <FileDiffList>
         {manyFiles.map((file) => (
@@ -574,23 +590,29 @@ export function FileDiffScrollDemo() {
 }
 
 export function FileDiffDemo() {
-  const files = [
-    { path: "packages/react/src/retrieval/index.ts", additions: 84, deletions: 12 },
-    { path: "packages/react/src/retrieval/encoder.ts", additions: 31, deletions: 0 },
-    { path: "apps/api/routes/search.ts", additions: 12, deletions: 4 },
-    { path: "docs/retrieval.md", additions: 27, deletions: 3 },
-  ];
+  const files = manyFiles.slice(0, 4);
+  const totalAdditions = files.reduce((n, f) => n + f.additions, 0);
+  const totalDeletions = files.reduce((n, f) => n + f.deletions, 0);
 
   return (
     <FileDiffCard className="w-full max-w-2xl" itemCount={files.length}>
       <FileDiffCardHeader>
+        <FileDiffCardIcon>
+          <FileCopyIcon />
+        </FileDiffCardIcon>
         <FileDiffCardHeading>
-          <FileDiffCardTitle>Changes</FileDiffCardTitle>
+          <FileDiffCardTitle>Edited {files.length} files</FileDiffCardTitle>
+          <DiffStat additions={totalAdditions} deletions={totalDeletions} />
         </FileDiffCardHeading>
-        <DiffStat
-          additions={files.reduce((n, f) => n + f.additions, 0)}
-          deletions={files.reduce((n, f) => n + f.deletions, 0)}
-        />
+        <FileDiffCardActions>
+          <Button variant="ghost" size="sm">
+            Undo
+            <Undo2 aria-hidden="true" />
+          </Button>
+          <Button variant="secondary" size="sm">
+            Review
+          </Button>
+        </FileDiffCardActions>
       </FileDiffCardHeader>
       <FileDiffList>
         {files.map((file) => (
