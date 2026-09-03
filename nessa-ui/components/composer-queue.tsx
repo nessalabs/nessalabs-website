@@ -10,6 +10,7 @@ import {
   useSensors,
   type DragEndEvent,
   type Announcements,
+  type Modifier,
 } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -19,9 +20,39 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { CornerDownRight, Ellipsis, GripVertical, Trash2 } from "lucide-react"
+import { ArrowUp, CornerDownRight, Ellipsis, GripVertical, Trash2 } from "lucide-react"
 
 import { cn } from "../lib/utils"
+
+/** Sortable rows stay on the vertical axis — sideways drag is not a reorder. */
+const restrictToVerticalAxis: Modifier = ({ transform }) => ({
+  ...transform,
+  x: 0,
+})
+
+/**
+ * Keeps a dragged row inside its list's box.
+ *
+ * Without this, a row can be pulled past the last item into empty space under
+ * the sheet — the queue looks unbounded even though dropping there does nothing.
+ * Reads the list off a ref at drag time so the first render's null never sticks.
+ */
+function restrictToListElement(
+  listRef: React.RefObject<HTMLElement | null>,
+): Modifier {
+  return ({ transform, draggingNodeRect, containerNodeRect }) => {
+    // Prefer dnd-kit's measured parent rect when present — it already tracked
+    // the list; falling back to a live read covers the first frame.
+    const bound = containerNodeRect ?? listRef.current?.getBoundingClientRect()
+    if (!draggingNodeRect || !bound) return transform
+    let { y } = transform
+    const top = draggingNodeRect.top + y
+    const bottom = draggingNodeRect.bottom + y
+    if (top < bound.top) y += bound.top - top
+    if (bottom > bound.bottom) y -= bottom - bound.bottom
+    return { ...transform, y }
+  }
+}
 
 export type ComposerDeliveryModeValue = "queue" | "steer"
 
@@ -58,7 +89,7 @@ function ComposerDeliveryMode({
           disabled={disabled}
           onClick={() => onValueChange(mode)}
           className={cn(
-            "h-7 rounded-full px-2.5 font-sans text-xs font-medium capitalize text-muted-foreground outline-none transition-[color,background-color,box-shadow] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50",
+            "h-7 rounded-full px-2.5 font-sans nessa-text-2 font-medium capitalize text-muted-foreground outline-none transition-[color,background-color,box-shadow] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50",
             value === mode && "bg-background text-foreground shadow-xs",
           )}
         >
@@ -69,9 +100,20 @@ function ComposerDeliveryMode({
   )
 }
 
+export type ComposerQueueAppearance = "card" | "plain"
+
+const ComposerQueueAppearanceContext =
+  React.createContext<ComposerQueueAppearance>("card")
+
 export interface ComposerQueueProps extends React.ComponentProps<"ol"> {
   itemIds: string[]
   onReorder: (itemIds: string[]) => void
+  /**
+   * `card` is the boxed list that sits above the composer during a run.
+   * `plain` is the unboxed sheet list: wrapping rows with no chrome, so the
+   * panel behind them is the surface.
+   */
+  appearance?: ComposerQueueAppearance
 }
 
 function dragItemLabel(item: {
@@ -100,14 +142,21 @@ const composerQueueAnnouncements: Announcements = {
 function ComposerQueue({
   itemIds,
   onReorder,
+  appearance = "card",
   className,
   ...props
 }: ComposerQueueProps) {
+  const listRef = React.useRef<HTMLOListElement>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
+  )
+
+  const modifiers = React.useMemo(
+    () => [restrictToVerticalAxis, restrictToListElement(listRef)],
+    [],
   )
 
   const handleDragEnd = React.useCallback(
@@ -122,24 +171,66 @@ function ComposerQueue({
   )
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      accessibility={{ announcements: composerQueueAnnouncements }}
-      onDragEnd={handleDragEnd}
+    <ComposerQueueAppearanceContext.Provider value={appearance}>
+      <DndContext
+        sensors={sensors}
+        modifiers={modifiers}
+        collisionDetection={closestCenter}
+        accessibility={{ announcements: composerQueueAnnouncements }}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+          <ol
+            ref={listRef}
+            data-slot="composer-queue"
+            data-appearance={appearance}
+            aria-label="Pending messages"
+            className={cn(
+              "m-0 grid list-none p-0",
+              appearance === "card"
+                ? "overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm"
+                : // Plain lists keep overflow visible so a dragged row's shadow
+                  // is not clipped by the list box.
+                  "overflow-visible bg-transparent text-foreground",
+              className,
+            )}
+            {...props}
+          />
+        </SortableContext>
+      </DndContext>
+    </ComposerQueueAppearanceContext.Provider>
+  )
+}
+
+export interface ComposerQueueBadgeProps
+  extends Omit<React.ComponentProps<"button">, "children"> {
+  /** How many messages are waiting. Shown after the "Queued" label. */
+  count: number
+}
+
+/**
+ * The compact pill that stands in for a pending-message list: "Queued 2".
+ * Pressing it is the host's job — typically opening a sheet of the rows.
+ * Hidden when `count` is 0 so an empty queue leaves no chrome.
+ */
+function ComposerQueueBadge({
+  count,
+  className,
+  ...props
+}: ComposerQueueBadgeProps) {
+  if (count <= 0) return null
+  return (
+    <button
+      type="button"
+      data-slot="composer-queue-badge"
+      className={cn(
+        "inline-flex h-7 items-center rounded-full bg-muted px-2.5 font-sans nessa-text-2 font-medium text-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        className,
+      )}
+      {...props}
     >
-      <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-        <ol
-          data-slot="composer-queue"
-          aria-label="Pending messages"
-          className={cn(
-            "m-0 grid list-none overflow-hidden rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-sm",
-            className,
-          )}
-          {...props}
-        />
-      </SortableContext>
-    </DndContext>
+      Queued {count}
+    </button>
   )
 }
 
@@ -147,23 +238,40 @@ export interface ComposerQueueItemProps extends React.ComponentProps<"li"> {
   id: string
   itemLabel: string
   onSteer?: () => void
+  /**
+   * Moves this row to the front of the queue. Distinct from steer: promote
+   * reorders, steer interrupts the current run with this message.
+   */
+  onPromote?: () => void
   onRemove?: () => void
   onMore?: () => void
   steerLabel?: string
+  /**
+   * Shows the drag handle so rows reorder by dragging one onto another.
+   * Defaults to true, including in the queued sheet. Pass false only when
+   * the host must not expose pointer sorting.
+   */
+  showHandle?: boolean
 }
+
+const queueItemActionClassName =
+  "inline-flex size-8 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 
 function ComposerQueueItem({
   id,
   itemLabel,
   onSteer,
+  onPromote,
   onRemove,
   onMore,
   steerLabel = "Steer",
+  showHandle = true,
   className,
   children,
   style,
   ...props
 }: ComposerQueueItemProps) {
+  const appearance = React.useContext(ComposerQueueAppearanceContext)
   const {
     attributes,
     listeners,
@@ -171,43 +279,78 @@ function ComposerQueueItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, data: { itemLabel } })
+  } = useSortable({ id, data: { itemLabel }, disabled: !showHandle })
+  const plain = appearance === "plain"
 
   return (
     <li
       ref={setNodeRef}
       data-slot="composer-queue-item"
+      data-appearance={appearance}
       data-dragging={isDragging ? "true" : "false"}
       style={{
         ...style,
         transform: CSS.Transform.toString(transform),
-        transition,
-      }}
+        "--composer-queue-sort-transition": transition,
+      } as React.CSSProperties}
+      // The sort-transition class applies only while dnd-kit supplies one, so
+      // an idle item leaves consumer transition utilities untouched instead of
+      // pinning `transition` to an unset custom property.
       className={cn(
-        "group relative z-0 grid min-h-11 grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-card px-2 py-1.5 font-sans last:border-b-0 data-[dragging=true]:z-10 data-[dragging=true]:rounded-xl data-[dragging=true]:shadow-lg",
+        "group relative z-0 grid min-h-11 gap-2 border-b border-border font-sans last:border-b-0 data-[dragging=true]:z-10 data-[dragging=true]:rounded-xl data-[dragging=true]:shadow-lg",
+        showHandle
+          ? "grid-cols-[1.75rem_minmax(0,1fr)_auto]"
+          : "grid-cols-[minmax(0,1fr)_auto]",
+        plain
+          ? "items-start bg-transparent px-6 py-3.5"
+          : "items-center bg-card px-2 py-1.5",
+        Boolean(transition) && "[transition:var(--composer-queue-sort-transition)]",
         className,
       )}
       {...props}
     >
-      <button
-        type="button"
-        data-slot="composer-queue-handle"
-        aria-label={`Reorder ${itemLabel}`}
-        title={`Reorder ${itemLabel}`}
-        className="flex size-7 touch-none cursor-grab items-center justify-center rounded-full text-muted-foreground/60 outline-none transition-colors hover:bg-accent hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
+      {showHandle ? (
+        <button
+          type="button"
+          data-slot="composer-queue-handle"
+          aria-label={`Reorder ${itemLabel}`}
+          title={`Reorder ${itemLabel}`}
+          className="flex size-7 touch-none cursor-grab items-center justify-center rounded-full text-muted-foreground/60 outline-none transition-colors hover:bg-accent hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical aria-hidden="true" className="size-3.5" />
+        </button>
+      ) : null}
+      <div
+        className={cn(
+          "min-w-0 text-foreground",
+          plain
+            ? "whitespace-normal nessa-text-3 leading-snug"
+            : "truncate nessa-text-4",
+        )}
       >
-        <GripVertical aria-hidden="true" className="size-3.5" />
-      </button>
-      <div className="min-w-0 truncate text-sm text-foreground">{children}</div>
-      <div className="flex items-center gap-0.5">
+        {children}
+      </div>
+      <div className={cn("flex items-center gap-0.5", plain && "-mt-0.5")}>
+        {onPromote ? (
+          <button
+            type="button"
+            data-slot="composer-queue-promote"
+            aria-label={`Promote ${itemLabel}`}
+            title={`Promote ${itemLabel}`}
+            onClick={onPromote}
+            className={queueItemActionClassName}
+          >
+            <ArrowUp aria-hidden="true" className="size-4" />
+          </button>
+        ) : null}
         {onSteer ? (
           <button
             type="button"
             aria-label={`${steerLabel} ${itemLabel}`}
             onClick={onSteer}
-            className="inline-flex h-7 items-center gap-1 rounded-full border-0 bg-transparent px-2 font-sans text-xs font-medium text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="inline-flex h-7 items-center gap-1 rounded-full border-0 bg-transparent px-2 font-sans nessa-text-2 font-medium text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <CornerDownRight aria-hidden="true" className="size-3" />
             {steerLabel}
@@ -216,12 +359,13 @@ function ComposerQueueItem({
         {onRemove ? (
           <button
             type="button"
+            data-slot="composer-queue-remove"
             aria-label={`Remove ${itemLabel}`}
             title={`Remove ${itemLabel}`}
             onClick={onRemove}
-            className="inline-flex size-7 items-center justify-center rounded-full border-0 bg-transparent text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className={queueItemActionClassName}
           >
-            <Trash2 aria-hidden="true" className="size-3.5" />
+            <Trash2 aria-hidden="true" className="size-4" />
           </button>
         ) : null}
         {onMore ? (
@@ -230,9 +374,9 @@ function ComposerQueueItem({
             aria-label={`More actions for ${itemLabel}`}
             title={`More actions for ${itemLabel}`}
             onClick={onMore}
-            className="inline-flex size-7 items-center justify-center rounded-full border-0 bg-transparent text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className={queueItemActionClassName}
           >
-            <Ellipsis aria-hidden="true" className="size-3.5" />
+            <Ellipsis aria-hidden="true" className="size-4" />
           </button>
         ) : null}
       </div>
@@ -243,5 +387,6 @@ function ComposerQueueItem({
 export {
   ComposerDeliveryMode,
   ComposerQueue,
+  ComposerQueueBadge,
   ComposerQueueItem,
 }

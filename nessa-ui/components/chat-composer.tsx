@@ -6,14 +6,23 @@ import {
   AtSign,
   Box,
   ClipboardType,
+  Folder,
+  Image,
   LoaderCircle,
   Paperclip,
   Puzzle,
+  TextQuote,
   X,
 } from "lucide-react"
 import { Popover } from "radix-ui"
 
 import { cn } from "../lib/utils"
+
+import {
+  FileDropZone,
+  fileDropZoneDefaultLabel,
+  type FileDropZoneProps,
+} from "./file-drop-zone"
 
 /**
  * The editing-surface operations a ChatComposerTrigger needs, implemented by
@@ -56,9 +65,34 @@ export const ChatComposerContext =
 
 export type ChatComposerBorderMode = "none" | "focus" | "always"
 
+/**
+ * The drop behavior a composer delegates to FileDropZone: the zone's own
+ * options, and nothing else — the element it merges onto, the overlay, and
+ * every DOM prop belong to the composer's form, which the composer owns.
+ * `onFiles` receives the files a person dropped anywhere over the
+ * composer, already filtered by `accept`, `maxSize`, and `maxFiles`.
+ */
+export type ChatComposerFileDrop = Pick<
+  FileDropZoneProps,
+  | "onFiles"
+  | "onRejectedFiles"
+  | "label"
+  | "accept"
+  | "multiple"
+  | "maxFiles"
+  | "maxSize"
+  | "directories"
+  | "disabled"
+>
+
 /** A compound message-entry form with independently composable input and footer controls. */
 export interface ChatComposerProps extends React.ComponentProps<"form"> {
-  /** Controls when the root surface border is visible. Defaults to `none`. */
+  /**
+   * Controls when the root surface border is visible. Defaults to `none`.
+   * A composer taking `fileDrop` still lights its border while a file drag
+   * is over it, in every mode — that feedback belongs to the drag, not to
+   * the resting chrome.
+   */
   borderMode?: ChatComposerBorderMode
   /** Sets the preferred width in CSS pixels while preserving host containment. */
   width?: number
@@ -70,7 +104,32 @@ export interface ChatComposerProps extends React.ComponentProps<"form"> {
   maxHeight?: number
   submitOnEnter?: boolean
   size?: "default" | "compact"
+  /**
+   * Accepts dropped files anywhere over the composer — the input, the
+   * attachment row, the footer — by merging a FileDropZone onto the
+   * composer form itself, so the capability adds no element and no layout
+   * of its own. While a file drag is over it the composer lights its
+   * border the way focus does, and exposes `data-dragging` for hosts that
+   * want a different treatment. Omit the prop and the composer takes no
+   * drops at all. The composer stores nothing: hosts turn the files into
+   * their own attachments and render them as `ChatComposerAttachment`
+   * pills.
+   *
+   * Without the prop the composer attaches nothing, but still cancels
+   * file drops over itself rather than letting the browser navigate away
+   * from the page to the dropped file.
+   *
+   * Dropping is a pointer gesture with no keyboard equivalent, so a host
+   * that takes drops owes its readers two things of its own: a focusable
+   * attach control that reaches the same handler, and an announcement of
+   * what the files became. The composer announces only the drag itself,
+   * since it is the only part it can see.
+   */
+  fileDrop?: ChatComposerFileDrop
 }
+
+/** Stands in for the drop handler while a composer takes no drops. */
+const noFiles = () => undefined
 
 /** Renders the compound message-entry form and provides layout behavior to its slots. */
 function ChatComposer({
@@ -79,6 +138,7 @@ function ChatComposer({
   maxHeight,
   submitOnEnter = true,
   size = "default",
+  fileDrop,
   className,
   children,
   style,
@@ -103,39 +163,70 @@ function ChatComposer({
     [effectiveMaxHeight, inputAdapter, size, submitOnEnter],
   )
 
+  const renderForm = (isDragging: boolean) => (
+    <form
+      data-slot="chat-composer"
+      data-border-mode={borderMode}
+      className={cn(
+        "relative grid min-w-0 w-full max-w-full gap-3 rounded-3xl border border-transparent bg-card p-3 font-sans text-card-foreground shadow-sm transition-[border-color,box-shadow]",
+        effectiveMaxHeight !== undefined &&
+          "grid-rows-[minmax(0,1fr)_auto] overflow-hidden has-[[data-slot=chat-composer-attachments]]:grid-rows-[auto_minmax(0,1fr)_auto]",
+        borderMode === "focus" &&
+          "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
+        borderMode === "always" &&
+          "border-border focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
+        effectiveMaxHeight === undefined &&
+          (size === "compact" ? "min-h-24" : "min-h-32"),
+        size === "compact" && "gap-2 rounded-2xl p-2.5",
+        // A file drag reads like focus: the surface it is aimed at lights
+        // up. Hosts wanting another treatment style data-dragging instead.
+        fileDrop &&
+          "data-[dragging]:border-ring data-[dragging]:ring-[3px] data-[dragging]:ring-ring/20",
+        className,
+      )}
+      style={{
+        ...style,
+        ...(responsiveWidth === undefined
+          ? undefined
+          : { width: responsiveWidth }),
+        minHeight:
+          effectiveMaxHeight === undefined
+            ? style?.minHeight
+            : "min-content",
+        maxHeight: effectiveMaxHeight,
+      }}
+      {...props}
+    >
+      {children}
+      {fileDrop ? (
+        // Merged onto this form, the zone has no DOM of its own to speak
+        // through, so the composer announces the drag it is showing.
+        <span aria-live="polite" className="sr-only">
+          {isDragging ? (fileDrop.label ?? fileDropZoneDefaultLabel) : ""}
+        </span>
+      ) : null}
+    </form>
+  )
+
   return (
     <ChatComposerContext.Provider value={context}>
-      <form
-        data-slot="chat-composer"
-        data-border-mode={borderMode}
-        className={cn(
-          "relative grid min-w-0 w-full max-w-full gap-3 rounded-3xl border border-transparent bg-card p-3 font-sans text-card-foreground shadow-sm transition-[border-color,box-shadow]",
-          effectiveMaxHeight !== undefined &&
-            "grid-rows-[minmax(0,1fr)_auto] overflow-hidden has-[[data-slot=chat-composer-attachments]]:grid-rows-[auto_minmax(0,1fr)_auto]",
-          borderMode === "focus" &&
-            "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
-          borderMode === "always" &&
-            "border-border focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20",
-          effectiveMaxHeight === undefined &&
-            (size === "compact" ? "min-h-24" : "min-h-32"),
-          size === "compact" && "gap-2 rounded-2xl p-2.5",
-          className,
-        )}
-        style={{
-          ...style,
-          ...(responsiveWidth === undefined
-            ? undefined
-            : { width: responsiveWidth }),
-          minHeight:
-            effectiveMaxHeight === undefined
-              ? style?.minHeight
-              : "min-content",
-          maxHeight: effectiveMaxHeight,
-        }}
-        {...props}
+      {/*
+        asChild merges the drag protocol onto the form itself: a drop
+        anywhere over the composer counts, and the composer keeps its own
+        box, so nothing about its layout or sizing contract moves. The zone
+        stays mounted even with no fileDrop — swapping the child's element
+        type would remount the form and wipe a message someone is still
+        typing — and simply refuses drops until a host asks for them.
+      */}
+      <FileDropZone
+        asChild
+        disabled={!fileDrop}
+        onFiles={noFiles}
+        {...fileDrop}
+        data-disabled={fileDrop?.disabled || undefined}
       >
-        {children}
-      </form>
+        {({ isDragging }) => renderForm(isDragging)}
+      </FileDropZone>
     </ChatComposerContext.Provider>
   )
 }
@@ -251,6 +342,8 @@ export interface ChatComposerInputProps
   extends React.ComponentPropsWithRef<"textarea"> {
   /** Caps the textarea's own autosized height before it begins scrolling. */
   maxHeight?: number
+  /** Shows the native scrollbar when the input overflows. Hidden by default — the content still scrolls, chat-surface style. */
+  scrollbar?: boolean
   /**
    * Receives pasted plain text at least `pasteAttachmentMinLength` characters
    * long instead of inserting it into the textarea, so the host can present
@@ -266,6 +359,7 @@ export interface ChatComposerInputProps
 function ChatComposerInput({
   className,
   maxHeight = 240,
+  scrollbar = false,
   onChange,
   onKeyDown,
   onPaste,
@@ -342,10 +436,12 @@ function ChatComposerInput({
         // apply :focus-visible to editable fields on pointer focus too, so an
         // outline here reads as a permanent inner border. The caret indicates
         // focus; the composer's borderMode owns any surface treatment.
-        "min-w-0 w-full resize-none border-0 bg-transparent px-1 py-1 font-sans text-base leading-6 text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "min-w-0 w-full resize-none border-0 bg-transparent px-1 py-1 font-sans nessa-text-5 text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        // Chat surfaces scroll without chrome; opt back in via scrollbar.
+        !scrollbar && "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         constrained ? "min-h-0 max-h-full" : "min-h-14",
-        size === "compact" && !constrained && "min-h-10 text-sm leading-5",
-        size === "compact" && constrained && "text-sm leading-5",
+        size === "compact" && !constrained && "min-h-10 nessa-text-4",
+        size === "compact" && constrained && "nessa-text-4",
         className,
       )}
       onChange={(event) => {
@@ -403,6 +499,9 @@ export type ChatComposerAttachmentKind =
   | "plugin"
   | "pasted-text"
   | "file"
+  | "photo"
+  | "folder"
+  | "quote"
   | "mention"
 
 const attachmentKindIcons: Record<
@@ -413,6 +512,9 @@ const attachmentKindIcons: Record<
   plugin: Puzzle,
   "pasted-text": ClipboardType,
   file: Paperclip,
+  photo: Image,
+  folder: Folder,
+  quote: TextQuote,
   mention: AtSign,
 }
 
@@ -513,7 +615,7 @@ function ChatComposerAttachment({
       data-slot="chat-composer-attachment"
       data-kind={kind}
       className={cn(
-        "inline-flex h-7 min-w-0 max-w-full items-center gap-1.5 rounded-lg bg-accent px-2 font-sans text-sm text-accent-foreground",
+        "inline-flex h-7 min-w-0 max-w-full items-center gap-1.5 rounded-lg bg-accent px-2 font-sans nessa-text-4 text-accent-foreground",
         onRemove && "pr-0.5",
         className,
       )}

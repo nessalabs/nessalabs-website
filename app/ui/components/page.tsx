@@ -50,8 +50,8 @@ export default function ComponentsOverviewPage() {
       <h1 className="text-3xl font-semibold tracking-tight">Components</h1>
       <p className="mt-4 text-base leading-7 text-muted-foreground">
         nessa-ui is a set of accessible React components and tokens for AI
-        products. It covers primitives, content blocks, agent surfaces and
-        composites.
+        products. It covers primitives, content blocks, charts, agent and chat
+        surfaces, and composites.
       </p>
       <p className="mt-3 text-base leading-7 text-muted-foreground">
         Components own the behaviour and hand back the presentation:{" "}

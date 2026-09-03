@@ -25,6 +25,9 @@ const catalog = [
   ["pagination", "Pagination", "Primitives", "pagination"],
   ["timeline-header", "TimelineHeader", "Primitives", "timeline-header"],
   ["popover-surface", "PopoverSurface", "Primitives", "popover-surface"],
+  ["tabs", "Tabs", "Primitives", "tabs"],
+  ["task-list", "TaskList", "Primitives", "task-list"],
+  ["gradient-surface", "GradientSurface", "Primitives", "gradient-surface"],
 
   // Listboxes & menus
   ["searchable-listbox", "SearchableListbox", "Navigation", "searchable-listbox"],
@@ -33,6 +36,9 @@ const catalog = [
   ["dropdown-menu", "DropdownMenu", "Navigation", "dropdown-menu"],
   ["conversation-rail", "ConversationRail", "Navigation", "conversation-rail"],
   ["sidebar", "Sidebar", "Navigation", "sidebar"],
+  ["page-outline", "PageOutline", "Navigation", "page-outline"],
+  ["drawer", "Drawer", "Navigation", "drawer"],
+  ["sheet", "Sheet", "Navigation", "sheet"],
 
   // Content
   ["code-block", "CodeBlock", "Content", "code-block"],
@@ -43,6 +49,15 @@ const catalog = [
   ["reference", "Reference", "Content", "reference"],
   ["selection-tooltip", "SelectionTooltip", "Content", "selection-tooltip"],
   ["file-diff-list", "FileDiffCard", "Content", "file-diff-list"],
+  ["file-preview", "FilePreview", "Content", "file-preview"],
+  ["file-drop-zone", "FileDropZone", "Content", "file-drop-zone"],
+
+  // Charts
+  ["pie-chart", "PieChart", "Charts", "pie-chart"],
+  ["radar-chart", "RadarChart", "Charts", "radar-chart"],
+  ["flow-chart", "FlowChart", "Charts", "flow-chart"],
+  ["price-chart", "PriceChart", "Charts", "price-chart"],
+  ["stock-quote", "StockQuote", "Charts", "stock-quote"],
 
   // Agent surfaces
   ["message", "Message", "Agent surfaces", "message"],
@@ -57,6 +72,18 @@ const catalog = [
   ["model-capability-controls", "ModelThinkingControl", "Agent surfaces", "model-capability-controls"],
   ["generating-surface", "GeneratingSurface", "Agent surfaces", "generating-surface"],
   ["questionnaire", "Questionnaire", "Agent surfaces", "questionnaire"],
+  ["agent-activity", "AgentActivity", "Agent surfaces", "agent-activity"],
+  ["agent-details", "AgentDetails", "Agent surfaces", "agent-details"],
+  ["conversation-history", "ConversationHistory", "Agent surfaces", "conversation-history"],
+  ["transcript-divider", "TranscriptDivider", "Agent surfaces", "transcript-divider"],
+
+  // Chat surfaces
+  ["pill-composer", "PillComposer", "Chat surfaces", "pill-composer"],
+  ["chat-bubbles", "ChatBubbles", "Chat surfaces", "chat-bubbles"],
+  ["chat-tabs", "ChatTabs", "Chat surfaces", "chat-tabs"],
+  ["chat-tray", "ChatTray", "Chat surfaces", "chat-tray"],
+  ["chat-overlay", "ChatOverlay", "Chat surfaces", "chat-overlay"],
+  ["chat-annotations", "ChatAnnotations", "Chat surfaces", "chat-annotations"],
 
   // Composites
   ["app-shell", "AppShell", "Composites", "app-shell"],

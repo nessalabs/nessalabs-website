@@ -5,6 +5,9 @@ import { ThinkingIcon } from "../story-support/icons/nucleo";
 import {
   AtSign,
   Bookmark,
+  Pencil,
+  Pin,
+  Share,
   Copy,
   FileCode,
   FileSearch,
@@ -27,6 +30,17 @@ import {
   Wand2,
 } from "lucide-react";
 import {
+  AgentActivity,
+  AgentActivityCard,
+  AgentActivityContent,
+  AgentActivityCue,
+  AgentActivityTrigger,
+  AgentDetails,
+  AgentDetailsAction,
+  AgentDetailsActions,
+  AgentDetailsField,
+  AgentDetailsProject,
+  AgentDetailsSection,
   ChatComposer,
   ChatComposerAction,
   ChatComposerActions,
@@ -34,6 +48,7 @@ import {
   ChatComposerAttachments,
   ChatComposerEditor,
   ChatComposerTrigger,
+  ConversationHistory,
   ConversationRail,
   ConversationRailItem,
   ConversationRailMarker,
@@ -59,6 +74,7 @@ import {
   MermaidDiagram,
   ModelPicker,
   ModelThinkingControl,
+  RandomAvatar,
   Reference,
   ReferenceCard,
   ReferenceContent,
@@ -86,7 +102,19 @@ import {
   SelectionTooltipMore,
   SelectionTooltipSeparator,
   SelectionTooltipShelf,
+  Sheet,
+  SheetAction,
+  SheetBody,
+  SheetClose,
+  SheetExpand,
+  SheetHandle,
+  SheetHeader,
+  SheetTitle,
+  TranscriptDivider,
+  formatAgentActivitySummary,
+  formatAgentThoughtSummary,
   type ChatComposerEditorHandle,
+  type ConversationHistoryEntry,
   type ModelPickerGroup,
   type ModelPickerValue,
 } from "@nessa-ui/react";
@@ -1111,5 +1139,226 @@ export function ChatComposerInlineDemo() {
         Serialized: {content ? content : "empty"}
       </p>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Agent activity, details, history and transcript markers
+ * ------------------------------------------------------------------ */
+
+const exploredSummary = formatAgentActivitySummary({ files: 3, searches: 2 });
+
+export function AgentActivityDemo() {
+  const [open, setOpen] = React.useState(false);
+  const sheetId = React.useId();
+
+  return (
+    <div className="relative h-80 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-background p-4">
+      <div className="flex flex-col gap-3">
+        <AgentActivityCue>{formatAgentThoughtSummary(1)}</AgentActivityCue>
+        <AgentActivity>
+          <AgentActivityTrigger
+            icon={<RandomAvatar seed="agent-activity" className="size-4" />}
+            aria-expanded={open}
+            aria-controls={open ? sheetId : undefined}
+            onClick={() => setOpen(true)}
+          >
+            {exploredSummary}
+          </AgentActivityTrigger>
+        </AgentActivity>
+      </div>
+      {open ? (
+        <Sheet
+          id={sheetId}
+          label={exploredSummary}
+          modal={false}
+          onClose={() => setOpen(false)}
+        >
+          <SheetHandle />
+          <SheetHeader>
+            <SheetExpand />
+            <SheetTitle>{exploredSummary}</SheetTitle>
+            <SheetAction>Done</SheetAction>
+          </SheetHeader>
+          <SheetBody>
+            <AgentActivityContent>
+              <ToolCall>
+                <ToolCallTrigger icon={<FileSearch />} meta="chat-tabs.tsx">
+                  Read
+                </ToolCallTrigger>
+                <ToolCallContent>
+                  <ToolCallTabs
+                    input={`{ "path": "chat-tabs.tsx" }`}
+                    output="export function ChatTabs…"
+                  />
+                </ToolCallContent>
+              </ToolCall>
+              <ToolCall>
+                <ToolCallTrigger icon={<Search />} meta="wrapTab">
+                  Search
+                </ToolCallTrigger>
+                <ToolCallContent>
+                  <ToolCallTabs input={`{ "pattern": "wrapTab" }`} output="2 matches" />
+                </ToolCallContent>
+              </ToolCall>
+            </AgentActivityContent>
+          </SheetBody>
+        </Sheet>
+      ) : null}
+    </div>
+  );
+}
+
+export function AgentActivityCardDemo() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-3 rounded-2xl border border-border bg-background p-4">
+      <AgentActivity status="running">
+        <AgentActivityTrigger
+          icon={<RandomAvatar seed="agent-activity" busy className="size-4" />}
+        >
+          Exploring…
+        </AgentActivityTrigger>
+      </AgentActivity>
+      <AgentActivityCard
+        icon={<RandomAvatar seed="explorer" busy className="size-7" />}
+        title="Explore chat UI components"
+        meta="Working · Explorer"
+      />
+    </div>
+  );
+}
+
+export function AgentDetailsDemo() {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="relative h-96 w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-background">
+      <Button
+        variant="outline"
+        className="absolute left-1/2 top-8 -translate-x-1/2"
+        onClick={() => setOpen(true)}
+      >
+        View details
+      </Button>
+      {open ? (
+        <Sheet label="Agent details" onClose={() => setOpen(false)}>
+          <SheetHandle />
+          <SheetHeader>
+            <SheetExpand />
+            <SheetClose className="col-start-3 justify-self-end" />
+          </SheetHeader>
+          <SheetBody>
+            <AgentDetails title="Agent message package implementation">
+              <AgentDetailsActions>
+                <AgentDetailsAction label="Edit">
+                  <Pencil aria-hidden="true" />
+                </AgentDetailsAction>
+                <AgentDetailsAction label="Pin">
+                  <Pin aria-hidden="true" />
+                </AgentDetailsAction>
+                <AgentDetailsAction label="Share">
+                  <Share aria-hidden="true" />
+                </AgentDetailsAction>
+              </AgentDetailsActions>
+              <AgentDetailsSection title="Info">
+                <AgentDetailsProject path="nessalabs/nessa_ui" branch="main" />
+                <AgentDetailsField label="Source" value="Mobile" />
+                <AgentDetailsField label="Runtime" value="Cursor Cloud" />
+                <AgentDetailsField label="Model" value="Fable 5" />
+                <AgentDetailsField label="Created" value="1m" />
+                <AgentDetailsField label="Last updated" value="1m" />
+              </AgentDetailsSection>
+            </AgentDetails>
+          </SheetBody>
+        </Sheet>
+      ) : null}
+    </div>
+  );
+}
+
+const conversationCatalog: ConversationHistoryEntry[] = [
+  {
+    id: "agent-message",
+    title: "Agent message package implementation",
+    preview: "I'll start by reading the repo workflow…",
+    updated: "1m",
+    pinned: true,
+    project: "nessalabs/nessa_ui",
+  },
+  {
+    id: "audit",
+    title: "Repo audit",
+    preview: "I'll split that: one agent maps the composer call sites.",
+    updated: "12m",
+    project: "nessalabs/nessa_ui",
+  },
+  {
+    id: "release",
+    title: "Release notes",
+    preview: "New conversation",
+    updated: "Just now",
+  },
+];
+
+export function ConversationHistoryDemo() {
+  const [query, setQuery] = React.useState("");
+  const [value, setValue] = React.useState<string | null>("agent-message");
+  const conversations = conversationCatalog.filter((entry) => {
+    const haystack = `${entry.title} ${entry.preview ?? ""} ${entry.project ?? ""}`;
+    return haystack.toLowerCase().includes(query.trim().toLowerCase());
+  });
+
+  return (
+    <div className="h-96 w-full max-w-sm rounded-2xl border border-border bg-background p-4">
+      <ConversationHistory
+        conversations={conversations}
+        value={value}
+        onValueChange={setValue}
+        query={query}
+        onQueryChange={setQuery}
+      />
+    </div>
+  );
+}
+
+export function TranscriptDividerDemo() {
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <Message from="assistant">
+        <MessageContent className="max-w-full">
+          <MessageBubble variant="plain">Read part-07.txt.</MessageBubble>
+        </MessageContent>
+      </Message>
+      <TranscriptDivider meta="72k → 10k tokens · 37s">
+        Context compacted
+      </TranscriptDivider>
+      <Message from="assistant">
+        <MessageContent className="max-w-full">
+          <MessageBubble variant="plain">Read part-08.txt.</MessageBubble>
+        </MessageContent>
+      </Message>
+    </div>
+  );
+}
+
+const compactionSummary = `This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary request and intent: read each file in full, one at a time, answering with only the filename.
+2. Files read so far: corpus/part-01.txt through corpus/part-07.txt.
+3. Pending: the remaining files, in order.`;
+
+export function TranscriptDividerDetailDemo() {
+  return (
+    <TranscriptDivider
+      meta="71.1k → 9.3k tokens · 17s"
+      detail={
+        <div className="max-h-64 overflow-auto rounded-lg border border-border bg-muted/40 p-3 whitespace-pre-wrap text-sm">
+          {compactionSummary}
+        </div>
+      }
+    >
+      Context compacted
+    </TranscriptDivider>
   );
 }

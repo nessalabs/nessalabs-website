@@ -30,6 +30,13 @@ export interface CheckboxProps
 }
 
 /**
+ * The check glyph's path on the 18-unit control viewBox. Shared so
+ * companion surfaces that draw a matching check — TaskList's read-only
+ * done indicator — can never drift from the Checkbox's own glyph.
+ */
+export const checkboxCheckPath = "M5.75 9.25L8 11.75L12.25 6.25"
+
+/**
  * A checkbox: a real `input type="checkbox"` styled in place, so keyboard
  * and form semantics stay native and `FormData` sees the value. Supports the
  * mixed state through `indeterminate`, and composes into a label row or a
@@ -63,7 +70,7 @@ function Checkbox({
         // Fading the whole control keeps the box and its glyph in step; a
         // per-element opacity would leave a full-strength check on a faded
         // box when a checked control is disabled.
-        "relative inline-flex size-[18px] shrink-0 text-primary has-[:disabled]:opacity-50",
+        "relative inline-flex size-4.5 shrink-0 text-primary has-[:disabled]:opacity-50",
         className,
       )}
     >
@@ -105,7 +112,7 @@ function Checkbox({
         )}
       >
         <path
-          d={indeterminate ? "M5.5 9H12.5" : "M5.75 9.25L8 11.75L12.25 6.25"}
+          d={indeterminate ? "M5.5 9H12.5" : checkboxCheckPath}
           stroke="currentColor"
           strokeWidth={1.5}
           strokeLinecap="round"

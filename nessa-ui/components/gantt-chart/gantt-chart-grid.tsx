@@ -500,7 +500,7 @@ function TaskBar({
         <span
           aria-hidden="true"
           data-slot="gantt-chart-milestone-name"
-          className="pointer-events-none absolute top-0 flex h-full max-w-48 items-center truncate text-xs font-medium text-foreground"
+          className="pointer-events-none absolute top-0 flex h-full max-w-48 items-center truncate nessa-text-2 font-medium text-foreground"
           style={{ left: left + MILESTONE_SIZE }}
         >
           {task.name}
@@ -516,7 +516,7 @@ function TaskBar({
       {...sharedButtonProps}
       data-slot="gantt-chart-bar"
       className={cn(
-        "absolute flex cursor-grab items-center overflow-hidden rounded-md px-2 text-start text-xs font-medium leading-4 shadow-xs",
+        "absolute flex cursor-grab items-center overflow-hidden rounded-md px-2 text-start nessa-text-2 font-medium shadow-xs",
         ganttChartToneVariants({ tone }),
         surfaceTransitionClassName,
         insetFocusClassName,
@@ -610,12 +610,12 @@ function DefaultMoveConfirm({
       radius="lg"
       className="flex w-64 flex-col gap-2 p-3"
     >
-      <p className="text-xs font-medium">
+      <p className="nessa-text-2 font-medium">
         {durationChanged
           ? labels.confirmResizeTitle(context.task.name)
           : labels.confirmMoveTitle(context.task.name)}
       </p>
-      <p className="text-xs text-muted-foreground">
+      <p className="nessa-text-2 text-muted-foreground">
         {milestone
           ? formatDayLabel(locale, context.range.start)
           : `${formatDayLabel(locale, context.range.start)} – ${formatDayLabel(
@@ -624,7 +624,7 @@ function DefaultMoveConfirm({
             )}`}
       </p>
       {moveDependents && context.dependentTaskIds.length ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="nessa-text-2 text-muted-foreground">
           {labels.cascadeNote(context.dependentTaskIds.length)}
         </p>
       ) : null}
@@ -1032,8 +1032,10 @@ export interface GanttChartGridProps extends React.ComponentProps<"div"> {}
 /**
  * The chart's scrollable body: the pinned task list, the two-tier time
  * header, one lane per visible task, dependency arrows, weekend shading,
- * and the today marker. Scrolls both axes inside a built-in height cap
- * that hosts override with `className`.
+ * and the today marker. Fills whatever box the host gives the chart —
+ * size the `GanttChart` (or a parent) and the grid takes the height left
+ * after the toolbar and scrolls both axes inside it; leave the chart
+ * unsized and it simply grows with its rows.
  */
 function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
   const {
@@ -1482,7 +1484,7 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
   }
 
   return (
-    <div data-slot="gantt-chart-grid" className="relative">
+    <div data-slot="gantt-chart-grid" className="relative min-h-0 flex-1">
     <div
       ref={scrollerRef}
       data-slot="gantt-chart-scroll"
@@ -1490,7 +1492,7 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
       aria-label={labels.timeline}
       tabIndex={0}
       className={cn(
-        "relative max-h-[480px] overflow-auto overscroll-contain",
+        "relative h-full overflow-auto overscroll-contain",
         insetFocusClassName,
         className,
       )}
@@ -1523,16 +1525,16 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
       <div
         ref={canvasRef}
         data-slot="gantt-chart-canvas"
-        className="relative min-w-full"
+        className="relative flex min-h-full min-w-full flex-col"
         style={{ width: taskListWidth + timelineWidth }}
       >
         <div
           data-slot="gantt-chart-header"
-          className="sticky top-0 z-30 flex border-b border-border bg-background"
+          className="sticky top-0 z-30 flex shrink-0 border-b border-border bg-background"
           style={{ height: HEADER_HEIGHT }}
         >
           <div
-            className="sticky left-0 z-10 flex shrink-0 items-end gap-1 border-r border-border bg-background pe-3 ps-3 pb-1 text-xs font-medium text-muted-foreground"
+            className="sticky left-0 z-10 flex shrink-0 items-end gap-1 border-r border-border bg-background pe-3 ps-3 pb-1 nessa-text-2 font-medium text-muted-foreground"
             style={{ width: taskListWidth }}
           >
             <span className="min-w-0 flex-1 truncate">
@@ -1585,16 +1587,12 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
             ))}
           </TimelineHeader>
         </div>
-        <div data-slot="gantt-chart-body" className="relative">
+        <div data-slot="gantt-chart-body" className="relative flex flex-1 flex-col">
           <div
             aria-hidden="true"
             data-slot="gantt-chart-underlay"
-            className="pointer-events-none absolute top-0"
-            style={{
-              left: taskListWidth,
-              width: timelineWidth,
-              height: rowsHeight,
-            }}
+            className="pointer-events-none absolute inset-y-0"
+            style={{ left: taskListWidth, width: timelineWidth }}
           >
             {secondaryCells.map((cell) => (
               <div
@@ -1719,7 +1717,7 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
                 key={row.task.id}
                 data-slot="gantt-chart-row"
                 data-summary={row.summary || undefined}
-                className="flex"
+                className="flex shrink-0"
                 style={{ height: rowHeight }}
               >
                 {/* The cell and the lane each own their bottom border: a
@@ -1728,11 +1726,11 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
                     through it across the pinned column. */}
                 <div
                   data-slot="gantt-chart-task-cell"
-                  className="sticky left-0 z-20 flex shrink-0 items-center gap-1 border-b border-r border-border/40 border-r-border bg-background pe-3 text-sm"
+                  className="sticky left-0 z-20 flex shrink-0 items-center gap-1 border-b border-r border-border/40 border-r-border bg-background pe-3 ps-(--gantt-row-indent) nessa-text-4"
                   style={{
                     width: taskListWidth,
-                    paddingInlineStart: 8 + row.depth * 16,
-                  }}
+                    "--gantt-row-indent": `${8 + row.depth * 16}px`,
+                  } as React.CSSProperties}
                 >
                   {row.summary ? (
                     <button
@@ -1781,7 +1779,7 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
                       data-slot="gantt-chart-task-cell-column"
                       data-column={column.key}
                       className={cn(
-                        "shrink-0 truncate text-xs tabular-nums text-muted-foreground",
+                        "shrink-0 truncate nessa-text-2 tabular-nums text-muted-foreground",
                         column.align === "end" && "text-end",
                       )}
                       style={{ width: column.width }}
@@ -1934,6 +1932,20 @@ function GanttChartGrid({ className, ...props }: GanttChartGridProps) {
               </div>
             )
           })}
+          {/* When the host's box is taller than the rows, the pinned
+              column and its divider keep going — an expanded chart never
+              shows the task list falling short of its own frame. */}
+          <div
+            aria-hidden="true"
+            data-slot="gantt-chart-filler"
+            className="flex min-h-0 flex-1"
+          >
+            <div
+              className="sticky left-0 z-20 shrink-0 border-r border-border bg-background"
+              style={{ width: taskListWidth }}
+            />
+            <div className="shrink-0" style={{ width: timelineWidth }} />
+          </div>
         </div>
       </div>
     </div>
