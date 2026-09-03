@@ -4,13 +4,9 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 import {
   Bell,
-  CalendarDays,
   Columns2,
   Database,
   Filter,
-  MessageCircle,
-  PanelsTopLeft,
-  PenTool,
   Rows2,
   SearchX,
   Shuffle,
@@ -21,9 +17,6 @@ import {
 import {
   Badge,
   Button,
-  ChatBubble,
-  ChatMessage,
-  ChatMessageReceipt,
   Checkbox,
   EventCalendar,
   EventCalendarGrid,
@@ -39,7 +32,6 @@ import {
   KanbanColumn,
   KanbanColumnHandle,
   KanbanColumnList,
-  RandomAvatar,
   SplitView,
   SplitViewOrientation,
   SplitViewPanel,
@@ -60,8 +52,6 @@ import {
   TableSortButton,
   TableToolbar,
   TableViewOptions,
-  TaskList,
-  TaskListItem,
   WindowDeck,
   WindowDeckPane,
   WorkflowCanvas,
@@ -1385,246 +1375,67 @@ export function TableEmptyDemo() {
 
 /* ── WindowDeck ────────────────────────────────────────────────────────── */
 
-/** One window's chrome: the app mark, its name, and the thread it is on. */
-function WindowDeckPaneHeader({
-  icon: Icon,
-  name,
-  subtitle,
-}: {
-  icon: React.ElementType;
-  name: string;
-  subtitle: string;
-}) {
-  return (
-    <>
-      <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground [&_svg]:size-3.5">
-        <Icon />
-      </span>
-      <span className="flex min-w-0 flex-col">
-        <strong className="nessa-text-3 truncate font-medium">{name}</strong>
-        <small className="nessa-text-2 truncate text-muted-foreground">
-          {subtitle}
-        </small>
-      </span>
-    </>
-  );
-}
-
-/** A short transcript, the shape the chat kit renders it. */
-function WindowDeckTranscript({
-  lines,
-}: {
-  lines: readonly { tone: "sent" | "received"; text: string }[];
-}) {
-  return (
-    <div className="flex flex-col gap-1.5 p-4">
-      {lines.map((line, index) => (
-        <ChatMessage key={line.text} tone={line.tone} animateIn={false}>
-          <ChatBubble>{line.text}</ChatBubble>
-          {index === lines.length - 1 && line.tone === "sent" ? (
-            <ChatMessageReceipt>Delivered</ChatMessageReceipt>
-          ) : null}
-        </ChatMessage>
-      ))}
-    </div>
-  );
-}
+const windowDeckPanes = [
+  {
+    id: "brief",
+    label: "Brief",
+    subtitle: "Today",
+    body: "Three reviews before noon, then the token audit. Hold the afternoon for the registry check.",
+  },
+  {
+    id: "notes",
+    label: "Notes",
+    subtitle: "Open",
+    body: "The separator is a separator, not a tab stop. Keep the handle out of the tab order.",
+  },
+  {
+    id: "studio",
+    label: "Studio",
+    subtitle: "In progress",
+    body: "Widen the gap between chart 3 and chart 4. They read as one colour at this size.",
+  },
+  {
+    id: "review",
+    label: "Review",
+    subtitle: "Queued",
+    body: "Read the motion tokens against the overdamped spring. The discard should accelerate, not coast.",
+  },
+  {
+    id: "log",
+    label: "Log",
+    subtitle: "This week",
+    body: "Opened the overview, restored Calendar, dismissed Notes. The grid packed over the gap.",
+  },
+];
 
 /**
- * Six windows of different content, so the deck is a frame rather than six
- * copies of one surface. Scroll or swipe to move; Mod+G opens the overview.
+ * Five generic windows. Scroll or swipe to move; Mod+G opens the overview.
  */
 export function WindowDeckDemo() {
   return (
     <div className="h-[32rem] w-full overflow-hidden rounded-2xl border border-border bg-background">
       <WindowDeck defaultActivePane="studio">
-        <WindowDeckPane
-          id="messages"
-          label="Messages"
-          header={
-            <WindowDeckPaneHeader
-              icon={MessageCircle}
-              name="Messages"
-              subtitle="Nessa crew"
-            />
-          }
-        >
-          <WindowDeckTranscript
-            lines={[
-              {
-                tone: "received",
-                text: "SplitView keeps its separator on the token ramp now.",
-              },
-              {
-                tone: "sent",
-                text: "Does the Drawer still trap focus on the resize handle?",
-              },
-              {
-                tone: "received",
-                text: "Fixed — the handle is a separator, not a tab stop.",
-              },
-            ]}
-          />
-        </WindowDeckPane>
-
-        <WindowDeckPane
-          id="rollout"
-          label="Rollout"
-          header={
-            <WindowDeckPaneHeader
-              icon={PanelsTopLeft}
-              name="Rollout"
-              subtitle="@nessa-ui/react"
-            />
-          }
-        >
-          <div className="flex flex-col gap-3 p-4">
-            <TaskList>
-              <TaskListItem status="done" meta="14 components">
-                Publish the neutral ramp
-              </TaskListItem>
-              <TaskListItem status="done">Freeze the typography scale</TaskListItem>
-              <TaskListItem status="active" meta="4 open">
-                Move every surface onto the motion tokens
-              </TaskListItem>
-              <TaskListItem status="todo">
-                Retire the transitional dark variant
-              </TaskListItem>
-            </TaskList>
-          </div>
-        </WindowDeckPane>
-
-        <WindowDeckPane
-          id="studio"
-          label="Studio"
-          header={
-            <WindowDeckPaneHeader
-              icon={PenTool}
-              name="Studio"
-              subtitle="nessa-ui preview"
-            />
-          }
-        >
-          <div className="flex flex-col gap-3 p-4">
-            <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
-              <span className="nessa-text-2 text-muted-foreground">
-                Chart ramp
+        {windowDeckPanes.map((pane) => (
+          <WindowDeckPane
+            key={pane.id}
+            id={pane.id}
+            label={pane.label}
+            header={
+              <span className="flex min-w-0 flex-col">
+                <strong className="nessa-text-3 truncate font-medium">
+                  {pane.label}
+                </strong>
+                <small className="nessa-text-2 truncate text-muted-foreground">
+                  {pane.subtitle}
+                </small>
               </span>
-              <div className="flex h-16 gap-1.5">
-                <span className="flex-1 rounded-md bg-(--nessa-chart-series-1)" />
-                <span className="flex-1 rounded-md bg-(--nessa-chart-series-2)" />
-                <span className="flex-1 rounded-md bg-(--nessa-chart-series-3)" />
-                <span className="flex-1 rounded-md bg-(--nessa-chart-series-4)" />
-                <span className="flex-1 rounded-md bg-(--nessa-chart-series-5)" />
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <Badge>Default</Badge>
-                <Badge variant="secondary">Secondary</Badge>
-                <Badge variant="outline">Outline</Badge>
-              </div>
-            </div>
-            <WindowDeckTranscript
-              lines={[
-                {
-                  tone: "sent",
-                  text: "Chart 3 and 4 read the same at this size.",
-                },
-                {
-                  tone: "received",
-                  text: "Widened the gap between them in both themes.",
-                },
-              ]}
-            />
-          </div>
-        </WindowDeckPane>
-
-        <WindowDeckPane
-          id="calendar"
-          label="Calendar"
-          header={
-            <WindowDeckPaneHeader
-              icon={CalendarDays}
-              name="Calendar"
-              subtitle="Week 43"
-            />
-          }
-        >
-          <div className="flex flex-col gap-2 p-4">
-            <div className="flex items-center justify-between">
-              <strong className="nessa-text-3">Wednesday, Oct 22</strong>
-              <Badge variant="secondary">Focus held</Badge>
-            </div>
-            {(
-              [
-                ["12:00", "Component review — WindowDeck"],
-                ["14:00", "Token audit — motion and elevation"],
-                ["16:30", "Registry parity check"],
-              ] as const
-            ).map(([time, label]) => (
-              <div
-                key={time}
-                className="nessa-text-3 flex items-center gap-3 rounded-md bg-muted/60 px-3 py-2"
-              >
-                <time className="text-muted-foreground">{time}</time>
-                <span className="truncate">{label}</span>
-              </div>
-            ))}
-          </div>
-        </WindowDeckPane>
-
-        <WindowDeckPane
-          id="crew"
-          label="Crew"
-          header={
-            <WindowDeckPaneHeader
-              icon={MessageCircle}
-              name="Crew"
-              subtitle="Maintainers"
-            />
-          }
-        >
-          <div className="flex flex-col gap-1 p-4">
-            {["Ada", "Noor", "Ivo", "Wren"].map((person) => (
-              <div
-                key={person}
-                className="flex items-center gap-3 rounded-md px-2 py-2"
-              >
-                <RandomAvatar seed={person} className="size-8" />
-                <span className="nessa-text-3">{person}</span>
-              </div>
-            ))}
-          </div>
-        </WindowDeckPane>
-
-        <WindowDeckPane
-          id="notes"
-          label="Notes"
-          header={
-            <WindowDeckPaneHeader
-              icon={PanelsTopLeft}
-              name="Notes"
-              subtitle="Component backlog"
-            />
-          }
-        >
-          <div className="grid grid-cols-2 gap-2 p-4">
-            {[
-              "Drawer",
-              "SplitView",
-              "Kanban",
-              "GanttChart",
-              "FilePreview",
-              "WindowDeck",
-            ].map((card) => (
-              <span
-                key={card}
-                className="nessa-text-2 rounded-md bg-muted/60 px-3 py-3"
-              >
-                {card}
-              </span>
-            ))}
-          </div>
-        </WindowDeckPane>
+            }
+          >
+            <p className="m-0 p-4 text-sm leading-6 text-muted-foreground">
+              {pane.body}
+            </p>
+          </WindowDeckPane>
+        ))}
       </WindowDeck>
     </div>
   );
