@@ -544,6 +544,18 @@ const documented: {
     ],
   },
   {
+    slug: "window-deck",
+    group: "Composites",
+    description:
+      "A deck of windows that snaps one to the centre and opens an overview of tiles on Mod+G.",
+    examples: [
+      {
+        id: "window-deck-photos",
+        title: "Photographs with no chrome. Throw a tile off the overview to dismiss it",
+      },
+    ],
+  },
+  {
     slug: "kanban",
     group: "Composites",
     description:
