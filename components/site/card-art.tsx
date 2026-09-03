@@ -3,6 +3,74 @@
  * Drawn in currentColor at low opacity, lifting slightly on hover.
  */
 const motifs: Record<string, React.ReactNode> = {
+  search: (
+    <>
+      <rect x="14" y="14" width="80" height="16" rx="8" />
+      <circle cx="26" cy="22" r="4" />
+      <path d="M14 40h80M14 50h58M14 60h68" />
+    </>
+  ),
+  sections: (
+    <>
+      <path d="M14 16h30" />
+      <path d="M14 26h80M14 34h62" />
+      <path d="M14 46h34" />
+      <path d="M14 56h80M14 64h50" />
+    </>
+  ),
+  rail: (
+    <>
+      <rect x="14" y="12" width="30" height="48" rx="6" />
+      <path d="M20 22h18M20 30h18M20 38h12" />
+      <rect x="52" y="12" width="42" height="48" rx="6" />
+    </>
+  ),
+  shell: (
+    <>
+      <rect x="14" y="12" width="80" height="48" rx="6" />
+      <path d="M14 22h80" />
+      <path d="M38 22v38" />
+      <path d="M38 46h56" />
+    </>
+  ),
+  questions: (
+    <>
+      <circle cx="22" cy="20" r="6" />
+      <path d="M36 20h58" />
+      <circle cx="22" cy="38" r="6" />
+      <path d="M36 38h44" />
+      <rect x="16" y="52" width="78" height="12" rx="6" />
+    </>
+  ),
+  smoke: (
+    <>
+      <rect x="14" y="14" width="80" height="44" rx="10" />
+      <ellipse cx="38" cy="34" rx="16" ry="10" />
+      <ellipse cx="64" cy="40" rx="20" ry="12" />
+    </>
+  ),
+  chips: (
+    <>
+      <rect x="14" y="20" width="80" height="34" rx="12" />
+      <path d="M22 30h12" />
+      <rect x="38" y="25" width="26" height="10" rx="5" />
+      <path d="M22 44h34" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M54 12l26 8v18c0 14-12 22-26 26-14-4-26-12-26-26V20z" />
+      <path d="M44 36l8 8 16-16" />
+    </>
+  ),
+  dial: (
+    <>
+      <path d="M14 34h80" />
+      <circle cx="44" cy="34" r="8" />
+      <path d="M24 48h60" />
+      <circle cx="66" cy="48" r="6" />
+    </>
+  ),
   button: (
     <>
       <rect x="14" y="26" width="46" height="18" rx="9" />
@@ -390,6 +458,17 @@ const bySlug: Record<string, keyof typeof motifs> = {
   "chat-tray": "tray",
   "chat-overlay": "overlay",
   "chat-annotations": "annotation",
+  "context-menu": "menu",
+  "popover-surface": "panel",
+  "searchable-listbox": "search",
+  "sectioned-listbox": "sections",
+  sidebar: "rail",
+  "app-shell": "shell",
+  questionnaire: "questions",
+  "generating-surface": "smoke",
+  "chat-composer-editor": "chips",
+  "composer-access-mode": "shield",
+  "model-capability-controls": "dial",
 };
 
 export function CardArt({ slug }: { slug: string }) {

@@ -92,6 +92,33 @@ const documented: {
       "A menu of actions anchored to a trigger, with checkbox and radio items, shortcut hints and submenus.",
   },
   {
+    slug: "context-menu",
+    group: "Primitives",
+    description:
+      "A right-click menu of actions, with checkbox and radio items, shortcut hints and submenus.",
+  },
+  {
+    slug: "popover-surface",
+    group: "Primitives",
+    description:
+      "A floating card surface that overlay chrome sits on, leaving positioning and dismissal to its host.",
+    examples: [
+      { id: "popover-surface-variants", title: "The radius and elevation pairs" },
+    ],
+  },
+  {
+    slug: "searchable-listbox",
+    group: "Primitives",
+    description:
+      "A single-select list under a search field, where the host renders each row.",
+  },
+  {
+    slug: "sectioned-listbox",
+    group: "Primitives",
+    description:
+      "A single-select list grouped under sticky headers, where arrow keys move across the section boundaries.",
+  },
+  {
     slug: "pagination",
     group: "Primitives",
     description:
@@ -380,6 +407,45 @@ const documented: {
       "A searchable roster of conversations, each row painted from the avatar of its project.",
   },
   {
+    slug: "chat-composer-editor",
+    group: "Agent surfaces",
+    description:
+      "A message input where attachments are atomic inline chips that keep their place in the sentence.",
+  },
+  {
+    slug: "composer-access-mode",
+    group: "Agent surfaces",
+    description:
+      "A control beside the composer that picks the tool-approval policy a turn runs under.",
+  },
+  {
+    slug: "model-capability-controls",
+    group: "Agent surfaces",
+    description:
+      "A thinking-level control and fast-mode toggle for the composer's model row.",
+    examples: [
+      { id: "model-thinking-slider", title: "The thinking slider on its own" },
+    ],
+  },
+  {
+    slug: "generating-surface",
+    group: "Agent surfaces",
+    description:
+      "A container that holds an ambient placeholder while content is generated, then morphs into it.",
+  },
+  {
+    slug: "questionnaire",
+    group: "Agent surfaces",
+    description:
+      "A question flow of fieldsets, choices and free text, answered through a wrapping form.",
+    examples: [
+      {
+        id: "questionnaire-mixed",
+        title: "Multiple selection, a written answer and a progress bar",
+      },
+    ],
+  },
+  {
     slug: "transcript-divider",
     group: "Agent surfaces",
     description:
@@ -452,6 +518,18 @@ const documented: {
         title: "Date columns, the critical path, and a task drawn on an empty lane",
       },
     ],
+  },
+  {
+    slug: "sidebar",
+    group: "Composites",
+    description:
+      "A collapsible navigation rail beside the page, with grouped menus, submenus and tooltips once collapsed to icons.",
+  },
+  {
+    slug: "app-shell",
+    group: "Composites",
+    description:
+      "An application frame of header, docks and status bar around a workspace of panes that split, move and resize.",
   },
   {
     slug: "split-view",
