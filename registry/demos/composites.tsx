@@ -1414,7 +1414,7 @@ const windowDeckPanes = [
 export function WindowDeckDemo() {
   return (
     <div className="h-[32rem] w-full overflow-hidden rounded-2xl border border-border bg-background">
-      <WindowDeck defaultActivePane="studio">
+      <WindowDeck defaultActivePane="studio" wheelNavigation={false}>
         {windowDeckPanes.map((pane) => (
           <WindowDeckPane
             key={pane.id}
@@ -1481,7 +1481,7 @@ export function WindowDeckPhotosDemo() {
         </Button>
       </div>
       <div className="min-h-0 flex-1">
-        <WindowDeck paneWidth="min(620px, 76cqw)">
+        <WindowDeck paneWidth="min(620px, 76cqw)" wheelNavigation={false}>
           {remaining.map((shot) => (
             <WindowDeckPane
               key={shot.id}
