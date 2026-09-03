@@ -230,7 +230,7 @@ const documented: {
     description:
       "A summary of changed files with per-file stats and a collapse toggle.",
     examples: [
-      { id: "file-diff-scroll", title: "Twelve files, collapsed and scrollable" },
+      { id: "file-diff-scroll", title: "Fourteen files, collapsed and scrollable" },
     ],
   },
   {
