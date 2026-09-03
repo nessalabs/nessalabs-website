@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  Badge,
   Button,
   Checkbox,
   EventCalendar,
@@ -51,6 +52,8 @@ import {
   TableSortButton,
   TableToolbar,
   TableViewOptions,
+  WindowDeck,
+  WindowDeckPane,
   WorkflowCanvas,
   WorkflowCanvasEdge,
   WorkflowCanvasEdges,
@@ -1367,5 +1370,144 @@ export function TableEmptyDemo() {
         </TableBody>
       </Table>
     </TableShell>
+  );
+}
+
+/* ── WindowDeck ────────────────────────────────────────────────────────── */
+
+const windowDeckPanes = [
+  {
+    id: "brief",
+    label: "Brief",
+    subtitle: "Today",
+    body: "Three reviews before noon, then the token audit. Hold the afternoon for the registry check.",
+  },
+  {
+    id: "notes",
+    label: "Notes",
+    subtitle: "Open",
+    body: "The separator is a separator, not a tab stop. Keep the handle out of the tab order.",
+  },
+  {
+    id: "studio",
+    label: "Studio",
+    subtitle: "In progress",
+    body: "Widen the gap between chart 3 and chart 4. They read as one colour at this size.",
+  },
+  {
+    id: "review",
+    label: "Review",
+    subtitle: "Queued",
+    body: "Read the motion tokens against the overdamped spring. The discard should accelerate, not coast.",
+  },
+  {
+    id: "log",
+    label: "Log",
+    subtitle: "This week",
+    body: "Opened the overview, restored Calendar, dismissed Notes. The grid packed over the gap.",
+  },
+];
+
+/**
+ * Five generic windows. Scroll or swipe to move; Mod+G opens the overview.
+ */
+export function WindowDeckDemo() {
+  return (
+    <div className="h-[32rem] w-full overflow-hidden rounded-2xl border border-border bg-background">
+      <WindowDeck defaultActivePane="studio" wheelNavigation={false}>
+        {windowDeckPanes.map((pane) => (
+          <WindowDeckPane
+            key={pane.id}
+            id={pane.id}
+            label={pane.label}
+            header={
+              <span className="flex min-w-0 flex-col">
+                <strong className="nessa-text-3 truncate font-medium">
+                  {pane.label}
+                </strong>
+                <small className="nessa-text-2 truncate text-muted-foreground">
+                  {pane.subtitle}
+                </small>
+              </span>
+            }
+          >
+            <p className="m-0 p-4 text-sm leading-6 text-muted-foreground">
+              {pane.body}
+            </p>
+          </WindowDeckPane>
+        ))}
+      </WindowDeck>
+    </div>
+  );
+}
+
+/** Builds a gradient photograph as a data URI, so the demo needs no assets. */
+function windowDeckPhoto(from: string, to: string) {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='480' height='320'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${from}'/><stop offset='1' stop-color='${to}'/></linearGradient></defs><rect width='480' height='320' fill='url(#g)'/></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+const windowDeckShots = [
+  { id: "accent", label: "Accent ramp", from: "#f59e0b", to: "#ec4899" },
+  { id: "chart", label: "Chart ramp", from: "#22d3ee", to: "#0071e3" },
+  { id: "success", label: "Success ramp", from: "#34d399", to: "#065f46" },
+  { id: "focus", label: "Focus ramp", from: "#a78bfa", to: "#4c1d95" },
+  { id: "destructive", label: "Destructive ramp", from: "#fda4af", to: "#7f1d1d" },
+];
+
+/**
+ * The same deck carrying photographs: one frame at a time, the whole roll in
+ * the overview, and a throw upward to discard one.
+ */
+export function WindowDeckPhotosDemo() {
+  const [remaining, setRemaining] = React.useState(windowDeckShots);
+  const [last, setLast] = React.useState("nothing yet");
+
+  return (
+    <div className="flex h-[32rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-background">
+      <div className="flex items-center gap-3 border-b border-border px-4 py-2">
+        <Badge variant="secondary">{remaining.length} studies</Badge>
+        <span className="nessa-text-2 text-muted-foreground">{last}</span>
+        <Button
+          size="sm"
+          variant="outline"
+          className="ml-auto"
+          onClick={() => {
+            setRemaining(windowDeckShots);
+            setLast("nothing yet");
+          }}
+        >
+          Restore
+        </Button>
+      </div>
+      <div className="min-h-0 flex-1">
+        <WindowDeck paneWidth="min(620px, 76cqw)" wheelNavigation={false}>
+          {remaining.map((shot) => (
+            <WindowDeckPane
+              key={shot.id}
+              id={shot.id}
+              label={shot.label}
+              chrome={false}
+              scrollable={false}
+              dismissDirections={["up", "down"]}
+              onDismiss={(dismissal) => {
+                setLast(
+                  `${shot.label} — ${dismissal.direction}, by ${dismissal.reason}`
+                );
+                setRemaining((current) =>
+                  current.filter((entry) => entry.id !== shot.id)
+                );
+              }}
+            >
+              <img
+                src={windowDeckPhoto(shot.from, shot.to)}
+                alt={shot.label}
+                className="size-full rounded-xl object-cover"
+              />
+            </WindowDeckPane>
+          ))}
+        </WindowDeck>
+      </div>
+    </div>
   );
 }

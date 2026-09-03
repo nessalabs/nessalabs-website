@@ -403,6 +403,13 @@ const motifs: Record<string, React.ReactNode> = {
       <rect x="44" y="38" width="50" height="16" rx="8" />
     </>
   ),
+  deck: (
+    <>
+      <rect x="8" y="20" width="28" height="36" rx="6" />
+      <rect x="32" y="12" width="44" height="48" rx="6" />
+      <rect x="72" y="20" width="28" height="36" rx="6" />
+    </>
+  ),
 };
 
 const bySlug: Record<string, keyof typeof motifs> = {
@@ -464,6 +471,7 @@ const bySlug: Record<string, keyof typeof motifs> = {
   "sectioned-listbox": "sections",
   sidebar: "rail",
   "app-shell": "shell",
+  "window-deck": "deck",
   questionnaire: "questions",
   "generating-surface": "smoke",
   "chat-composer-editor": "chips",

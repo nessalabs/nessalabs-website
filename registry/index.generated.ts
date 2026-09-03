@@ -1724,6 +1724,50 @@ export const catalog: CatalogEntry[] = [
     ]
   },
   {
+    "slug": "window-deck",
+    "name": "WindowDeck",
+    "group": "Composites",
+    "description": "A deck of windows the user moves between. The carousel snaps one window to the middle at a time and lets its neighbours recede; Mod+G pulls every window back into an overview of tiles, and choosing a tile returns the deck to the carousel on that window. The return is the part worth knowing about: the scroller jumps to the landing window and the rail is shifted by the same distance in the same frame, so the composite is pixel-identical and the only thing that animates is one spring back to zero. Panes are content-agnostic frames — compose any Nessa components into them — and both the focused pane and the presentation mode may be controlled or left to the deck. The keymap follows the design system's shortcut descriptors, so a host rebinds an action, disables one with false, or turns off keyboard control entirely.",
+    "stories": [
+      {
+        "name": "Default",
+        "note": null
+      },
+      {
+        "name": "OverviewAndBack",
+        "note": null
+      },
+      {
+        "name": "ControlledWithACustomKeymap",
+        "note": null
+      },
+      {
+        "name": "PhotosAndDismissal",
+        "note": null
+      },
+      {
+        "name": "DeclinedDismissal",
+        "note": null
+      },
+      {
+        "name": "RapidToggling",
+        "note": null
+      },
+      {
+        "name": "WithoutMotion",
+        "note": null
+      },
+      {
+        "name": "DeferredHostUpdates",
+        "note": null
+      },
+      {
+        "name": "ShortcutsLeaveTheComposer",
+        "note": null
+      }
+    ]
+  },
+  {
     "slug": "event-calendar",
     "name": "EventCalendar",
     "group": "Composites",

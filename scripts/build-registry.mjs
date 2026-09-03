@@ -88,6 +88,7 @@ const catalog = [
   // Composites
   ["app-shell", "AppShell", "Composites", "app-shell"],
   ["split-view", "SplitView", "Composites", "split-view"],
+  ["window-deck", "WindowDeck", "Composites", "window-deck"],
   ["event-calendar", "EventCalendar", "Composites", "event-calendar"],
   ["gantt-chart", "GanttChart", "Composites", "gantt-chart"],
   ["kanban", "KanbanBoard", "Composites", "kanban"],
