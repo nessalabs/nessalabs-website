@@ -10,6 +10,7 @@
  * Publishing @nessa-ui/react to npm would replace this script with a plain
  * dependency — that is the intended end state.
  */
+import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -95,3 +96,18 @@ them in the nessa-ui repo and re-run \`npm run sync:ui\`.
 );
 
 console.log(`synced @nessa-ui/react@${version} → nessa-ui/, @nessa-ui/agent-stream → agent-stream/`);
+
+/**
+ * The catalog and its descriptions are read out of the same checkout, so they
+ * cannot drift from the source that was just vendored: a sync that added a
+ * component but left the docs quoting the previous storybook is the failure
+ * this avoids.
+ */
+for (const script of ["extract-story-docs.mjs", "build-registry.mjs"]) {
+  const result = spawnSync(
+    process.execPath,
+    [join(root, "scripts", script), sourceRepo],
+    { stdio: "inherit" }
+  );
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}

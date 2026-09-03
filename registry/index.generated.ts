@@ -508,7 +508,7 @@ export const catalog: CatalogEntry[] = [
       },
       {
         "name": "ExpandToggle",
-        "note": "SheetExpand grows the drawer into a filled extra-details surface over the same ancestor; Minimize recedes it. Dragging the grab bar up expands, dragging it down minimizes, and dragging down from the drawer dismisses. Escape and Done still dismiss."
+        "note": "SheetExpand grows the drawer into a filled extra-details surface over the same ancestor; Minimize recedes it. Dragging the grab bar stretches the panel in place the way a phone's bottom sheet does: the bottom edge stays pinned to the frame, the height follows the pointer one-for-one, and the body takes its filled layout for the whole drag so content arrives under the pointer rather than on release. Releasing past the threshold settles into expanded, minimized, or dismissed; releasing short of it returns the panel to where it started. Escape and Done still dismiss."
       },
       {
         "name": "DoneAction",

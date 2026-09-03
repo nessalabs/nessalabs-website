@@ -35,6 +35,11 @@ The same script vendors `@nessa-ui/agent-stream` into `agent-stream/`, because
 the React package re-exports it. Both are resolved through tsconfig paths of
 the same name, so the app imports them exactly as a published consumer would.
 
+The same run also rebuilds the catalog: it extracts each component's authored
+description out of the checkout's storybook and regenerates
+`registry/index.generated.ts`, so the docs can never quote a storybook older
+than the source they render.
+
 Publishing `@nessa-ui/react` to npm would replace the vendoring with a plain
 dependency — that is the intended end state, and the only reason it is vendored
 today is that the package is unpublished and this app deploys standalone.

@@ -1,6 +1,6 @@
 {
   "agent-activity": {
-    "title": "Components/AgentActivity",
+    "title": "Agents/AgentActivity",
     "component": "AgentActivity",
     "description": "Collapsed agent work in a transcript: a quiet cue such as “Explored 3 files, 2 searches” that opens the extra-details sheet with that beat’s thinking and tool calls, a named-task card for a delegated run, and a standalone thought or live “Exploring…” line. Exploring cues and named cards carry a RandomAvatar — busy (flooding paint) while that agent is working, still once it is not. The transcript stays a conversation; the tools never expand inline.",
     "stories": [
@@ -15,7 +15,7 @@
     ]
   },
   "agent-details": {
-    "title": "Components/AgentDetails",
+    "title": "Agents/AgentDetails",
     "component": "AgentDetails",
     "description": "The identity of an agent conversation: a title, a row of compact actions (edit, pin, share), and an Info section for the project path, branch, model, runtime, and timestamps. The panel does not own how it is shown — the catalog mounts it in a Sheet; Expand and dragging the grab bar fill the chat window.",
     "stories": [
@@ -26,7 +26,7 @@
     ]
   },
   "agent-stream": {
-    "title": "Composites/AgentStream",
+    "title": "Agents/AgentStream",
     "component": "Explorer",
     "description": "The agent stream parser, driven by real captures from two agents — `claude -p --output-format stream-json` and `codex exec --json`. Left is the transcript drawn from parsed events with Message, ToolCall, TaskList and MessageMarkdown; right is the same bytes unparsed — every wire line and every event it became, selectable against each other through JsonTree. The player feeds lines one at a time so the delta path, the shimmer on an unfinished call and the plan filling in all happen the way they do against a live process.",
     "stories": [
@@ -48,17 +48,17 @@
       },
       {
         "name": "Architecture",
-        "note": "How the parser is put together, now that three agents and six wires have been read. Each transport owns its own envelope types, its own mapping table and its own mapper — they are separate protocols with separate versions, and opencode alone speaks three. Only what is genuinely identical is shared: opencode's `run` and `serve` carry the same message parts, so those are read once. Everything to the right of AgentEvent is agent-agnostic, which is what makes a fourth provider a new column here and no change to any component. The three diagrams are the structure, one line's journey on a one-way wire, and the exchange only an interactive one has."
+        "note": "How the parser is put together, now that four agents and seven wires have been read. Each transport owns its own envelope types, its own mapping table and its own mapper — they are separate protocols with separate versions, and opencode alone speaks three. Only what is genuinely identical is shared: opencode's `run` and `serve` carry the same message parts, so those are read once. Everything to the right of AgentEvent is agent-agnostic, which is what makes a fifth provider a new column here and no change to any component. The three diagrams are the structure, one line's journey on a one-way wire, and the exchange only an interactive one has."
       }
     ]
   },
   "agent-workspace": {
-    "title": "Composites/AgentWorkspace",
+    "title": "Agents/AgentWorkspace",
     "description": "A Slack-shaped agent workspace assembled entirely from shipped Nessa primitives, at the scale a real one reaches. The left rail stays bounded — sections and channels, plus at most a few pinned sessions per channel — because a rail that lists every session runs out of vertical space the moment you spin up more agents. Every session in a channel instead lives in a channel-scoped second column: Tabs as drawers across the top, a SectionedListbox grouping what the drawer leaves under sticky status headers, and the selected session's thread beside it behind a draggable SplitView separator. Nothing here is a new component.",
     "stories": []
   },
   "app-shell": {
-    "title": "Composites/AppShell",
+    "title": "Shell/AppShell",
     "component": "AppShell",
     "description": "AppShell composes an agent-workspace frame: a header, pixel-sized resizable docks, a status bar, and a center workspace whose panes split recursively in any direction and can be rearranged by dragging one pane onto another to swap them. The whole arrangement is one serializable layout document; the shell renders it and reports changes, while the consuming application owns state and persistence. This catalog demonstrates it as a multi-agent chat app: conversations live in the sidebar dock, every chat opens in a pane, and panes split, maximize (Shift+Escape), swap by dragging, and close like an IDE.",
     "stories": [
@@ -85,7 +85,7 @@
     ]
   },
   "badge": {
-    "title": "Components/Badge",
+    "title": "Primitives/Badge",
     "component": "Badge",
     "description": "A compact, non-interactive label for status, category, or metadata. Badge follows the shadcn composition model and uses Nessa semantic color tokens. Keep labels short; use Button when the element performs an action.",
     "stories": [
@@ -100,7 +100,7 @@
     ]
   },
   "button": {
-    "title": "Components/Button",
+    "title": "Primitives/Button",
     "component": "Button",
     "description": "The primary action primitive for Nessa interfaces. Button is built on the shadcn/Radix composition model, supports semantic variants and sizes, and can render another element through `asChild`. Use one primary action per decision area and reserve `destructive` for irreversible outcomes.",
     "stories": [
@@ -123,7 +123,7 @@
     ]
   },
   "card": {
-    "title": "Components/Card",
+    "title": "Primitives/Card",
     "component": "Card",
     "description": "A composable surface for grouping related content and actions. Card is a shadcn-style family of layout primitives rather than a single rigid template: combine Header, Title, Description, Action, Content, and Footer only when those regions are meaningful.",
     "stories": [
@@ -134,7 +134,7 @@
     ]
   },
   "chat-annotations": {
-    "title": "Components/ChatAnnotations",
+    "title": "Conversation/ChatAnnotations",
     "component": "ChatAnnotationThread",
     "description": "Passages lifted out of a document, and the reader's notes on them, read as short conversations. An annotation is not metadata bolted onto a chat: ChatAnnotationThread renders the lifted passage as the document's message and each comment as the reader's reply, so the same bubbles, sides, and rhythm carry both. A thread with onSelect makes its passage the target for the next comment; onEditComment swaps a comment into the in-bubble editor when its hover control is pressed; onRemove offers the discard control; and a view that passes none of them — the record of annotations already sent — renders the same thread read-only. Passing children replaces the passage's plain text, which is where a markdown renderer goes. ChatAnnotationList is the column they sit in, and ChatAnnotationBadge compresses a sent message's whole set into one quote chip, because a message that spilled every passage into the transcript would bury the conversation it belongs to. Hosts own the annotations; these components render and edit them.",
     "stories": [
@@ -149,7 +149,7 @@
     ]
   },
   "chat-bubbles": {
-    "title": "Components/ChatBubbles",
+    "title": "Conversation/ChatBubbles",
     "component": "ChatMessage",
     "description": "iMessage-style transcript primitives that compose with PillComposer: ChatMessage aligns a sent or received column and springs in on mount; ChatBubble is the colored bubble (a real button when it carries an onSelect action such as reply); ChatMessageQuote and ChatMessageReceipt add reply context and delivery state; ChatTypingIndicator pulses while the agent responds; ChatReactionPicker (with the exported chatReactionOptions) is the iMessage tapback row, cascading in per emoji and composing into ContextMenu hosts as keyboard-reachable menu items; and ChatAttachmentTile, ChatAttachmentStack, and ChatAttachmentViewer give every attachment kind one square-tile language — fanned into a one-direction stack when collapsed and filling the chat frame as a grid when opened.",
     "stories": [
@@ -176,7 +176,7 @@
     ]
   },
   "chat-composer-editor": {
-    "title": "Components/ChatComposerEditor",
+    "title": "Conversation/ChatComposerEditor",
     "component": "ChatComposerEditor",
     "description": "A rich chat-composer input where attachments are true inline chips: atomic non-editable tokens that flow with the text on its baseline and type metrics, carry kind or custom icons (including images), delete as a whole with Backspace, and surface press and hover actions. Pastes and drops land as plain text; large pastes route to the host as attachments. Composes with ChatComposer and ChatComposerTrigger in place of the plain textarea input.",
     "stories": [
@@ -199,7 +199,7 @@
     ]
   },
   "chat-composer": {
-    "title": "Components/ChatComposer",
+    "title": "Conversation/ChatComposer",
     "component": "ChatComposer",
     "description": "A compound chat-entry surface built from input, footer, action, and submit primitives, plus opt-in attachment capabilities: a stacked attachments-row of pills, paste-to-attachment capture, and key-triggered menus (such as / and @) that anchor host-supplied content above the composer. Pair it with ChatComposerEditor for inline chip attachments, and compose it with ModelPicker or application-owned controls without moving message, upload, voice, or runtime state into the design system.",
     "stories": [
@@ -294,7 +294,7 @@
     ]
   },
   "chat-overlay": {
-    "title": "Components/ChatOverlay",
+    "title": "Conversation/ChatOverlay",
     "component": "ChatOverlay",
     "description": "A reading view that takes over a chat's transcript without disturbing the window around it. It fills its nearest positioned ancestor, so a host that positions the transcript region — rather than the whole chat frame — keeps its tab strip and composer visible and usable while the overlay is open: the reader can still switch conversations or keep typing. That is the difference from ChatAttachmentViewer, which owns a tile grid and a back arrow of its own; ChatOverlay is the bare surface for reading views such as a previewed file, one message's full text, or the annotations waiting to be sent. ChatOverlayBody is the scrolling content region and takes its layout from the host, ChatOverlayBack is the quiet centered way out, and ChatOverlaySummary captions the content. It is deliberately not a modal dialog: Tab is not trapped and the chat around it is not hidden, because the strip and composer beside it stay in use — but the siblings it is drawn over go inert while it is open, so nothing behind the view takes focus or a pointer. Focus moves into the view on open and returns to whatever opened it on close (or to wherever onReturnFocus says, for hosts whose opener hides behind the view), Escape closes it from anywhere inside, and it fades in only when motion is allowed.",
     "stories": [
@@ -320,7 +320,7 @@
     ]
   },
   "chat-tray": {
-    "title": "Components/ChatTray",
+    "title": "Conversation/ChatTray",
     "component": "ChatTray",
     "description": "The single row of everything attached to the message being written. A quoted passage, a large paste, a dropped file, and a chosen skill all end up on the same message, so they queue in the same place rather than in one pending stack per kind — the tray takes the composer's own attachment kinds as its vocabulary, and each chip wears that kind's glyph. However much it holds, the row stays one line: it shows the first chip (or the first few, through collapseAfter) and collapses the tail into a count that opens the whole set. The tray stores nothing and decides nothing about what a chip opens; hosts own the list and wire onOpenItem, onOpenAll, and onClear, which is what lets one row hold kinds that behave differently.",
     "stories": [
@@ -335,7 +335,7 @@
     ]
   },
   "checkbox": {
-    "title": "Components/Checkbox",
+    "title": "Primitives/Checkbox",
     "component": "Checkbox",
     "description": "A real `input type=\"checkbox\"` styled in place, so keyboard and form semantics stay native and FormData sees the value. Supports the mixed state through `indeterminate`: the DOM flag is a property rather than an attribute, and the browser clears it on every click, so the component restores it synchronously on click as well as after each render — which makes it the control for a select-all whose rows are only partly selected.",
     "stories": [
@@ -354,13 +354,13 @@
     ]
   },
   "code-block": {
-    "title": "Components/CodeBlock",
+    "title": "Files/CodeBlock",
     "component": "CodeBlock",
     "description": "A syntax-highlighted code block backed by Pierre's Shiki-based rendering engine. Standalone it renders any snippet with dark and light theme support, an optional file header, line numbers, and line wrapping; MessageMarkdown composes it automatically for fenced code. Appearance resolves from props first, then the nearest CodeBlockProvider, then defaults — so a host sets its code theme once at the root and every code surface in the app follows, exactly like the app's light and dark mode.",
     "stories": []
   },
   "composer-access-mode": {
-    "title": "Components/ComposerAccessMode",
+    "title": "Conversation/ComposerAccessMode",
     "component": "ComposerAccessMode",
     "description": "An icon-first composer dropdown for Ask for approval, Auto approval, and Full access using the licensed Nucleo shield icon family supplied for this component. The icons are included in Nessa's tracked Nucleo inventory; Full access is last and uses the destructive semantic color.",
     "stories": [
@@ -379,7 +379,7 @@
     ]
   },
   "composer-queue": {
-    "title": "Components/ComposerQueue",
+    "title": "Conversation/ComposerQueue",
     "component": "ComposerQueue",
     "description": "Pending-message rows for active agent runs, plus a delivery-mode control for choosing whether the next follow-up queues behind the run or steers it immediately. A compact Queued N badge opens a plain sheet of wrapping rows; drag a row onto another to reorder, or promote one to the front. The host owns ordering and delivery semantics.",
     "stories": [
@@ -406,7 +406,7 @@
     ]
   },
   "context-menu": {
-    "title": "Components/ContextMenu",
+    "title": "Primitives/ContextMenu",
     "component": "ContextMenu",
     "description": "A right-click menu on Nessa's popover surface: the shadcn context-menu layout — items with keyboard shortcuts, groups and labels, nested submenus, checkbox and radio selection — rebuilt on Radix context-menu primitives with Nessa tokens, the shared popover surface recipe, and a destructive item variant. Icons drop into items directly; Nessa's Nucleo set and lucide both fit the 16px item slot.",
     "stories": [
@@ -459,7 +459,7 @@
     ]
   },
   "drawer": {
-    "title": "Components/Drawer",
+    "title": "Shell/Drawer",
     "component": "Drawer",
     "description": "A modal panel anchored to one edge of the viewport — the layer other Nessa components are composed onto for a record's detail view, a filter panel, or a form. Radix Dialog supplies the focus trap, Escape and outside-press dismissal, and the aria wiring; Nessa supplies the surface, the edge slide on the motion tokens, and the sizing contract. The panel slides in from its side and holds that transition on the way out, so closing is animated rather than cut. Size is a CSS length along the drawer's own axis, controlled with size or left to defaultSize, and resizable adds a drag- and keyboard-operable handle on the inner edge between minSize and maxSize.",
     "stories": [
@@ -482,7 +482,7 @@
     ]
   },
   "dropdown-menu": {
-    "title": "Components/DropdownMenu",
+    "title": "Primitives/DropdownMenu",
     "component": "DropdownMenu",
     "description": "A composable action menu on the popover surface. The trigger projects onto any Nessa button; the content composes groups with labels, plain items, checkbox and radio items with leading indicators, separators, shortcut hints, and nested submenus. The accent wash always means \"this row is under the pointer or keyboard\" — checked state is shown only by the item indicators.",
     "stories": [
@@ -548,7 +548,7 @@
     ]
   },
   "file-diff-list": {
-    "title": "Components/FileDiffList",
+    "title": "Agents/Tools/FileDiffList",
     "component": "FileDiffCard",
     "description": "Changed-file summary card for agent edit turns: header primitives with aggregate diff stats, a scrollable file list with per-file additions and deletions, hover- and focus-revealed row actions, and a collapse toggle that keeps long change sets compact.",
     "stories": [
@@ -571,7 +571,7 @@
     ]
   },
   "file-drop-zone": {
-    "title": "Components/FileDropZone",
+    "title": "Files/FileDropZone",
     "component": "FileDropZone",
     "description": "A wrapper that turns whatever it contains into a file drop target. Drag files or folders anywhere over the wrapped subtree and the zone hands the host a filtered File list through onFiles; the host stores them as attachments and renders them however it likes. The zone owns only the drag protocol: depth-counted enter and leave bookkeeping so nested children cannot flicker the state, dropEffect and the preventDefault that stops the browser from navigating to the file, recursive folder expansion through the directory-entry API, the accept, maxSize, maxFiles, and multiple rules with every refusal reported through onRejectedFiles. It holds no file state of its own, and it draws nothing: the drag affordance belongs to the children, which can be a function of the live drag state, and the root always mirrors that state as data-dragging. asChild goes further and merges the whole protocol onto the child element, so wrapping a component adds no DOM at all — that is how ChatComposer takes its drops. The zone stays a plain region and owns no controls: dropping is a pointer gesture, so the keyboard path to the same files is a browse control the host renders and wires to the same handler.",
     "stories": [
@@ -602,7 +602,7 @@
     ]
   },
   "file-preview": {
-    "title": "Components/FilePreview",
+    "title": "Files/FilePreview",
     "component": "FilePreview",
     "description": "A composable file previewer built around a renderer registry: the root detects the file's kind (MIME type first, extension fallback) and delegates rendering to the strategy registered for that kind. Images render through a script-inert img element with loading and error states; PDFs render through the browser's built-in viewer via an object embed with a download fallback for environments without an inline viewer; unknown kinds fall back to a surface that keeps the file reachable through a download link. Consumers override built-in renderers or register whole new kinds through the renderers prop — no library change needed. Sources can be plain URLs (file) or a File/Blob (blob), whose object URL lifecycle is managed internally.",
     "stories": [
@@ -665,7 +665,7 @@
     ]
   },
   "flow-chart": {
-    "title": "Components/SankeyChart",
+    "title": "Charts/SankeyChart",
     "component": "FlowChart",
     "description": "A flow diagram: node bars in columns joined by ribbons whose thickness is proportional to the flow they carry. Node bars take soft tints from a built-in palette — overridable per node, or disableable to an all-neutral wash — and every ribbon inherits its source's tint, so each origin's flows read as one family. The chart fills whatever box the host gives it on both axes. Every ribbon is a keyboard-focusable button: hovering a ribbon or bar isolates the connected flow, clicking (or Enter or Space) makes the isolation stick as a selection — Command- or Ctrl-clicking toggles further flows into it — and the selection is host-controllable through `selectedLinkIds`. `renderHoverDetail` floats any content the host wants beside the pointer, and columns come from longest-path layering so multi-stage flows lay out without configuration.",
     "stories": [
@@ -704,7 +704,7 @@
     ]
   },
   "gantt-chart": {
-    "title": "Components/GanttChart",
+    "title": "Charts/GanttChart",
     "component": "GanttChart",
     "description": "A project-plan timeline in the industry's Gantt shape: a pinned task list beside a scrollable day/week/month timeline of bars, milestones, and roll-up summary brackets, with finish-to-start dependency arrows, a today marker, weekend shading, and collapsible groups. Bars reschedule by drag, edge-drag resizing, or keyboard chords behind a confirmable move gate, the toolbar composes the SegmentedControl primitive for its scale switcher, and labels plus shortcuts are fully host-overridable.",
     "stories": [
@@ -771,7 +771,7 @@
     ]
   },
   "generating-surface": {
-    "title": "Components/GeneratingSurface",
+    "title": "Agents/GeneratingSurface",
     "component": "GeneratingSurface",
     "description": "A container for content that takes a while to generate — diagrams, images, page previews, anything an assistant streams or renders. While `generating` it reserves space with an ambient placeholder: soft smoke plumes drift behind a shimmering status label instead of half-finished output. When `generating` flips off, the placeholder morphs into the content in two beats, like a container transform: the surface first resizes to the content's height with the placeholder still opaque, then fades through — smoke out fully, content sharpening in from a soft blur — so the finished artifact lands without a layout jump or a ghosted cross-dissolve. MermaidDiagram composes it automatically while streaming diagram source, and under reduced motion the reveal applies its end state instantly.",
     "stories": [
@@ -786,7 +786,7 @@
     ]
   },
   "gradient-surface": {
-    "title": "Components/GradientSurface",
+    "title": "Primitives/GradientSurface",
     "component": "GradientSurface",
     "description": "A decorative gradient backdrop for heroes, empty states, and banners. The wash is built from a swappable palette — deepest colour first, each later colour a soft radial bloom with the brightest one centred — so changing the whole mood is one `colors` array. Over the wash sits an optional hairline drawing (`contours`, soft wobbled topographic rings; `waves`; or `rings`), and over the whole frame — content included — a film-grain layer that makes the flat CSS gradient read as printed. Everything is deterministic CSS and inline SVG: no images to fetch, identical markup on server and client. The surface sizes itself from the box and crops the drawing rather than stretching it; text contrast on top belongs to the host.",
     "stories": [
@@ -805,7 +805,7 @@
     ]
   },
   "input": {
-    "title": "Components/Input",
+    "title": "Primitives/Input",
     "component": "Input",
     "description": "A styled native input for text entry. Input preserves native HTML attributes and shadcn conventions while applying Nessa tokens for border, focus, disabled, and invalid states. Always pair it with a visible label; placeholders are examples, not labels.",
     "stories": [
@@ -830,7 +830,7 @@
     ]
   },
   "json-tree": {
-    "title": "Components/JsonTree",
+    "title": "Data/JsonTree",
     "component": "JsonTree",
     "description": "A structured JSON renderer for any surface that shows a payload: keys tint muted so the values carry the emphasis, containers indent with real JSON punctuation, and the text stays selectable. By default it renders statically with no focusable parts — what consent surfaces that must show everything want — and `collapsible` adds a disclosure toggle to every object and array, with `defaultExpandedDepth` choosing how much starts open. The surface is deliberately unopinionated (monospace, semantic tokens only), and every part carries a data-slot hook (`json-tree-key`, `-value`, `-count`, `-toggle`, `-row`, `-children`, `-overflow`) so hosts restyle it per surface. Rendering is bounded on every axis so an arbitrary host payload can never freeze or crash the surface: circular references render as a marker, containers past the depth cap render as their folded summary, and containers wider than the entry cap render their head plus an explicit overflow row.",
     "stories": [
@@ -853,7 +853,7 @@
     ]
   },
   "kanban": {
-    "title": "Components/Kanban",
+    "title": "Data/Kanban",
     "component": "KanbanBoard",
     "description": "Kanban is a composable board of columns and draggable cards. The board owns no card data: every settled move — a pointer drop or a keyboard drop — is reported once through onCardMove with the card, source column, target column, and insertion index, and the consumer renders the new order (applyKanbanMove performs the standard column-map transform). While a card moves, a drop indicator marks the insertion point in the hovered column and only the dragged card and that indicator re-render. Cards are fully keyboard-operable: Space or Enter lifts the focused card, the arrow keys walk it through positions and columns, Space drops it, Escape cancels, and every step is announced to screen readers through a live region (the wording is replaceable via getAnnouncement). Cards render any content; controls inside them, and anything marked data-kanban-no-drag, never start a drag.",
     "stories": [
@@ -888,7 +888,7 @@
     ]
   },
   "math-block": {
-    "title": "Components/MathBlock",
+    "title": "Files/MathBlock",
     "component": "MathBlock",
     "description": "A TeX formula rendered through KaTeX, standalone or composed automatically by MessageMarkdown for $…$ and $$…$$ math. While a formula streams in, invalid intermediate TeX keeps the last successful render on screen instead of flashing KaTeX's error state — the fix for mid-stream jitter — and until the first successful parse the raw source shows muted. Display formulas carry a copy control that copies the TeX in markdown form ($$…$$).",
     "stories": [
@@ -903,7 +903,7 @@
     ]
   },
   "mermaid-diagram": {
-    "title": "Components/MermaidDiagram",
+    "title": "Charts/MermaidDiagram",
     "component": "MermaidDiagram",
     "description": "A Mermaid diagram rendered to SVG — one component for every Mermaid grammar: flowcharts, sequence diagrams, state and class diagrams, gantt charts, and the rest. It follows the nearest CodeBlockProvider's mode so diagrams switch light and dark with the app, keeps the last successful render on screen while streaming source is momentarily invalid, and carries a copy control for the Mermaid source. MessageMarkdown composes it automatically for ```mermaid fences.",
     "stories": [
@@ -930,7 +930,7 @@
     ]
   },
   "message-markdown": {
-    "title": "Components/MessageMarkdown",
+    "title": "Conversation/MessageMarkdown",
     "component": "MessageMarkdown",
     "description": "Rich assistant replies inside a message: MessageMarkdown renders GitHub-flavored markdown — headings, lists, tables, task lists, blockquotes, links — and routes special content to Nessa's dedicated surfaces: fenced code to CodeBlock (Shiki syntax highlighting, themed app-wide through CodeBlockProvider), TeX math to MathBlock (KaTeX, jitter-free while streaming), and ```mermaid fences to MermaidDiagram (flowcharts, sequence diagrams, and every other Mermaid grammar, with a fullscreen pan-and-zoom viewer). Code, tables, and display math each carry a hover copy control that copies their original markdown source. Compose it inside a plain MessageBubble; while a reply streams, keep passing the partial source with the streaming prop set — the latest complete blocks render and newly arrived prose fades in with the same animation MessageStreamText uses, so streamed markdown and streamed plain text feel identical. Individual element renderers can still be replaced through the components prop.",
     "stories": [
@@ -945,7 +945,7 @@
     ]
   },
   "message-scroller": {
-    "title": "Components/MessageScroller",
+    "title": "Conversation/MessageScroller",
     "component": "MessageScroller",
     "description": "A stick-to-bottom transcript scroller for streamed conversations. MessageScroller owns the live-edge state and exposes it as data-pinned; MessageScrollerViewport opens scrolled to the end and follows content growth with a ResizeObserver while the reader stays within a few pixels of the bottom — any scroll away releases the follow so the transcript never moves underneath someone rereading, and returning to the bottom re-pins it. MessageScrollerContent is a polite log live region (hosts supply the accessible name), and MessageScrollerButton floats over the bottom edge, appearing only while unpinned, to smooth-scroll the reader back to the newest content. Hosts can read the same state through useMessageScroller, and autoScroll={false} turns the viewport into a plain scroll region.",
     "stories": [
@@ -960,7 +960,7 @@
     ]
   },
   "message": {
-    "title": "Components/Message",
+    "title": "Conversation/Message",
     "component": "Message",
     "description": "A composable chat message kit. Message lays out one conversation row and aligns it from the sender — from=\"user\" end-aligns, from=\"assistant\" start-aligns, and align overrides either — while exposing data-from and data-align for host styling. Inside it, MessageAvatar is an optional slot that renders an image with an initials fallback by default and accepts arbitrary children for fully custom avatars; MessageContent columns the optional MessageHeader, a MessageBubble, and the optional MessageFooter. The bubble ships three variants: muted for received messages, primary for sent messages, and plain for unbubbled prose such as assistant responses. MessageGroup tightens spacing between consecutive messages from the same sender. Slack-style threading composes from MessageThread wrapping a parent row, MessageThreadSummary — a facepile-plus-count button whose meta text swaps to an action label on hover, with expansion state host-owned via onClick and aria-expanded — and MessageThreadReplies, which indents replies to the parent's content column behind a connector rule. MessageActions is a hover-revealed action row under a bubble — MessageAction icon buttons alongside meta text such as the sent time — that also reveals while an action holds keyboard focus and hides again once the pointer moves on; what each action does, including swapping the bubble for an edit composer, stays host-owned. Every piece is an ordinary styled element, so hosts compose their own user and response message components from these primitives — or replace any slot entirely — instead of configuring a monolith.",
     "stories": [
@@ -1007,7 +1007,7 @@
     ]
   },
   "model-capability-controls": {
-    "title": "Components/ModelCapabilityControls",
+    "title": "Conversation/ModelCapabilityControls",
     "component": "ModelThinkingControl",
     "description": "Independent composer controls for model capabilities. Render Fast only for models that support it and Thinking only when the selected model declares ordered thinking levels.",
     "stories": [
@@ -1090,7 +1090,7 @@
     ]
   },
   "model-picker": {
-    "title": "Components/ModelPicker",
+    "title": "Conversation/ModelPicker",
     "component": "ModelPicker",
     "description": "A provider-aware, searchable chooser dedicated to model and provider selection.",
     "stories": [
@@ -1180,7 +1180,7 @@
     ]
   },
   "page-outline": {
-    "title": "Components/PageOutline",
+    "title": "Data/PageOutline",
     "component": "PageOutline",
     "description": "A scroll-spy section outline drawn along a rail that jogs sideways to trace the heading hierarchy, so depth reads from the line itself rather than from type size. A comet pulse travels the rail — through its corners, since every pulse layer is a dash window on the rail's own path — to whichever section crosses the reading line, easing symmetrically so it arrives rather than crawling. Sections come from an items array, or the outline derives them from the headings of any rendered element via contentRef, which is what makes a markdown surface work with no markdown awareness in the component; scraped content is watched for mutations so streaming output keeps the outline current. collapse=\"auto\" folds entries deeper than the second level except in the branch the reader has settled in — nothing folds mid-scroll, only where scrolling comes to rest, and rows hiding folded branches carry a count. A marker node replaces the comet with host-supplied SVG content that the outline translates and rotates along the path each frame. The root fills the box its host provides and scrolls its own rows when the box is shorter than the list.",
     "stories": [
@@ -1203,7 +1203,7 @@
     ]
   },
   "pagination": {
-    "title": "Components/Pagination",
+    "title": "Primitives/Pagination",
     "component": "Pagination",
     "description": "Composable pagination controls: a nav landmark (Pagination) wrapping a list (PaginationContent) of items (PaginationItem) that hold compact page buttons (PaginationLink, marked current with aria-current and a ring border), previous/next controls, and a collapsed-run ellipsis. Page state and the windowing rule both live with the host — the example below computes its own page window.",
     "stories": [
@@ -1218,7 +1218,7 @@
     ]
   },
   "pie-chart": {
-    "title": "Components/PieChart",
+    "title": "Charts/PieChart",
     "component": "PieChart",
     "description": "A pie or donut chart: one wedge per slice, sized to its share of the total, filling whatever box the host gives it on both axes. Slices take a slot from the design system's categorical chart ramp — overridable per slice, or disableable to an all-neutral wash. The ramp is a token per theme, so every slot is contrast-correct against its own surface, and its slot order is what keeps neighbouring wedges separable under colour-vision deficiency. Every wedge is a keyboard-focusable button: hovering one isolates it and recedes the rest, clicking (or Enter or Space) makes the isolation stick as a selection and eases the wedge out of the ring — Command- or Ctrl-clicking toggles further slices into it — and the selection is host-controllable through `selectedSliceIds`. A donut's centre reads the **total at rest and the engaged slice while one is hovered, focused, or solely selected**, so the chart answers \"how much is this?\" without a tooltip. A long tail can be rolled into one bucket with `groupThreshold`, whose members stay reachable through `renderHoverDetail`, and narrowing the sweep with `startAngle`/`endAngle` turns the same component into a gauge.",
     "stories": [
@@ -1292,7 +1292,7 @@
     ]
   },
   "popover-surface": {
-    "title": "Components/PopoverSurface",
+    "title": "Primitives/PopoverSurface",
     "component": "PopoverSurface",
     "description": "The floating overlay surface underneath Nessa's popover-style chrome: popover tokens over a hairline border, with elevation (md/xl shadow) and radius (lg/xl/2xl) variants. Purely presentational — positioning, portals, and dismissal stay with the consumer — and asChild projects the surface classes onto another element, such as a positioning library's content node. The EventCalendar's built-in confirmation dialog and quick-create demos sit on this surface.",
     "stories": [
@@ -1307,7 +1307,7 @@
     ]
   },
   "price-chart": {
-    "title": "Components/PriceChart",
+    "title": "Charts/PriceChart",
     "component": "PriceChart",
     "description": "A price plot in the language brokerage apps use: one hairline stroke in the market's colour, a dotted reference rule, a price scale down the right edge over faint gridlines, a time scale along the bottom, and a cursor that follows a finger, a pointer, or the arrow keys across the series. Switching the view to candles draws open/high/low/close bars over the same scale; dragging across the plot zooms into that window and re-labels both scales for it. The chart fills the box its host gives it and re-measures on resize, so one element serves a phone-width card and a full-width desk layout.",
     "stories": [
@@ -1334,7 +1334,7 @@
     ]
   },
   "questionnaire": {
-    "title": "Components/Questionnaire",
+    "title": "Conversation/Questionnaire",
     "component": "Questionnaire",
     "description": "A composable question-flow surface for agent onboarding, feedback asks, and structured intake. Hosts stack a QuestionnaireHeader — with the batteries-included QuestionnaireProgress step counter or progress bar, or any custom chrome — above QuestionnaireItems, and close with a QuestionnaireActions row holding navigation and the QuestionnaireSubmit button. Each item is a real fieldset titled by its legend; answers come from QuestionnaireChoices (native radios or checkboxes under custom check indicators, single or multiple selection) and QuestionnaireInput for freeform text, and a wrapping form receives every answer as FormData.",
     "stories": [
@@ -1357,7 +1357,7 @@
     ]
   },
   "radar-chart": {
-    "title": "Components/RadarChart",
+    "title": "Charts/RadarChart",
     "component": "RadarChart",
     "description": "A radar chart: values plotted along spokes radiating from one centre, one closed outline per series. Series take a slot from the design system's categorical chart ramp — overridable per series, or disableable to an all-neutral wash — and the area wash is derived from each outline's own colour, so a custom tint stays coherent. The ramp is a token per theme, so every slot is contrast-correct against its own surface, and its slot order is what keeps neighbouring series separable under colour-vision deficiency. The chart fills whatever box the host gives it on both axes. Every outline is a keyboard-focusable button: hovering one isolates it and recedes the rest, clicking (or Enter or Space) makes the isolation stick as a selection — Command- or Ctrl-clicking toggles further series into it — and the selection is host-controllable through `selectedSeriesIds`. Hovering a spoke instead **probes that axis**: the spoke lights up, every series is marked where it crosses, and `renderHoverDetail` receives the readings ranked, so one axis can be compared across series without isolating anything. `scale` switches between one shared maximum (ring distance comparable everywhere) and per-axis normalisation (shape reads as rank), and `curve` controls how rounded the outline is — it defaults to a slight rounding, and the spline interpolates, so a value stays exactly on its own spoke at any setting.",
     "stories": [
@@ -1392,7 +1392,7 @@
     ]
   },
   "random-avatar": {
-    "title": "Components/RandomAvatar",
+    "title": "Primitives/RandomAvatar",
     "component": "RandomAvatar",
     "description": "A deterministic generative avatar, painted rather than drawn: two to five translucent pools of pigment dropped on tinted paper, their edges pulled apart by turbulence so they bleed and granulate like a wet wash, multiplying where they overlap. The seed decides the hue, the number of passes, where each pool lands, and how far its edge wanders, so the same identity always paints the same abstract — no image to upload, fetch, or cache. Colour is configured in independent halves: hues picks the part of the wheel, hueSpread how far one painting wanders across it, tone how dilute the paint is (pastel, soft, vivid, deep, or a custom lightness/chroma range). Size comes from the box (size-* through className) and name supplies the accessible label. Several seeds paint one group picture, ground=\"ink\" moves the paint onto a dark surface, animateOnMount blooms the pools on, busy floods them to show an agent working, and speed, flood, bleed, and grain tune the paint and its motion.",
     "stories": [
@@ -1474,7 +1474,7 @@
     ]
   },
   "searchable-listbox": {
-    "title": "Components/SearchableListbox",
+    "title": "Primitives/SearchableListbox",
     "component": "SearchableListbox",
     "description": "A searchable single-select list that owns filtering, roving focus, selection semantics, and async states while consumers render domain-specific row content.",
     "stories": [
@@ -1501,7 +1501,7 @@
     ]
   },
   "sectioned-listbox": {
-    "title": "Components/SectionedListbox",
+    "title": "Primitives/SectionedListbox",
     "component": "SectionedListbox",
     "description": "A single-select list of items grouped under sticky section headers, with roving keyboard focus that moves continuously across section boundaries. Unlike SearchableListbox, it has no built-in search field — pair it with an external filter input when one is needed.",
     "stories": [
@@ -1536,7 +1536,7 @@
     ]
   },
   "segmented-control": {
-    "title": "Components/SegmentedControl",
+    "title": "Primitives/SegmentedControl",
     "component": "SegmentedControl",
     "description": "A compact single-choice switcher: a bordered pill of pressed/unpressed buttons, the pattern Nessa's toolbars use for view and scale toggles (the GanttChart toolbar composes it for Day/Week/Month). One option is always selected, choosing another moves the pressed state and fires onValueChange, and the group takes an aria-label naming the choice it controls.",
     "stories": [
@@ -1555,7 +1555,7 @@
     ]
   },
   "selection-tooltip": {
-    "title": "Components/SelectionTooltip",
+    "title": "Conversation/SelectionTooltip",
     "component": "SelectionTooltip",
     "description": "A floating selection-callout pill in the spirit of the iOS text-selection menu: labeled actions separated by hairline rules, a chevron toggle, and a chevron-revealed shelf that scrolls horizontally with its scrollbar hidden. The host positions the pill over the selection and owns what every action does; only the shelf reveal is managed by the component.",
     "stories": [
@@ -1578,7 +1578,7 @@
     ]
   },
   "sheet": {
-    "title": "Components/Sheet",
+    "title": "Shell/Sheet",
     "component": "Sheet",
     "description": "A bottom sheet that rises over its nearest positioned ancestor: a modal dialog with a backdrop, a grab bar, a header of close or expand plus a centered title and optional Done, and a scrolling body. The drawer lifts a short way from the bottom on open; dragging the grab bar up (or SheetExpand) interpolates height into a filled extra-details surface over the same ancestor, and dragging down or Minimize recedes it. Escape, the backdrop, SheetClose, and SheetAction all dismiss it. Focus moves into the panel on open and returns to the opener on close; siblings it covers go inert. Pass modal={false} for a contained extra-details surface that leaves surrounding chrome reachable.",
     "stories": [
@@ -1588,7 +1588,7 @@
       },
       {
         "name": "ExpandToggle",
-        "note": "SheetExpand grows the drawer into a filled extra-details surface over the same ancestor; Minimize recedes it. Dragging the grab bar up expands, dragging it down minimizes, and dragging down from the drawer dismisses. Escape and Done still dismiss."
+        "note": "SheetExpand grows the drawer into a filled extra-details surface over the same ancestor; Minimize recedes it. Dragging the grab bar stretches the panel in place the way a phone's bottom sheet does: the bottom edge stays pinned to the frame, the height follows the pointer one-for-one, and the body takes its filled layout for the whole drag so content arrives under the pointer rather than on release. Releasing past the threshold settles into expanded, minimized, or dismissed; releasing short of it returns the panel to where it started. Escape and Done still dismiss."
       },
       {
         "name": "DoneAction",
@@ -1597,7 +1597,7 @@
     ]
   },
   "sidebar-compositions": {
-    "title": "Components/Sidebar/Compositions",
+    "title": "Shell/Sidebar/Compositions",
     "component": "Sidebar",
     "description": "Purposeful combinations of public Sidebar primitives. These patterns demonstrate assembly and behavior without introducing additional runtime components.",
     "stories": [
@@ -1628,13 +1628,13 @@
     ]
   },
   "sidebar-menu": {
-    "title": "Components/Sidebar/Primitives/Menu",
+    "title": "Shell/Sidebar/Primitives/Menu",
     "component": "SidebarMenu",
     "description": "A deliberately small sidebar menu API: one list, one composite item, and one loading item. Badge and Button remain generic components passed through SidebarMenuItem slots.",
     "stories": []
   },
   "sidebar-primitives": {
-    "title": "Components/Sidebar/Primitives",
+    "title": "Shell/Sidebar/Primitives",
     "component": "Sidebar",
     "description": "The public Sidebar building blocks in one structural catalog. Use the nested Menu catalog for isolated row primitives, then move to Compositions to see purposeful combinations.",
     "stories": [
@@ -1665,7 +1665,7 @@
     ]
   },
   "sidebar": {
-    "title": "Components/Sidebar/Examples",
+    "title": "Shell/Sidebar/Examples",
     "component": "Sidebar",
     "description": "Complete Sidebar examples across application navigation, themes, collapsed states, mobile overlays, non-collapsible layouts, and performance. Use Primitives for component-level contracts and Compositions for reusable patterns.",
     "stories": [
@@ -1700,7 +1700,7 @@
     ]
   },
   "split-view": {
-    "title": "Components/SplitView",
+    "title": "Shell/SplitView",
     "component": "SplitView",
     "description": "SplitView arranges panels along one axis with accessible, keyboard-operable separators between them. The group is persistence-free: it renders the layout it is given (controlled) or keeps a transient one locally (uncontrolled), reports every change through onLayoutChange, and announces settled gestures through onLayoutCommit so applications can persist layouts without the components ever owning storage. Panel constraints accept percentages or pixels and are re-resolved whenever the group resizes.",
     "stories": [
@@ -1735,7 +1735,7 @@
     ]
   },
   "stock-quote": {
-    "title": "Components/StockQuote",
+    "title": "Charts/StockQuote",
     "component": "StockQuote",
     "description": "A brokerage-style quote panel: ticker, name, the price in large type with its change in the market's colour, a scrubbable and zoomable PriceChart with its price and time scales, the range and chart-type controls, an after-hours line, and a strip of key figures. Hovering the chart replaces the headline with the bar under the cursor; dragging across it zooms into that window, and the headline reports the window until it is cleared. Trading state is announced rather than drawn — a live quote shows it by pulsing the newest point. The panel is a display surface — an agent or application feeds it prices as they arrive and reloads the series when the range changes — and it reflows from a phone-width card to a full-width desk layout on its own container's width.",
     "stories": [
@@ -1762,7 +1762,7 @@
     ]
   },
   "table": {
-    "title": "Components/Table",
+    "title": "Data/Table",
     "component": "Table",
     "description": "A composable data-table kit. The core primitives mirror the familiar Table/TableHeader/TableBody/TableRow/TableHead/TableCell composition on a flat bordered shell; filtering, sorting, column visibility, and pagination are separate composable pieces — a toolbar with a search field, faceted filter selects, a disclosed advanced-filter panel, and a TableViewOptions column menu, a click-to-toggle TableSortButton for headers, and a windowed pagination bar — so hosts wire their own table state (or a headless table library) to exactly the chrome they need.",
     "stories": [
@@ -1805,7 +1805,7 @@
     ]
   },
   "tabs": {
-    "title": "Components/Tabs",
+    "title": "Primitives/Tabs",
     "component": "Tabs",
     "description": "A real tablist: Radix supplies the tab, tablist and tabpanel roles, roving focus, arrow-key movement along the list's orientation, and Home and End, while Nessa supplies the presentation. Use it wherever one region swaps between named views — unlike SegmentedControl, which is a role=group of pressed buttons for toggling a setting rather than swapping a panel. Selection is uncontrolled through defaultValue or host-controlled through value and onValueChange, orientation is horizontal or vertical, and activationMode chooses whether arrowing selects as it goes or waits for Enter.",
     "stories": [
@@ -1824,7 +1824,7 @@
     ]
   },
   "task-list": {
-    "title": "Components/TaskList",
+    "title": "Agents/TaskList",
     "component": "TaskList",
     "description": "A list of tasks for agent plan steps and personal checklists. The root is a plain ul stacking TaskListItem rows; each row carries a status — todo, active, done, or failed — drawn as a circular indicator matched to the Checkbox's stroke style, with the label as children and muted trailing detail through meta. Rows are read-only by default, announcing their status through visually hidden text, which is the shape agent transcripts stream; passing onStatusChange turns a todo/done row into a real circular checkbox with native keyboard and form semantics, and an icon prop turns an agenda-style row into a presentational entry drawn with the host's own glyph, outside the status contract. The list owns no task state: hosts render rows from their own data and apply toggles themselves.",
     "stories": [
@@ -1847,7 +1847,7 @@
     ]
   },
   "timeline-header": {
-    "title": "Components/TimelineHeader",
+    "title": "Agents/TimelineHeader",
     "component": "TimelineHeader",
     "description": "The band a horizontal scale lives on: pixel-offset cells with hairline dividers, and labels that pin at a chosen inset while any part of their cell is in view. Born as the GanttChart's two-tier time header and extracted — like PopoverSurface and SegmentedControl before it — so any horizontally scrolled surface (rulers, grouped table headers, audio timelines) can reuse the layout. The band is purely presentational: the consumer owns the scroll container, tier heights, and whether the scale is aria-hidden decoration.",
     "stories": [
@@ -1858,7 +1858,7 @@
     ]
   },
   "tool-approval": {
-    "title": "Components/ToolApproval",
+    "title": "Agents/Tools/ToolApproval",
     "component": "ToolApproval",
     "description": "A tool-permission request card: an agent wants to run something and the person decides before it does. One composable request — ToolApprovalHeader with an icon and a heading stack of title plus description, a ToolApprovalCommand payload showing exactly what the tool is about to run (wrapping long commands, scrolling past a built-in height cap, and pretty-printing structured inputs via its `json` prop), and a ToolApprovalActions row of ToolApprovalAction buttons — renders on three surfaces chosen by `variant`: `docked` sits full-width directly above the chat composer, `floating` is a compact free-standing panel that also serves narrow viewports, and `notch` drops from the top display edge with a square top and rounded bottom corners. The card mounts with a token-driven entrance animation and is announced to assistive tech as a named group. Resolution is host-driven: set `resolution` (allowed or denied) when a choice is made — the card goes inert and plays the variant's exit motion — and unmount it from `onExited`, swapping in whatever follows.",
     "stories": [
@@ -1909,7 +1909,7 @@
     ]
   },
   "tool-call": {
-    "title": "Components/ToolCall",
+    "title": "Agents/Tools/ToolCall",
     "component": "ToolCall",
     "description": "One tool invocation in an agent transcript: a compact disclosure row that names the tool — shimmering while it runs — and expands into the call's details. Compose the body from ToolCallTabs (input and output payloads), ToolCallDiff (an edit as a unified diff), and ToolCallFile (clickable chips for touched files). Hosts map their own tool names to icons and pass the match to the trigger.",
     "stories": [
@@ -1940,7 +1940,7 @@
     ]
   },
   "transcript-divider": {
-    "title": "Components/TranscriptDivider",
+    "title": "Agents/TranscriptDivider",
     "component": "TranscriptDivider",
     "description": "A hairline rule across a transcript with a label sitting on it, marking a point in time rather than a piece of content: a day boundary, an unread mark, a model swap, a context compaction. It is deliberately not a card — what it marks happened *to* the conversation rather than being a step the agent took, so giving it a card's weight would put it in competition with the work either side of it. While `pending`, the label carries the same glyph-clipped shimmer ToolCall and GeneratingSurface use, because it means the same thing there: this is happening now. Given `detail`, the label becomes a disclosure so whatever the event produced — a compaction's summary — stays one line until a reader asks for it.",
     "stories": [
@@ -1977,7 +1977,7 @@
     ]
   },
   "workflow-canvas": {
-    "title": "Components/WorkflowCanvas",
+    "title": "Agents/WorkflowCanvas",
     "component": "WorkflowCanvas",
     "description": "WorkflowCanvas is a pannable, zoomable window onto a plane of nodes and edges. The canvas is infinite by default or confined by bounds; the viewport is controlled or uncontrolled and reported through onViewportChange. Nodes are plain containers that render any content — cards, forms, even a whole nested canvas — drag with the pointer, move with arrow keys, and anchor edges by id. Handles on node sides reveal on hover and focus (the default dot swaps for any custom indicator passed as children) and draw live connections that settle through onConnect. Edges auto-align by default — each one leaves and enters whichever facing sides connect its nodes most directly, re-routing live as nodes move; pin sides with sourceSide/targetSide or disable with autoAlign={false}. An edge with onClick becomes a focusable button with a generous hit area for selection; its line restyles through className, the pending line through the connectionLine slot, and useWorkflowCanvasEdgeGeometry backs fully custom edge components. Delete or Backspace on a focused node or edge reports through its onDelete; a connection released over empty canvas reports its drop point through onConnectEnd, ready for follow-up UI like a node palette; and WorkflowCanvasNodeToggle with WorkflowCanvasNodeBody folds any node — a whole nested subflow included — down to its header until it is wanted. A canvas nested inside another canvas' node presents read-only by default (pan, zoom, resize, and collapse only — no dragging, connecting, or deleting; readOnly={false} opts back in), and nesting is meant to stop at one level: represent deeper workflows as plain nodes whose open control navigates to that flow. Geometry lives in a per-node subscription store, so moving one node re-renders only that node and the edges attached to it; panning and zooming touch a single transform. That keeps interactions smooth with thousands of nodes on the plane.",
     "stories": [
