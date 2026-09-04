@@ -28,6 +28,7 @@ const catalog = [
   ["tabs", "Tabs", "Primitives", "tabs"],
   ["task-list", "TaskList", "Primitives", "task-list"],
   ["gradient-surface", "GradientSurface", "Primitives", "gradient-surface"],
+  ["morphing-mesh-gradient", "MorphingMeshGradient", "Primitives", "morphing-mesh-gradient"],
 
   // Listboxes & menus
   ["searchable-listbox", "SearchableListbox", "Navigation", "searchable-listbox"],

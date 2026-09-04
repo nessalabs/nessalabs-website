@@ -177,6 +177,16 @@ const documented: {
       { id: "gradient-surface-patterns", title: "Contours, waves, rings and none" },
     ],
   },
+  {
+    slug: "morphing-mesh-gradient",
+    group: "Primitives",
+    description:
+      "A mesh-gradient backdrop of blurred colour fields that circulate on closed-loop paths.",
+    examples: [
+      { id: "morphing-mesh-gradient-presets", title: "The named palettes" },
+      { id: "morphing-mesh-gradient-types", title: "Mesh, aurora and orb" },
+    ],
+  },
 
   {
     slug: "code-block",

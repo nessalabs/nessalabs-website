@@ -22,6 +22,7 @@ import {
   FilePreview,
   GradientSurface,
   Input,
+  MorphingMeshGradient,
   PageOutline,
   Sheet,
   SheetAction,
@@ -39,6 +40,8 @@ import {
   TaskListItem,
   gradientSurfacePatterns,
   gradientSurfacePresets,
+  morphingMeshGradientPresets,
+  morphingMeshGradientTypes,
   type FileDropRejection,
   type PageOutlineItemData,
   type TaskListItemStatus,
@@ -194,6 +197,130 @@ export function GradientSurfacePatternsDemo() {
             </p>
           </div>
         </GradientSurface>
+      ))}
+    </div>
+  );
+}
+
+function MeshSetupCard({ inverted = false }: { inverted?: boolean }) {
+  const tone = inverted
+    ? {
+        label: "text-neutral-600/80",
+        quote: "text-neutral-900",
+        back: "bg-black/10 text-neutral-800",
+        later: "bg-white/70 text-neutral-800",
+        continue: "bg-white/85 text-neutral-900",
+      }
+    : {
+        label: "text-white/75",
+        quote: "text-white",
+        back: "bg-black/20 text-white",
+        later: "bg-white/55 text-neutral-900",
+        continue: "bg-white/70 text-neutral-900",
+      };
+
+  return (
+    <div className="relative flex h-full w-full flex-col px-6 pb-6 pt-5">
+      <button
+        type="button"
+        aria-label="Back"
+        className={`absolute top-5 left-5 flex size-9 items-center justify-center rounded-full ${tone.back}`}
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          className="size-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M10 3 5 8l5 5" />
+        </svg>
+      </button>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-10 text-center">
+        <p className={`m-0 text-[0.95rem] font-normal ${tone.label}`}>Try</p>
+        <p
+          className={`mt-2 max-w-[22rem] text-balance text-[1.65rem] leading-snug font-semibold tracking-tight ${tone.quote}`}
+        >
+          “Nessa, open the agent tray.”
+        </p>
+      </div>
+      <div className="grid shrink-0 grid-cols-2 items-center gap-3">
+        <button
+          type="button"
+          className={`justify-self-start rounded-full px-5 py-2.5 text-sm font-medium ${tone.later}`}
+        >
+          Skip for now
+        </button>
+        <button
+          type="button"
+          className={`justify-self-end rounded-full px-5 py-2.5 text-sm font-medium ${tone.continue}`}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function MorphingMeshGradientDemo() {
+  return (
+    <MorphingMeshGradient
+      colors={morphingMeshGradientPresets.glass}
+      className="h-80 w-full rounded-[1.75rem]"
+    >
+      <MeshSetupCard />
+    </MorphingMeshGradient>
+  );
+}
+
+export function MorphingMeshGradientPresetsDemo() {
+  return (
+    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(morphingMeshGradientPresets).map(([name, colors]) => {
+        const pale = name === "glassInverted";
+        return (
+          <MorphingMeshGradient
+            key={name}
+            colors={colors}
+            className="min-h-40 rounded-2xl"
+          >
+            <div className="flex h-full min-h-40 items-end">
+              <p
+                className={
+                  pale
+                    ? "px-5 py-4 text-sm font-medium capitalize text-neutral-900/90"
+                    : "px-5 py-4 text-sm font-medium capitalize text-white/90"
+                }
+              >
+                {name.replace(/([A-Z])/g, " $1").trim()}
+              </p>
+            </div>
+          </MorphingMeshGradient>
+        );
+      })}
+    </div>
+  );
+}
+
+export function MorphingMeshGradientTypesDemo() {
+  return (
+    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+      {morphingMeshGradientTypes.map((type) => (
+        <MorphingMeshGradient
+          key={type}
+          type={type}
+          colors={morphingMeshGradientPresets.ember}
+          className="min-h-44 rounded-2xl"
+        >
+          <div className="flex h-full min-h-44 items-end">
+            <p className="px-5 py-4 text-sm font-medium capitalize text-white/90">
+              {type}
+            </p>
+          </div>
+        </MorphingMeshGradient>
       ))}
     </div>
   );
