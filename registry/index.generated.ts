@@ -289,6 +289,38 @@ export const catalog: CatalogEntry[] = [
     ]
   },
   {
+    "slug": "morphing-mesh-gradient",
+    "name": "MorphingMeshGradient",
+    "group": "Primitives",
+    "description": "A living mesh-gradient backdrop in the Apple glass-mesh register: solid colour fields softly blurred, circulating on closed-loop paths so the wash dissolves forward continuously (no ping-pong reverse). Defaults to the `glass` preset. Pass any CSS colour array, or build one with `meshGradientFromRange(start, end, count)`. Set `inverted` for the pale reading — or reach for `glassInverted`. Motion follows the ambient duration token and cancels under reduced motion.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Default glass mesh in a Nessa setup card — back top-left, centred prompt, corner pills — so the living wash reads the way the Apple setup modal does. Watch a few seconds: magenta, amber, and blue fields migrate across the card."
+      },
+      {
+        "name": "Presets",
+        "note": "Every named palette as a living card, including `glassInverted` — the pale reading shipped beside the default glass mesh."
+      },
+      {
+        "name": "Inverted",
+        "note": "The same glass pigments, lifted: `inverted` runs each colour through `color-mix(…, white)` so the default wash becomes the pale treatment."
+      },
+      {
+        "name": "Types",
+        "note": "One ember palette under each layout — mesh, aurora, and orb — to show the type is a station map, independent of the colours."
+      },
+      {
+        "name": "FromRange",
+        "note": "`meshGradientFromRange(start, end, count)` steps a brand pair into a mesh-ready palette via `color-mix`."
+      },
+      {
+        "name": "Still",
+        "note": "The same wash with motion off — useful when the host wants the mesh look without ambient drift, or as a visual stand-in for the reduced-motion path."
+      }
+    ]
+  },
+  {
     "slug": "searchable-listbox",
     "name": "SearchableListbox",
     "group": "Navigation",

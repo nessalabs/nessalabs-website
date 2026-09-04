@@ -291,6 +291,14 @@ const motifs: Record<string, React.ReactNode> = {
       <path d="M18 52c14-10 26 4 40-4s20-14 32-8" />
     </>
   ),
+  mesh: (
+    <>
+      <rect x="12" y="14" width="84" height="44" rx="8" />
+      <ellipse cx="36" cy="30" rx="22" ry="16" />
+      <ellipse cx="64" cy="28" rx="20" ry="14" />
+      <ellipse cx="52" cy="44" rx="24" ry="12" />
+    </>
+  ),
   outline: (
     <>
       <path d="M22 14v14h10v14h-10v14" />
@@ -447,6 +455,7 @@ const bySlug: Record<string, keyof typeof motifs> = {
   drawer: "panel",
   sheet: "sheet",
   "gradient-surface": "wash",
+  "morphing-mesh-gradient": "mesh",
   "page-outline": "outline",
   "file-preview": "file",
   "file-drop-zone": "drop",
