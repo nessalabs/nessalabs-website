@@ -418,6 +418,27 @@ const motifs: Record<string, React.ReactNode> = {
       <rect x="72" y="20" width="28" height="36" rx="6" />
     </>
   ),
+  graph: (
+    <>
+      <circle cx="22" cy="18" r="4" />
+      <circle cx="22" cy="36" r="4" />
+      <circle cx="40" cy="54" r="4" />
+      <circle cx="22" cy="54" r="4" />
+      <path d="M22 22v10M22 40c0 8 0 10 0 14M22 40c18 0 18 10 18 14" />
+    </>
+  ),
+  commit: (
+    <>
+      <rect x="18" y="12" width="72" height="48" rx="6" />
+      <path d="M26 24h40M26 34h28M26 44h48" />
+    </>
+  ),
+  list: (
+    <>
+      <rect x="16" y="12" width="76" height="48" rx="6" />
+      <path d="M24 22h60M24 32h48M24 42h56M24 52h36" />
+    </>
+  ),
 };
 
 const bySlug: Record<string, keyof typeof motifs> = {
@@ -486,6 +507,9 @@ const bySlug: Record<string, keyof typeof motifs> = {
   "chat-composer-editor": "chips",
   "composer-access-mode": "shield",
   "model-capability-controls": "dial",
+  "virtual-list": "list",
+  "git-history": "graph",
+  "git-commit-details": "commit",
 };
 
 export function CardArt({ slug }: { slug: string }) {

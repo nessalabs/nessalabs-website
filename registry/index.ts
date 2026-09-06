@@ -2,11 +2,13 @@ import { catalog } from "./index.generated";
 
 export const groups = [
   "Primitives",
-  "Content",
+  "Layout",
+  "Data",
   "Charts",
-  "Agent surfaces",
-  "Chat surfaces",
-  "Composites",
+  "Files",
+  "Conversation",
+  "Agent",
+  "Git",
 ] as const;
 
 export type Group = (typeof groups)[number];
@@ -21,6 +23,44 @@ export interface ComponentDoc {
   examples?: { id: string; title: string }[];
   /** Behaviours the library's own storybook demonstrates. */
   stories?: { name: string; note: string | null }[];
+}
+
+/**
+ * Website labels that differ from a spaced export name, so the nav matches
+ * the word people look up rather than the identifier they import.
+ */
+const displayNames: Record<string, string> = {
+  "random-avatar": "Avatar",
+  "popover-surface": "Popover",
+  "event-calendar": "Calendar",
+  "gantt-chart": "Gantt chart",
+  "message-markdown": "Markdown",
+  "math-block": "Math",
+  "mermaid-diagram": "Mermaid",
+  "morphing-mesh-gradient": "Mesh gradient",
+  "gradient-surface": "Gradient",
+  "file-diff-list": "File diff",
+  "file-drop-zone": "File drop",
+  "model-capability-controls": "Thinking controls",
+  "chat-composer-editor": "Composer editor",
+  "composer-access-mode": "Access mode",
+  "git-commit-details": "Commit details",
+  kanban: "Kanban",
+  "json-tree": "JSON tree",
+  "searchable-listbox": "Listbox",
+  "chat-composer": "Composer",
+  "timeline-header": "Timeline",
+};
+
+/** Spaced sentence case from a PascalCase export, e.g. ChatTabs → Chat tabs. */
+function sentenceName(pascal: string) {
+  const spaced = pascal
+    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
+  const [first, ...rest] = spaced.split(" ");
+  return [first, ...rest.map((word) => word.toLowerCase())]
+    .join(" ")
+    .replace(/\bJson\b/, "JSON");
 }
 
 /**
@@ -39,6 +79,20 @@ const documented: {
     description: "A button that triggers an action, in six variants and four sizes.",
   },
   {
+    slug: "input",
+    group: "Primitives",
+    description: "A single-line text field.",
+  },
+  {
+    slug: "checkbox",
+    group: "Primitives",
+    description:
+      "A checkbox built on a real input, with a mixed state for a set that is only partly selected.",
+    examples: [
+      { id: "checkbox-states", title: "Unchecked, checked, mixed and disabled" },
+    ],
+  },
+  {
     slug: "badge",
     group: "Primitives",
     description: "A compact label that marks status, in four variants.",
@@ -49,9 +103,11 @@ const documented: {
     description: "A bordered surface with header, content, footer and action slots.",
   },
   {
-    slug: "input",
+    slug: "tabs",
     group: "Primitives",
-    description: "A single-line text field.",
+    description:
+      "A tablist that swaps one panel for another, with roving focus and arrow-key movement.",
+    examples: [{ id: "tabs-pill", title: "The pill strip, shared with SegmentedControl" }],
   },
   {
     slug: "segmented-control",
@@ -60,30 +116,10 @@ const documented: {
       "A row of mutually exclusive options. Arrow keys move between them.",
   },
   {
-    slug: "random-avatar",
+    slug: "pagination",
     group: "Primitives",
     description:
-      "An avatar painted from a seed, where the same identity always paints the same picture.",
-    examples: [
-      { id: "random-avatar-group", title: "Several seeds painting one group picture" },
-      {
-        id: "random-avatar-working",
-        title: "The paint keeps flooding while busy is set",
-      },
-      {
-        id: "random-avatar-tones",
-        title: "Tone presets, and the ink ground for dark surfaces",
-      },
-    ],
-  },
-  {
-    slug: "checkbox",
-    group: "Primitives",
-    description:
-      "A checkbox built on a real input, with a mixed state for a set that is only partly selected.",
-    examples: [
-      { id: "checkbox-states", title: "Unchecked, checked, mixed and disabled" },
-    ],
+      "A nav of numbered page buttons between previous and next controls. The host computes the window and holds the page.",
   },
   {
     slug: "dropdown-menu",
@@ -119,52 +155,20 @@ const documented: {
       "A single-select list grouped under sticky headers, where arrow keys move across the section boundaries.",
   },
   {
-    slug: "pagination",
+    slug: "random-avatar",
     group: "Primitives",
     description:
-      "A nav of numbered page buttons between previous and next controls. The host computes the window and holds the page.",
-  },
-  {
-    slug: "timeline-header",
-    group: "Primitives",
-    description:
-      "A band for a horizontal scale, whose pixel-offset cells can pin their labels as the scroll passes them.",
-  },
-  {
-    slug: "tabs",
-    group: "Primitives",
-    description:
-      "A tablist that swaps one panel for another, with roving focus and arrow-key movement.",
-    examples: [{ id: "tabs-pill", title: "The pill strip, shared with SegmentedControl" }],
-  },
-  {
-    slug: "task-list",
-    group: "Primitives",
-    description:
-      "A list of task rows, each carrying a todo, active, done or failed status.",
+      "An avatar painted from a seed, where the same identity always paints the same picture.",
     examples: [
+      { id: "random-avatar-group", title: "Several seeds painting one group picture" },
       {
-        id: "task-list-checklist",
-        title: "onStatusChange turns each row into a real checkbox",
+        id: "random-avatar-working",
+        title: "The paint keeps flooding while busy is set",
       },
-    ],
-  },
-  {
-    slug: "drawer",
-    group: "Primitives",
-    description:
-      "A modal panel anchored to one edge of the viewport, sliding in on the motion tokens.",
-    examples: [
-      { id: "drawer-resizable", title: "A left drawer resized by drag or arrow keys" },
-    ],
-  },
-  {
-    slug: "sheet",
-    group: "Primitives",
-    description:
-      "A bottom sheet that rises over its nearest positioned ancestor and fills it when dragged up.",
-    examples: [
-      { id: "sheet-contained", title: "modal={false}, leaving the chrome around it reachable" },
+      {
+        id: "random-avatar-tones",
+        title: "Tone presets, and the ink ground for dark surfaces",
+      },
     ],
   },
   {
@@ -189,81 +193,102 @@ const documented: {
   },
 
   {
-    slug: "code-block",
-    group: "Content",
+    slug: "app-shell",
+    group: "Layout",
     description:
-      "A block of syntax-highlighted code with a copy button. CodeBlockProvider sets the theme.",
+      "An application frame of header, docks and status bar around a workspace of panes that split, move and resize.",
   },
   {
-    slug: "json-tree",
-    group: "Content",
-    description: "A structured view of a JSON value, with optional per-branch collapse.",
-    examples: [{ id: "json-tree-collapsible", title: "Collapsible branches" }],
-  },
-  {
-    slug: "math-block",
-    group: "Content",
+    slug: "sidebar",
+    group: "Layout",
     description:
-      "A KaTeX formula that holds its last valid render while the TeX is still streaming.",
+      "A collapsible navigation rail beside the page, with grouped menus, submenus and tooltips once collapsed to icons.",
   },
   {
-    slug: "mermaid-diagram",
-    group: "Content",
+    slug: "split-view",
+    group: "Layout",
     description:
-      "A diagram rendered from Mermaid source, following the app's colour mode.",
-  },
-  {
-    slug: "message-markdown",
-    group: "Content",
-    description: "Markdown for message bodies, composing CodeBlock and MathBlock.",
-  },
-  {
-    slug: "reference",
-    group: "Content",
-    description: "An inline citation that opens its source card on hover or focus.",
-  },
-  {
-    slug: "selection-tooltip",
-    group: "Content",
-    description:
-      "A pill of actions for the current text selection. Overflow actions sit in a scrolling shelf.",
+      "A pair of resizable panels around a draggable separator. Arrow keys resize it from the keyboard.",
     examples: [
       {
-        id: "selection-tooltip-shelf",
-        title: "Twelve shelf actions. Expand, then scroll the shelf sideways",
+        id: "split-view-workspace",
+        title: "Nested splits, with views dragged between panes",
       },
     ],
   },
   {
-    slug: "file-diff-list",
-    group: "Content",
+    slug: "window-deck",
+    group: "Layout",
     description:
-      "A summary of changed files with per-file stats and a collapse toggle.",
+      "A deck of windows that snaps one to the centre and opens an overview of tiles on Mod+G.",
     examples: [
-      { id: "file-diff-scroll", title: "Fourteen files, collapsed and scrollable" },
+      {
+        id: "window-deck-photos",
+        title: "Photographs with no chrome. Throw a tile off the overview to dismiss it",
+      },
+      {
+        id: "window-deck-workspaces",
+        title: "Each window holds a split workspace. Resizing a split does not throw the window",
+      },
     ],
   },
   {
-    slug: "file-preview",
-    group: "Content",
+    slug: "drawer",
+    group: "Layout",
     description:
-      "A previewer that renders a file by its detected kind, through renderers the host can replace.",
+      "A modal panel anchored to one edge of the viewport, sliding in on the motion tokens.",
     examples: [
-      { id: "file-preview-fallback", title: "An unregistered kind, kept reachable by download" },
+      { id: "drawer-resizable", title: "A left drawer resized by drag or arrow keys" },
     ],
   },
   {
-    slug: "file-drop-zone",
-    group: "Content",
+    slug: "sheet",
+    group: "Layout",
     description:
-      "A wrapper that turns whatever it contains into a file drop target, reporting the files it accepts.",
+      "A bottom sheet that rises over its nearest positioned ancestor and fills it when dragged up.",
     examples: [
-      { id: "file-drop-zone-limits", title: "accept, maxSize and maxFiles, with every refusal reported" },
+      { id: "sheet-contained", title: "modal={false}, leaving the chrome around it reachable" },
     ],
+  },
+  {
+    slug: "virtual-list",
+    group: "Layout",
+    description:
+      "A fixed-height list that mounts only the rows in view. Offscreen rows unmount; durable state stays with the host.",
+    examples: [
+      { id: "virtual-list-all", title: "virtualize={false} mounts every row in the same viewport" },
+    ],
+  },
+
+  {
+    slug: "table",
+    group: "Data",
+    description:
+      "A data table on a flat bordered shell, with the toolbar, sorting, column menu and pager as separate pieces.",
+    examples: [
+      {
+        id: "table-workbench",
+        title: "Search, a status facet, a column menu, a sortable column and row selection",
+      },
+      { id: "table-pagination", title: "The pager under a long result set" },
+      { id: "table-empty", title: "The row shown instead of data" },
+    ],
+  },
+  {
+    slug: "kanban",
+    group: "Data",
+    description:
+      "A board of columns and draggable cards. Moves report through onCardMove.",
+  },
+  {
+    slug: "event-calendar",
+    group: "Data",
+    description:
+      "A day, week and month scheduler. Events are created, moved and resized by drag.",
   },
   {
     slug: "page-outline",
-    group: "Content",
+    group: "Data",
     description:
       "A section outline on a rail that jogs with heading depth, tracking the section being read.",
     examples: [
@@ -273,6 +298,12 @@ const documented: {
       },
       { id: "page-outline-marker", title: "A host marker banking along the rail" },
     ],
+  },
+  {
+    slug: "json-tree",
+    group: "Data",
+    description: "A structured view of a JSON value, with optional per-branch collapse.",
+    examples: [{ id: "json-tree-collapsible", title: "Collapsible branches" }],
   },
 
   {
@@ -322,22 +353,79 @@ const documented: {
     description:
       "A quote panel of price, change, range controls and key figures around a scrubbable price chart.",
   },
+  {
+    slug: "gantt-chart",
+    group: "Charts",
+    description:
+      "A project timeline of bars, milestones and typed dependency arrows. Tasks are drawn, linked and rescheduled by drag or keyboard.",
+    examples: [
+      {
+        id: "gantt-chart-planning",
+        title: "Date columns, the critical path, and a task drawn on an empty lane",
+      },
+    ],
+  },
+  {
+    slug: "timeline-header",
+    group: "Charts",
+    description:
+      "A band for a horizontal scale, whose pixel-offset cells can pin their labels as the scroll passes them.",
+  },
+  {
+    slug: "mermaid-diagram",
+    group: "Charts",
+    description:
+      "A diagram rendered from Mermaid source, following the app's colour mode.",
+  },
 
   {
-    slug: "conversation-rail",
-    group: "Agent surfaces",
+    slug: "code-block",
+    group: "Files",
     description:
-      "A navigator beside a transcript that marks every turn and previews one on hover or focus.",
+      "A block of syntax-highlighted code with a copy button. CodeBlockProvider sets the theme.",
   },
   {
-    slug: "message-scroller",
-    group: "Agent surfaces",
-    description:
-      "A transcript viewport that follows the live edge until the reader scrolls away, with a control to return.",
+    slug: "message-markdown",
+    group: "Files",
+    description: "Markdown for message bodies, composing CodeBlock and MathBlock.",
   },
+  {
+    slug: "math-block",
+    group: "Files",
+    description:
+      "A KaTeX formula that holds its last valid render while the TeX is still streaming.",
+  },
+  {
+    slug: "file-preview",
+    group: "Files",
+    description:
+      "A previewer that renders a file by its detected kind, through renderers the host can replace.",
+    examples: [
+      { id: "file-preview-fallback", title: "An unregistered kind, kept reachable by download" },
+    ],
+  },
+  {
+    slug: "file-drop-zone",
+    group: "Files",
+    description:
+      "A wrapper that turns whatever it contains into a file drop target, reporting the files it accepts.",
+    examples: [
+      { id: "file-drop-zone-limits", title: "accept, maxSize and maxFiles, with every refusal reported" },
+    ],
+  },
+  {
+    slug: "file-diff-list",
+    group: "Files",
+    description:
+      "A summary of changed files with per-file stats and a collapse toggle.",
+    examples: [
+      { id: "file-diff-scroll", title: "Fourteen files, collapsed and scrollable" },
+    ],
+  },
+
   {
     slug: "message",
-    group: "Agent surfaces",
+    group: "Conversation",
     description:
       "A row in a transcript, with assistant and user sides built from avatar, bubble and footer parts.",
     examples: [
@@ -349,28 +437,20 @@ const documented: {
     ],
   },
   {
-    slug: "tool-call",
-    group: "Agent surfaces",
+    slug: "message-scroller",
+    group: "Conversation",
     description:
-      "A single tool invocation that expands into its input, output and touched files. The label shimmers while it runs.",
-    examples: [
-      { id: "tool-call-states", title: "Running, complete and error" },
-    ],
+      "A transcript viewport that follows the live edge until the reader scrolls away, with a control to return.",
   },
   {
-    slug: "tool-approval",
-    group: "Agent surfaces",
+    slug: "conversation-rail",
+    group: "Conversation",
     description:
-      "A permission request for a tool run. Setting a resolution makes the card inert.",
-    examples: [
-      { id: "tool-approval-flow", title: "Granting hands off to the running call" },
-      { id: "tool-approval-notch", title: "Notch variant" },
-      { id: "tool-approval-mobile", title: "Phone viewport" },
-    ],
+      "A navigator beside a transcript that marks every turn and previews one on hover or focus.",
   },
   {
     slug: "chat-composer",
-    group: "Agent surfaces",
+    group: "Conversation",
     description:
       "A chat entry surface with an input, footer actions, attachments and submit.",
     examples: [
@@ -385,52 +465,31 @@ const documented: {
     ],
   },
   {
-    slug: "composer-queue",
-    group: "Agent surfaces",
-    description:
-      "A queue of messages pending on a running turn. Entries can be reordered, steered and removed.",
-  },
-  {
-    slug: "model-picker",
-    group: "Agent surfaces",
-    description: "A model chooser grouped by provider, with search.",
-  },
-  {
-    slug: "agent-activity",
-    group: "Agent surfaces",
-    description:
-      "A collapsed cue for a stretch of agent work, opening its thinking and tool calls elsewhere.",
-    examples: [
-      { id: "agent-activity-card", title: "A live cue, and the card for a delegated run" },
-    ],
-  },
-  {
-    slug: "agent-details",
-    group: "Agent surfaces",
-    description:
-      "A panel naming an agent conversation, with compact actions and a section of project fields.",
-  },
-  {
-    slug: "conversation-history",
-    group: "Agent surfaces",
-    description:
-      "A searchable roster of conversations, each row painted from the avatar of its project.",
-  },
-  {
     slug: "chat-composer-editor",
-    group: "Agent surfaces",
+    group: "Conversation",
     description:
       "A message input where attachments are atomic inline chips that keep their place in the sentence.",
   },
   {
+    slug: "composer-queue",
+    group: "Conversation",
+    description:
+      "A queue of messages pending on a running turn. Entries can be reordered, steered and removed.",
+  },
+  {
     slug: "composer-access-mode",
-    group: "Agent surfaces",
+    group: "Conversation",
     description:
       "A control beside the composer that picks the tool-approval policy a turn runs under.",
   },
   {
+    slug: "model-picker",
+    group: "Conversation",
+    description: "A model chooser grouped by provider, with search.",
+  },
+  {
     slug: "model-capability-controls",
-    group: "Agent surfaces",
+    group: "Conversation",
     description:
       "A thinking-level control and fast-mode toggle for the composer's model row.",
     examples: [
@@ -438,14 +497,59 @@ const documented: {
     ],
   },
   {
-    slug: "generating-surface",
-    group: "Agent surfaces",
+    slug: "pill-composer",
+    group: "Conversation",
     description:
-      "A container that holds an ambient placeholder while content is generated, then morphs into it.",
+      "A pill-shaped composer for small chat surfaces, with a light travelling its rim while the agent works.",
+  },
+  {
+    slug: "chat-bubbles",
+    group: "Conversation",
+    description:
+      "A bubble transcript built from message, quote, reaction, receipt and attachment parts.",
+    examples: [
+      { id: "chat-bubbles-typing", title: "The indicator that pulses while the agent answers" },
+    ],
+  },
+  {
+    slug: "chat-tabs",
+    group: "Conversation",
+    description:
+      "A strip of pill tabs for a chat window, with busy dots, attention badges and close controls.",
+  },
+  {
+    slug: "chat-tray",
+    group: "Conversation",
+    description:
+      "A single row of everything attached to the message being written, collapsing its tail into a count.",
+    examples: [
+      { id: "chat-tray-collapse", title: "collapseAfter names three chips before the count" },
+    ],
+  },
+  {
+    slug: "chat-overlay",
+    group: "Conversation",
+    description:
+      "A reading view that takes over a chat's transcript while the tab strip and composer stay in use.",
+  },
+  {
+    slug: "chat-annotations",
+    group: "Conversation",
+    description:
+      "Passages lifted from a document and the reader's comments on them, read as short conversations.",
+    examples: [
+      { id: "chat-annotations-sent", title: "A sent message compressing its whole set into one chip" },
+    ],
+  },
+  {
+    slug: "conversation-history",
+    group: "Conversation",
+    description:
+      "A searchable roster of conversations, each row painted from the avatar of its project.",
   },
   {
     slug: "questionnaire",
-    group: "Agent surfaces",
+    group: "Conversation",
     description:
       "A question flow of fieldsets, choices and free text, answered through a wrapping form.",
     examples: [
@@ -456,138 +560,88 @@ const documented: {
     ],
   },
   {
+    slug: "reference",
+    group: "Conversation",
+    description: "An inline citation that opens its source card on hover or focus.",
+  },
+  {
+    slug: "selection-tooltip",
+    group: "Conversation",
+    description:
+      "A pill of actions for the current text selection. Overflow actions sit in a scrolling shelf.",
+    examples: [
+      {
+        id: "selection-tooltip-shelf",
+        title: "Twelve shelf actions. Expand, then scroll the shelf sideways",
+      },
+    ],
+  },
+
+  {
+    slug: "tool-call",
+    group: "Agent",
+    description:
+      "A single tool invocation that expands into its input, output and touched files. The label shimmers while it runs.",
+    examples: [
+      { id: "tool-call-states", title: "Running, complete and error" },
+    ],
+  },
+  {
+    slug: "tool-approval",
+    group: "Agent",
+    description:
+      "A permission request for a tool run. Setting a resolution makes the card inert.",
+    examples: [
+      { id: "tool-approval-flow", title: "Granting hands off to the running call" },
+      { id: "tool-approval-notch", title: "Notch variant" },
+      { id: "tool-approval-mobile", title: "Phone viewport" },
+    ],
+  },
+  {
+    slug: "task-list",
+    group: "Agent",
+    description:
+      "A list of task rows, each carrying a todo, active, done or failed status.",
+    examples: [
+      {
+        id: "task-list-checklist",
+        title: "onStatusChange turns each row into a real checkbox",
+      },
+    ],
+  },
+  {
+    slug: "agent-activity",
+    group: "Agent",
+    description:
+      "A collapsed cue for a stretch of agent work, opening its thinking and tool calls elsewhere.",
+    examples: [
+      { id: "agent-activity-card", title: "A live cue, and the card for a delegated run" },
+    ],
+  },
+  {
+    slug: "agent-details",
+    group: "Agent",
+    description:
+      "A panel naming an agent conversation, with compact actions and a section of project fields.",
+  },
+  {
+    slug: "generating-surface",
+    group: "Agent",
+    description:
+      "A container that holds an ambient placeholder while content is generated, then morphs into it.",
+  },
+  {
     slug: "transcript-divider",
-    group: "Agent surfaces",
+    group: "Agent",
     description:
       "A labelled hairline across a transcript, marking a day boundary, a model swap or a compaction.",
     examples: [
       { id: "transcript-divider-detail", title: "detail turns the label into a disclosure" },
     ],
   },
-
-  {
-    slug: "pill-composer",
-    group: "Chat surfaces",
-    description:
-      "A pill-shaped composer for small chat surfaces, with a light travelling its rim while the agent works.",
-  },
-  {
-    slug: "chat-bubbles",
-    group: "Chat surfaces",
-    description:
-      "A bubble transcript built from message, quote, reaction, receipt and attachment parts.",
-    examples: [
-      { id: "chat-bubbles-typing", title: "The indicator that pulses while the agent answers" },
-    ],
-  },
-  {
-    slug: "chat-tabs",
-    group: "Chat surfaces",
-    description:
-      "A strip of pill tabs for a chat window, with busy dots, attention badges and close controls.",
-  },
-  {
-    slug: "chat-tray",
-    group: "Chat surfaces",
-    description:
-      "A single row of everything attached to the message being written, collapsing its tail into a count.",
-    examples: [
-      { id: "chat-tray-collapse", title: "collapseAfter names three chips before the count" },
-    ],
-  },
-  {
-    slug: "chat-overlay",
-    group: "Chat surfaces",
-    description:
-      "A reading view that takes over a chat's transcript while the tab strip and composer stay in use.",
-  },
-  {
-    slug: "chat-annotations",
-    group: "Chat surfaces",
-    description:
-      "Passages lifted from a document and the reader's comments on them, read as short conversations.",
-    examples: [
-      { id: "chat-annotations-sent", title: "A sent message compressing its whole set into one chip" },
-    ],
-  },
-
-  {
-    slug: "event-calendar",
-    group: "Composites",
-    description:
-      "A day, week and month scheduler. Events are created, moved and resized by drag.",
-  },
-  {
-    slug: "gantt-chart",
-    group: "Composites",
-    description:
-      "A project timeline of bars, milestones and typed dependency arrows. Tasks are drawn, linked and rescheduled by drag or keyboard.",
-    examples: [
-      {
-        id: "gantt-chart-planning",
-        title: "Date columns, the critical path, and a task drawn on an empty lane",
-      },
-    ],
-  },
-  {
-    slug: "sidebar",
-    group: "Composites",
-    description:
-      "A collapsible navigation rail beside the page, with grouped menus, submenus and tooltips once collapsed to icons.",
-  },
-  {
-    slug: "app-shell",
-    group: "Composites",
-    description:
-      "An application frame of header, docks and status bar around a workspace of panes that split, move and resize.",
-  },
-  {
-    slug: "split-view",
-    group: "Composites",
-    description:
-      "A pair of resizable panels around a draggable separator. Arrow keys resize it from the keyboard.",
-    examples: [
-      {
-        id: "split-view-workspace",
-        title: "Nested splits, with views dragged between panes",
-      },
-    ],
-  },
-  {
-    slug: "window-deck",
-    group: "Composites",
-    description:
-      "A deck of windows that snaps one to the centre and opens an overview of tiles on Mod+G.",
-    examples: [
-      {
-        id: "window-deck-photos",
-        title: "Photographs with no chrome. Throw a tile off the overview to dismiss it",
-      },
-    ],
-  },
-  {
-    slug: "kanban",
-    group: "Composites",
-    description:
-      "A board of columns and draggable cards. Moves report through onCardMove.",
-  },
-  {
-    slug: "table",
-    group: "Composites",
-    description:
-      "A data table on a flat bordered shell, with the toolbar, sorting, column menu and pager as separate pieces.",
-    examples: [
-      {
-        id: "table-workbench",
-        title: "Search, a status facet, a column menu, a sortable column and row selection",
-      },
-      { id: "table-pagination", title: "The pager under a long result set" },
-      { id: "table-empty", title: "The row shown instead of data" },
-    ],
-  },
   {
     slug: "workflow-canvas",
-    group: "Composites",
+    group: "Agent",
     description:
       "A pan-and-zoom canvas of nodes and edges that can be dragged, connected and deleted.",
     examples: [
@@ -595,6 +649,31 @@ const documented: {
       {
         id: "workflow-canvas-palette",
         title: "Drop a connection on empty canvas to add a node",
+      },
+    ],
+  },
+
+  {
+    slug: "git-history",
+    group: "Git",
+    description:
+      "A commit graph of host-supplied history. Rows virtualize by default; selection stays with the host.",
+    examples: [
+      {
+        id: "git-history-branches",
+        title: "An octopus merge, with a custom lane palette",
+      },
+    ],
+  },
+  {
+    slug: "git-commit-details",
+    group: "Git",
+    description:
+      "A sidebar for one commit: metadata, changed files and host-linked work. Passing null releases the space.",
+    examples: [
+      {
+        id: "git-commit-details-history",
+        title: "Selecting a row in Git history fills this panel",
       },
     ],
   },
@@ -606,7 +685,7 @@ export const registry: ComponentDoc[] = documented.map(
     if (!entry) throw new Error(`No catalog entry for ${slug}`);
     return {
       slug,
-      name: entry.name,
+      name: displayNames[slug] ?? sentenceName(entry.name),
       description,
       group,
       examples,

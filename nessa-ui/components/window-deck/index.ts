@@ -10,7 +10,10 @@ export {
 } from "./window-deck"
 export { WindowDeckPane, type WindowDeckPaneProps } from "./window-deck-pane"
 export {
+  WINDOW_DECK_GESTURE_ATTRIBUTE,
+  hasGestureOptOutAncestor,
   useWindowDeck,
+  type WindowDeckContentMount,
   type WindowDeckContextValue,
   type WindowDeckDismissDirection,
   type WindowDeckDismissal,
@@ -18,8 +21,11 @@ export {
 } from "./window-deck-context"
 export {
   computeOverviewColumns,
+  computeOverviewLayout,
   computeOverviewTiles,
+  computeOverviewVisibleCount,
   type WindowDeckOverviewInsets,
+  type WindowDeckOverviewLayout,
   type WindowDeckOverviewOptions,
   type WindowDeckRect,
   type WindowDeckTile,

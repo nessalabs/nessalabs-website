@@ -9,6 +9,15 @@ import type { WindowDeckTile } from "./window-deck-layout"
 /** How the deck presents its panes. */
 export type WindowDeckMode = "carousel" | "overview"
 
+/**
+ * Which pane trees the deck keeps mounted.
+ *
+ * `active` mounts the live window only — neighbours and overview tiles are
+ * frames or host-supplied previews. `always` keeps every pane's content
+ * mounted, which a host needs when hidden windows must keep running work.
+ */
+export type WindowDeckContentMount = "active" | "always"
+
 /** The edge a pane is thrown towards to dismiss it. */
 export type WindowDeckDismissDirection = "up" | "down" | "left" | "right"
 
@@ -52,6 +61,26 @@ export interface WindowDeckContextValue {
   settling: boolean
   /** The overview transform for one pane, while the overview is open. */
   tileFor: (paneId: string) => WindowDeckTile | undefined
+  /**
+   * Whether this pane should mount its full content tree. The live window
+   * always does; everyone else does only when the host asked for `always`.
+   */
+  shouldMountContent: (paneId: string) => boolean
+  /**
+   * Whether this pane should mount its preview. Overview tiles in or next
+   * to the visible page do; far tiles and carousel neighbours do not.
+   */
+  shouldMountPreview: (paneId: string) => boolean
+  /**
+   * Whether the overview strip is being panned, so a pane can drop its
+   * transform transition and follow the hand instead of easing each tick.
+   */
+  overviewPanning: boolean
+  /**
+   * Pans the overview strip by a pointer delta. Horizontal travel in the
+   * overview is a scroll, not a dismissal.
+   */
+  panOverview: (deltaX: number) => void
   /** Registers a pane; returns its disposer. */
   registerPane: (pane: RegisteredWindowDeckPane) => () => void
   /**
@@ -80,8 +109,9 @@ const WindowDeckContext = React.createContext<WindowDeckContextValue | null>(
 /**
  * Reads the state of the nearest WindowDeck: which pane is focused, whether
  * the deck is a carousel or an overview, and how to open a pane. Content
- * inside a pane uses it to adapt to being a tile — a photograph dropping to
- * a thumbnail, a card hiding its call to action.
+ * inside a pane uses it to adapt to being a tile. Prefer a `preview` on the
+ * pane when the overview should show a cheap stand-in instead of the live
+ * tree.
  *
  * @returns The current WindowDeck context value.
  * @throws When called outside a WindowDeck.
@@ -120,6 +150,43 @@ function composeRefs<Element>(
 }
 
 /**
+ * The attribute a nested control sets to keep the deck's pointer gestures
+ * off it. A deck moves whole windows, so any element that runs a drag of
+ * its own inside a pane — a split separator, a pane drag handle — must be
+ * able to say so; the deck walks up from the event target and stands down.
+ */
+const WINDOW_DECK_GESTURE_ATTRIBUTE = "data-deck-gesture"
+
+/**
+ * Whether a gesture started inside a control that claims its own pointer
+ * drags, in which case the deck must not take it.
+ *
+ * The walk stops at the boundary — the pane the gesture started in — so an
+ * opt-out outside that pane can never silence it.
+ *
+ * @param target - The element the gesture landed on.
+ * @param boundary - The element the search stops at, exclusive.
+ * @returns Whether an ancestor claims the gesture.
+ */
+function hasGestureOptOutAncestor(
+  target: EventTarget | null,
+  boundary: HTMLElement | null,
+): boolean {
+  // Element, not HTMLElement: an SVG icon inside an opted-out control is
+  // still its descendant, and walking from null would steal its gesture.
+  let node = target instanceof Element ? target : null
+
+  while (node && node !== boundary) {
+    if (node.getAttribute(WINDOW_DECK_GESTURE_ATTRIBUTE) === "ignore") {
+      return true
+    }
+    node = node.parentElement
+  }
+
+  return false
+}
+
+/**
  * Orders registered panes by their position in the document, so pane order
  * always matches what the user sees regardless of mount order.
  *
@@ -139,8 +206,10 @@ function sortByDocumentPosition(
 }
 
 export {
+  WINDOW_DECK_GESTURE_ATTRIBUTE,
   WindowDeckContext,
   composeRefs,
+  hasGestureOptOutAncestor,
   sortByDocumentPosition,
   useWindowDeck,
 }

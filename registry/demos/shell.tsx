@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Archive, Bot, Columns2, GripVertical, Pin, Plus, X } from "lucide-react";
+import { Archive, Bot, Columns2, Pin, Plus, X } from "lucide-react";
 import {
   AppShell,
   AppShellBody,
@@ -9,7 +9,6 @@ import {
   AppShellDockSide,
   AppShellHeader,
   AppShellMain,
-  AppShellPaneDragHandle,
   AppShellStatusBar,
   AppShellWorkspace,
   Button,
@@ -43,7 +42,10 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  WindowDeck,
+  WindowDeckPane,
   createAppShellLayout,
+  splitPane,
   useAppShell,
   type PaneNode,
 } from "@nessa-ui/react";
@@ -545,22 +547,11 @@ function ShellPane({ pane }: { pane: PaneNode }) {
   const chat = shellChats.find((entry) => entry.id === pane.activeViewId);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col pt-4">
       <div className="flex h-9 shrink-0 items-center gap-0.5 border-b border-border bg-muted/40 pe-1.5">
-        {/* Dragging the grip moves this pane onto another pane's edge. */}
-        <AppShellPaneDragHandle
-          paneId={pane.id}
-          className="flex h-full min-w-0 flex-1 items-center gap-1.5 ps-2"
-          title="Drag to move this pane"
-        >
-          <GripVertical
-            aria-hidden
-            className="size-3.5 shrink-0 text-muted-foreground/70"
-          />
-          <span className="truncate text-xs font-medium">
-            {chat?.name ?? "Empty pane"}
-          </span>
-        </AppShellPaneDragHandle>
+        <span className="min-w-0 flex-1 truncate ps-3 text-xs font-medium">
+          {chat?.name ?? "Empty pane"}
+        </span>
         <Button
           variant="ghost"
           size="icon"
@@ -648,7 +639,10 @@ export function AppShellDemo() {
             <ShellConversations />
           </AppShellDock>
           <AppShellMain>
-            <AppShellWorkspace renderPane={(pane) => <ShellPane pane={pane} />} />
+            <AppShellWorkspace
+              paneGrabber
+              renderPane={(pane) => <ShellPane pane={pane} />}
+            />
             <AppShellDock
               side={AppShellDockSide.Bottom}
               minSize={100}
@@ -662,10 +656,73 @@ export function AppShellDemo() {
         </AppShellBody>
         <AppShellStatusBar className="bg-sidebar">
           <span className="text-xs text-muted-foreground">
-            Split a pane, then drag it by its grip onto another pane&apos;s edge.
+            Split a pane, then drag it by the pill on its top edge onto another pane.
           </span>
         </AppShellStatusBar>
       </AppShell>
+    </div>
+  );
+}
+
+function WindowWorkspace({ name }: { name: string }) {
+  return (
+    <AppShell
+      className="h-full"
+      defaultLayout={splitPane(
+        createAppShellLayout({
+          initialPaneId: `${name}-left`,
+          views: [`${name}:notes`],
+          openDocks: [],
+        }),
+        {
+          paneId: `${name}-left`,
+          direction: PaneSplitDirection.Right,
+          newPaneId: `${name}-right`,
+          views: [`${name}:tasks`],
+        }
+      )}
+    >
+      <AppShellWorkspace
+        paneGrabber
+        renderPane={(pane) => (
+          <div className="flex h-full flex-col gap-1 p-3 pt-6">
+            <span className="text-xs font-medium">{pane.activeViewId}</span>
+            <span className="text-xs text-muted-foreground">
+              Drag the space between tiles to resize.
+            </span>
+          </div>
+        )}
+      />
+    </AppShell>
+  );
+}
+
+/**
+ * A deck of windows, each one a split workspace. The deck moves whole
+ * windows; the shell tiles within one.
+ */
+export function WindowDeckWorkspacesDemo() {
+  return (
+    <div className="h-[32rem] w-full overflow-hidden rounded-2xl border border-border bg-background">
+      <WindowDeck className="h-full" contentMount="always" wheelNavigation={false}>
+        {["Planner", "Review"].map((name) => (
+          <WindowDeckPane
+            key={name}
+            id={name.toLowerCase()}
+            label={name}
+            header={
+              <span className="flex min-w-0 flex-col">
+                <strong className="nessa-text-3 truncate font-medium">{name}</strong>
+                <small className="nessa-text-2 truncate text-muted-foreground">
+                  2 panes
+                </small>
+              </span>
+            }
+          >
+            <WindowWorkspace name={name.toLowerCase()} />
+          </WindowDeckPane>
+        ))}
+      </WindowDeck>
     </div>
   );
 }
