@@ -28,7 +28,7 @@
   "agent-stream": {
     "title": "Agents/AgentStream",
     "component": "Explorer",
-    "description": "The agent stream parser, driven by real captures from two agents — `claude -p --output-format stream-json` and `codex exec --json`. Left is the transcript drawn from parsed events with Message, ToolCall, TaskList and MessageMarkdown; right is the same bytes unparsed — every wire line and every event it became, selectable against each other through JsonTree. The player feeds lines one at a time so the delta path, the shimmer on an unfinished call and the plan filling in all happen the way they do against a live process.",
+    "description": "The agent stream parser, driven by captured OpenAI Agents SDK, Claude Code, Codex, Cursor Agent, opencode, and ACP event streams. Left is the transcript drawn from normalized events with Message, ToolCall, TaskList and MessageMarkdown; right is the same JSON unparsed — every wire line and every event it became, selectable through JsonTree. The player feeds lines one at a time so deltas, pending calls, handoffs, approvals, and compaction happen in arrival order.",
     "stories": [
       {
         "name": "Explore",
@@ -45,6 +45,10 @@
       {
         "name": "Providers",
         "note": "The same views over a different agent. Switching provider swaps only the wire module and the mapper — the transcript, the tool rows, the plan and the raw inspector are the shared layer, unchanged. What differs is what each wire can say: the strip under the captures names it, and a surface a provider cannot fill is absent rather than empty. Codex reports structured file changes, which Claude Code does not; Claude advertises its commands, skills and MCP servers, which Codex does not."
+      },
+      {
+        "name": "OpenAI",
+        "note": "The OpenAI Agents SDK adapter over an exercised two-request function-tool loop. It distinguishes model-request completion from run completion, pairs the SDK's executed tool output with its call, and commits the streamed answer only once."
       },
       {
         "name": "Architecture",
@@ -71,8 +75,12 @@
         "note": "Splitting inserts a focused pane beside the target and closing returns its space to the neighbor it was split from; the tree re-normalizes after every operation."
       },
       {
+        "name": "DefaultPaneControls",
+        "note": "Pane content owns its top edge by default. Hosts opt into the overlay grabber only when they have reserved space for it."
+      },
+      {
         "name": "SwapPanes",
-        "note": "Dragging one pane onto another swaps them — the split structure and orientations stay exactly as they were, and new sections come from the explicit split actions instead. While hovering, the target highlights and previews the incoming content, a miniature of the dragged pane rides the cursor, and uninvolved panes fade."
+        "note": "Dragging one pane onto another swaps them — the split structure and orientations stay exactly as they were, and new sections come from the explicit split actions instead. While hovering, both slots stand empty and the displaced pane's content travels on its own layer into the slot the drag opened, so the exchange reads as movement rather than a redraw; a miniature of the dragged pane rides the cursor, and uninvolved panes fade."
       },
       {
         "name": "DockToggles",
@@ -455,6 +463,10 @@
       {
         "name": "CustomRowsAndAnimation",
         "note": "Rows are host-rendered: this example swaps markers for dots that read the inherited --nessa-rail-boost variable to scale along the same hill, and replaces the default preview slide with a slower fade-and-scale by overriding classes."
+      },
+      {
+        "name": "SlowPreviewTransitions",
+        "note": null
       }
     ]
   },
@@ -567,6 +579,10 @@
       {
         "name": "AgentTurnComposition",
         "note": "App-fidelity composition of an agent edit turn in dark mode: aggregate stats beside the card icon and undo/review actions in the header. Rows stay chrome-free here; per-row actions remain an opt-in shown in Hover Row Actions."
+      },
+      {
+        "name": "VirtualizedFiles",
+        "note": "The existing file-diff primitives opt into VirtualList through FileDiffList virtualize. Native ul/li semantics and the card collapse contract are preserved; only the visible fixed-height rows mount."
       }
     ]
   },
@@ -781,6 +797,80 @@
       },
       {
         "name": "RevealMorph",
+        "note": null
+      }
+    ]
+  },
+  "git-commit-details": {
+    "title": "Implement conversation echo",
+    "component": "GitCommitDetails",
+    "description": "Standalone commit sidebar with full metadata, changed-file statistics and host-linked work. Load details when GitHistory selects a commit; supply callbacks to open files, sessions, plans or the full commit. File changes in these examples come from local Git, compared with the first parent (or empty tree for root commits). Renames are deliberately captured as delete/add. Associations are explicit sample data. Changed files use VirtualList by default.",
+    "stories": [
+      {
+        "name": "WithHistory",
+        "note": null
+      },
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "NoSelection",
+        "note": null
+      },
+      {
+        "name": "NotLoaded",
+        "note": null
+      },
+      {
+        "name": "NoChanges",
+        "note": null
+      },
+      {
+        "name": "FileStress",
+        "note": null
+      },
+      {
+        "name": "AllFilesMounted",
+        "note": null
+      }
+    ]
+  },
+  "git-history": {
+    "title": "Git Operations/History",
+    "component": "GitHistory",
+    "description": "Parent-derived commit graph with optional row virtualization. Supply child-before-parent topological GitCommit records from your backend. The default story is a real local nessa-agent snapshot; refresh it with node apps/storybook/scripts/capture-git-history.mjs /path/to/repo. Browser code never runs Git. Virtualization mounts fixed-height rows; disable it for browser find or full accessibility traversal. Selection is host-controlled.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": null
+      },
+      {
+        "name": "TenThousandRows",
+        "note": null
+      },
+      {
+        "name": "AllRowsMounted",
+        "note": null
+      },
+      {
+        "name": "Narrow",
+        "note": null
+      },
+      {
+        "name": "Empty",
+        "note": null
+      },
+      {
+        "name": "ManyBranches",
+        "note": null
+      },
+      {
+        "name": "Compact",
+        "note": null
+      },
+      {
+        "name": "CustomPalette",
         "note": null
       }
     ]
@@ -1175,7 +1265,7 @@
     "stories": [
       {
         "name": "Playground",
-        "note": "Default glass mesh in a Nessa setup card — back top-left, centred prompt, corner pills — so the living wash reads the way the Apple setup modal does. Watch a few seconds: magenta, amber, and blue fields migrate across the card."
+        "note": null
       },
       {
         "name": "Presets",
@@ -1384,6 +1474,10 @@
       {
         "name": "ComposedFlow",
         "note": "Two questions composed into a stepped flow — the host owns the step and answer state while the questionnaire renders the active question, exactly the composition contract of the kit. The choices are controlled (value + onValueChange lifted to the host) so navigating Back preserves the answer instead of remounting to the default, and the actions row swaps Continue for the submit button on the final step. The play test answers question one, advances, asserts the counter re-announces 'Question 2 of 2' and the submit appears, then returns to prove the answer survived."
+      },
+      {
+        "name": "SlowSelectionTransitions",
+        "note": null
       }
     ]
   },
@@ -2007,10 +2101,29 @@
       }
     ]
   },
+  "virtual-list": {
+    "title": "Layout/Virtual List",
+    "component": "VirtualList",
+    "description": "Reusable fixed-row virtual list. Supply items, stable getKey, and a row renderer. Default viewport 400px, rows 40px, overscan 5. Offscreen rows unmount; keep durable state in the host. A focused row is retained until focus leaves it. Use virtualize=false for full DOM traversal. Variable-height content needs a measured virtualizer instead.",
+    "stories": [
+      {
+        "name": "Playground",
+        "note": "Ten thousand simple rows with a bounded mounted window and accessible list positions."
+      },
+      {
+        "name": "ChangingData",
+        "note": null
+      },
+      {
+        "name": "RapidScroll",
+        "note": null
+      }
+    ]
+  },
   "window-deck": {
     "title": "Shell/WindowDeck",
     "component": "WindowDeck",
-    "description": "A deck of windows the user moves between. The carousel snaps one window to the middle at a time and lets its neighbours recede; Mod+G pulls every window back into an overview of tiles, and choosing a tile returns the deck to the carousel on that window. The return is the part worth knowing about: the scroller jumps to the landing window and the rail is shifted by the same distance in the same frame, so the composite is pixel-identical and the only thing that animates is one spring back to zero. Panes are content-agnostic frames — compose any Nessa components into them — and both the focused pane and the presentation mode may be controlled or left to the deck. The keymap follows the design system's shortcut descriptors, so a host rebinds an action, disables one with false, or turns off keyboard control entirely.",
+    "description": "A deck of windows the user moves between. The carousel snaps one window to the middle at a time and lets its neighbours recede; Mod+G shrinks the live window into a strip of preview tiles. The viewport shows a capped page of those tiles — the rest scroll sideways — and choosing a tile returns the deck to the carousel on that window. Only the live window mounts its full content; everyone else is a frame or a host-supplied preview, so a large deck does not remount every pane on the way into the overview. The return is the part worth knowing about: the scroller jumps to the landing window and the rail is shifted by the same distance in the same frame, so the composite is pixel-identical and the only thing that animates is one spring back to zero. Panes are content-agnostic frames — compose any Nessa components into them — and both the focused pane and the presentation mode may be controlled or left to the deck.",
     "stories": [
       {
         "name": "Default",
@@ -2046,6 +2159,14 @@
       },
       {
         "name": "ShortcutsLeaveTheComposer",
+        "note": null
+      },
+      {
+        "name": "WorkspacesInsideWindows",
+        "note": "A deck of windows, each one a split workspace. The two layout systems do not contend: the deck moves whole windows by transform, the shell tiles within one by flex weights. The join between them is a gesture boundary — a split separator and a pane grabber mark themselves with `data-deck-gesture=\"ignore\"`, and the deck walks up from the event target and stands down, so resizing a split inside a window never throws the window away."
+      },
+      {
+        "name": "PreviewStrip",
         "note": null
       }
     ]

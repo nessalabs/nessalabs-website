@@ -4,15 +4,10 @@ The Nessa Labs website — homepage plus the **nessa-ui** component documentatio
 at `/ui/components`.
 
 nessa-ui is a behaviour-first React component system: primitives (button, input,
-select, switch, badge, avatar, tooltip, tabs, drawer, sheet…) plus the
-composites that usually cost a week each — a resizable application shell, split
-panes, a sortable/searchable data table, a pointer-driven board, a
-day/week/month/year calendar, a pan-and-zoom node canvas, a Gantt chart, the
-chart kit (pie, radar, flow, price, stock quote), the agent surfaces (streaming
-chat, composer with queue steering, tool calls, permission prompts, JSON trees,
-diff summaries, model picker, activity cues, conversation history) and the
-iMessage-style chat surfaces (pill composer, bubbles, tabs, tray, overlay,
-annotations).
+checkbox, badge, avatar, tabs, menus…) plus layout (a resizable application
+shell, split panes, a window deck, drawer, sheet, virtual list), data (table,
+board, calendar), the chart kit, files (code, markdown, preview, diff),
+conversation and agent surfaces, and git history.
 
 What ships is the interaction model. Styling is the consumer's: every component
 takes `className`, the interactive ones take `classNames` for their parts and a

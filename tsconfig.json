@@ -34,6 +34,12 @@
       ],
       "@nessa-ui/agent-stream/transcript": [
         "./agent-stream/transcript/index.ts"
+      ],
+      "@nessalabs/agent-stream": [
+        "./agent-stream/contract.ts"
+      ],
+      "@nessalabs/agent-stream/transcript": [
+        "./agent-stream/transcript/index.ts"
       ]
     }
   },

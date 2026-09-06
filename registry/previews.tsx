@@ -54,6 +54,7 @@ import {
   SearchableListboxDemo,
   SectionedListboxDemo,
   SidebarDemo,
+  WindowDeckWorkspacesDemo,
 } from "./demos/shell";
 import {
   ChatComposerEditorDemo,
@@ -112,6 +113,14 @@ import {
   TaskListDemo,
 } from "./demos/surfaces";
 import { AgentHarness } from "./demos/harness";
+import {
+  GitCommitDetailsDemo,
+  GitCommitDetailsHistoryDemo,
+  GitHistoryBranchesDemo,
+  GitHistoryDemo,
+  VirtualListAllDemo,
+  VirtualListDemo,
+} from "./demos/git";
 import {
   BadgeDemo,
   ButtonDemo,
@@ -266,6 +275,7 @@ export const previews: Record<string, React.ReactNode> = {
   "split-view-workspace": <SplitViewWorkspaceDemo />,
   "window-deck": <WindowDeckDemo />,
   "window-deck-photos": <WindowDeckPhotosDemo />,
+  "window-deck-workspaces": <WindowDeckWorkspacesDemo />,
   "workflow-canvas": <WorkflowCanvasDemo />,
   "workflow-canvas-nested": <WorkflowCanvasNestedDemo />,
   "workflow-canvas-palette": <WorkflowCanvasPaletteDemo />,
@@ -273,4 +283,11 @@ export const previews: Record<string, React.ReactNode> = {
   "table-workbench": <TableWorkbenchDemo />,
   "table-pagination": <TablePaginationDemo />,
   "table-empty": <TableEmptyDemo />,
+
+  "virtual-list": <VirtualListDemo />,
+  "virtual-list-all": <VirtualListAllDemo />,
+  "git-history": <GitHistoryDemo />,
+  "git-history-branches": <GitHistoryBranchesDemo />,
+  "git-commit-details": <GitCommitDetailsDemo />,
+  "git-commit-details-history": <GitCommitDetailsHistoryDemo />,
 };

@@ -32,8 +32,13 @@ export default async function ComponentPage({
   const index = registry.findIndex((c) => c.slug === slug);
   const prev = registry[index - 1];
   const next = registry[index + 1];
-  // Composites and charts need the room; everything else reads better narrow.
-  const wide = doc.group === "Composites" || doc.group === "Charts";
+  // Layout, data, charts and git need the room; everything else reads better narrow.
+  const wide =
+    doc.group === "Layout" ||
+    doc.group === "Data" ||
+    doc.group === "Charts" ||
+    doc.group === "Git" ||
+    doc.slug === "workflow-canvas";
 
   return (
     <div className={wide ? "max-w-5xl" : "max-w-3xl"}>
