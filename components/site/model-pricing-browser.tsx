@@ -62,7 +62,8 @@ export function ModelPricingBrowser() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const q = searchParams.get("q") ?? "";
+  const urlQ = searchParams.get("q") ?? "";
+  const [q, setQ] = React.useState(urlQ);
   const categoryParam = searchParams.get("category") ?? "all";
   const providerParam = searchParams.get("provider") ?? "all";
   const tierParam = searchParams.get("tier") ?? "standard";
@@ -84,6 +85,24 @@ export function ModelPricingBrowser() {
     const search = params.toString();
     router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
   }
+
+  // The field filters immediately. The URL follows after a pause so a fast
+  // series of keystrokes cannot be overwritten by an earlier navigation.
+  React.useEffect(() => {
+    setQ(urlQ);
+  }, [urlQ]);
+
+  React.useEffect(() => {
+    if (q === urlQ) return;
+    const handle = window.setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (q) params.set("q", q);
+      else params.delete("q");
+      const search = params.toString();
+      router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
+    }, 200);
+    return () => window.clearTimeout(handle);
+  }, [q, urlQ, pathname, router]);
 
   const result = queryCatalog(modelPricing, {
     provider: provider === "all" ? undefined : provider,
@@ -117,7 +136,7 @@ export function ModelPricingBrowser() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <Input
               value={q}
-              onChange={(event) => writeParams({ q: event.target.value || null })}
+              onChange={(event) => setQ(event.target.value)}
               placeholder="Search models, ids, providers"
               aria-label="Search models"
               className="lg:max-w-sm"
