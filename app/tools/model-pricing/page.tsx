@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function ModelPricingPage() {
   return (
     <div>
-      <header className="mx-auto w-full max-w-6xl px-6 pt-12 sm:px-8">
+      <header className="mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-6 pt-10 sm:px-8 sm:pt-12">
         <Link
           href="/tools"
           className="text-sm text-muted-foreground hover:text-foreground"
@@ -25,7 +25,7 @@ export default function ModelPricingPage() {
           Tools
         </Link>
         <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Model API pricing
           </h1>
           <a

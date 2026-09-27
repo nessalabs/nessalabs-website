@@ -39,12 +39,9 @@ function PriceList({ prices }: { prices?: Price[] }) {
         const unit = entry.unit === "per_million_tokens" ? null : unitLabel(entry.unit);
         const caption = [entry.when, unit].filter(Boolean).join(" ");
         return (
-          <li
-            key={`${entry.usd}-${entry.unit}-${entry.when ?? index}`}
-            className="flex items-baseline justify-end gap-2 whitespace-nowrap"
-          >
+          <li key={`${entry.usd}-${entry.unit}-${entry.when ?? index}`} className="text-right">
             {caption ? (
-              <span className="text-[11px] leading-4 text-muted-foreground">{caption}</span>
+              <span className="mr-2 text-[11px] leading-4 text-muted-foreground">{caption}</span>
             ) : null}
             <span className="font-mono text-sm tabular-nums text-foreground">
               {formatUsd(entry.usd)}
@@ -102,35 +99,29 @@ export function ModelPricingBrowser() {
   const narrowed = Boolean(provider || category !== "all");
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 pb-20 sm:px-8">
-      <div className="mt-8 flex items-center gap-4">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-6 pb-20 sm:px-8">
+      <div className="mt-8 flex items-center gap-3">
         <Input
           value={q}
           onChange={(event) => setQ(event.target.value)}
           placeholder="Filter models"
           aria-label="Filter models"
-          className="max-w-xs"
+          className="min-w-0 flex-1 sm:max-w-xs sm:flex-none"
         />
-        <span className="ml-auto shrink-0 text-sm tabular-nums text-muted-foreground">
+        <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
           {result.modelCount} {result.modelCount === 1 ? "model" : "models"}
         </span>
       </div>
-      <nav aria-label="Providers" className="mt-4 text-sm leading-6 text-muted-foreground">
-        {jumps.map((item, index) => (
-          <span key={item.id}>
-            {index > 0 ? <span className="mx-2 text-muted-foreground">·</span> : null}
-            <a href={`#${item.id}`} className="hover:text-foreground">
-              {item.name}
-            </a>
-          </span>
+      <nav aria-label="Providers" className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground">
+        {jumps.map((item) => (
+          <a key={item.id} href={`#${item.id}`} className="hover:text-foreground">
+            {item.name}
+          </a>
         ))}
         {narrowed ? (
-          <>
-            <span className="mx-2 text-muted-foreground">·</span>
-            <a href="/tools/model-pricing" className="hover:text-foreground">
-              Show every provider
-            </a>
-          </>
+          <a href="/tools/model-pricing" className="hover:text-foreground">
+            Show every provider
+          </a>
         ) : null}
       </nav>
 
@@ -154,7 +145,26 @@ export function ModelPricingBrowser() {
                 <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{item.line}</p>
               ) : null}
 
-              <div className="mt-4 overflow-x-auto">
+              <div className="mt-2 md:hidden">
+                {item.models.map((model, index) => (
+                  <React.Fragment key={model.id}>
+                    {several && model.category !== item.models[index - 1]?.category ? (
+                      <p
+                        className={
+                          index === 0
+                            ? "pb-1 pt-2 text-xs font-medium text-muted-foreground"
+                            : "pb-1 pt-6 text-xs font-medium text-muted-foreground"
+                        }
+                      >
+                        {categoryLabel(model.category)}
+                      </p>
+                    ) : null}
+                    <ModelCard model={model} />
+                  </React.Fragment>
+                ))}
+              </div>
+
+              <div className="mt-4 hidden min-w-0 overflow-x-auto md:block">
                 <table className="w-full min-w-[760px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-border text-xs text-muted-foreground">
@@ -228,6 +238,42 @@ export function ModelPricingBrowser() {
         Batch and fast tiers are in the JSON.
       </p>
     </div>
+  );
+}
+
+function ModelCard({ model }: { model: ModelQuote }) {
+  const rates = model.standard;
+  const fields = [
+    ["Input", rates.input],
+    ["Output", rates.output],
+    ["Cache read", rates.cachedInput],
+    ["Cache write", rates.cacheWrite],
+  ] as const;
+
+  return (
+    <article className="border-b border-border py-4">
+      <h3 className="font-medium text-foreground">{model.name}</h3>
+      <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">{model.id}</p>
+      {model.retiring ? <p className="mt-1 text-xs text-muted-foreground">{model.retiring}</p> : null}
+      <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-y-1.5">
+        {model.context ? (
+          <>
+            <dt className="text-sm text-muted-foreground">Context</dt>
+            <dd className="text-right font-mono text-xs text-muted-foreground">{model.context}</dd>
+          </>
+        ) : null}
+        {fields.map(([label, prices]) =>
+          prices?.length ? (
+            <React.Fragment key={label}>
+              <dt className="text-sm text-muted-foreground">{label}</dt>
+              <dd className="min-w-0 text-right">
+                <PriceList prices={prices} />
+              </dd>
+            </React.Fragment>
+          ) : null,
+        )}
+      </dl>
+    </article>
   );
 }
 
