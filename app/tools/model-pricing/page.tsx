@@ -17,26 +17,27 @@ export const metadata: Metadata = {
 export default function ModelPricingPage() {
   return (
     <div>
-      <header className="mx-auto w-full max-w-6xl px-6 pt-14 sm:px-8">
+      <header className="mx-auto w-full max-w-6xl px-6 pt-12 sm:px-8">
         <Link
           href="/tools"
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           Tools
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          Model API pricing
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-          Published list prices for major model APIs, grouped by provider. The same
-          rows are available as JSON at{" "}
+        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            Model API pricing
+          </h1>
           <a
             href="/api/model-pricing"
-            className="font-mono text-sm text-foreground underline-offset-4 hover:underline"
+            className="font-mono text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
             /api/model-pricing
           </a>
-          .
+        </div>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+          List prices for major model APIs, grouped by provider. Token rates are
+          USD per million tokens.
         </p>
       </header>
       <Suspense fallback={<div className="mx-auto w-full max-w-6xl px-6 py-10 text-sm text-muted-foreground sm:px-8">Loading prices.</div>}>

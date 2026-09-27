@@ -39,6 +39,7 @@ export const modelPricing: ModelPricingCatalog = {
       id: "anthropic",
       name: "Anthropic",
       docsUrl: "https://docs.anthropic.com/en/docs/about-claude/pricing",
+      line: "Cache reads are 0.1× input, or 0.025× on Fable 5.1.",
       billing:
         "Claude bills input, output and prompt-cache tokens per million. A five-minute cache write is 1.25× input and a one-hour write is 2×. Cache reads are 0.1× input, or 0.025× on Fable 5.1. The Batch API is half price. Fast mode, where listed, is 2× and is not available on the Batch API. US-only inference on Claude 4.6 and later is 1.1×. Claude 4.6 and later keep one rate out to 1M tokens.",
       models: [
@@ -115,6 +116,7 @@ export const modelPricing: ModelPricingCatalog = {
       id: "openai",
       name: "OpenAI",
       docsUrl: "https://developers.openai.com/api/docs/pricing",
+      line: "A prompt over 272k input tokens is billed at the long-context rate for every token in the request.",
       billing:
         "Flagship GPT-6 and GPT-5.6 rates below are the standard tier. A prompt over 272k input tokens is repriced for the whole request, not only the tokens past the line: 2× input and cache, 1.5× output. Cache writes are 1.25× input. On GPT-6, Batch and Flex are half of standard and Fast mode is 2×. Data-residency endpoints add 10% on models released on or after 5 March 2026. FedRAMP endpoints add 10%.",
       models: [
@@ -363,6 +365,7 @@ export const modelPricing: ModelPricingCatalog = {
       id: "google",
       name: "Google",
       docsUrl: "https://ai.google.dev/gemini-api/docs/pricing",
+      line: "Gemini 3.8 Flash is on an introductory rate through 31 December 2026.",
       billing:
         "Gemini Developer API paid tier, per million tokens. Thinking tokens are billed as output. Gemini 3.8 Flash, 3.7 Flash and 3.6 Flash are on an introductory rate through 31 December 2026. Batch is half of standard on the models that list it. Priority is the higher of the two published schedules. Search grounding is 5,000 requests a month free across Gemini 3.x, then $14 per 1,000.",
       models: [
@@ -521,6 +524,7 @@ export const modelPricing: ModelPricingCatalog = {
       id: "xai",
       name: "xAI",
       docsUrl: "https://docs.x.ai/developers/pricing",
+      line: "A prompt of 200k tokens or more is billed at the higher rate for every token in the request.",
       billing:
         "Text models with two rows bill every token in the request at the higher rate once the prompt reaches 200k tokens. Priority processing is 2× after the cache discount. The US regional endpoint is 1.1× and currently serves grok-4.7 and grok-4.6. Batch is 20% off for grok-4.3 and the grok-4.20 snapshots only. Voice, image and server-side tools are separate meters.",
       models: [
@@ -699,6 +703,7 @@ export const modelPricing: ModelPricingCatalog = {
       id: "deepseek",
       name: "DeepSeek",
       docsUrl: "https://api-docs.deepseek.com/quick_start/pricing",
+      line: "Peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday. Other hours are half price.",
       billing:
         "Off-peak is half of peak. Peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday, excluding Chinese public holidays. Weekends and those holidays are off-peak all day. Cache hits are automatic. Both models take a 1M context and up to 384k output. Base URL https://api.deepseek.com, or https://api.deepseek.com/anthropic for the Anthropic format.",
       models: [

@@ -74,7 +74,15 @@ function matchesText(haystack: string, needle: string): boolean {
 function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery): boolean {
   if (query.category && model.category !== query.category) return false;
   if (!query.q) return true;
-  const blob = [provider.name, provider.id, model.name, model.id, model.note, model.retiring]
+  const blob = [
+    provider.name,
+    provider.id,
+    model.name,
+    model.id,
+    model.category,
+    model.note,
+    model.retiring,
+  ]
     .filter(Boolean)
     .join(" ");
   return matchesText(blob, query.q);

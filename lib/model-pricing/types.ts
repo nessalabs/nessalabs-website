@@ -50,8 +50,10 @@ export interface Provider {
   id: string;
   name: string;
   docsUrl: string;
-  /** How this provider bills, in a sentence or two. */
+  /** How this provider bills, in a sentence or two. Shown in the JSON. */
   billing: string;
+  /** One sentence on the page, when the table headings do not carry it. */
+  line?: string;
   models: ModelQuote[];
 }
 
