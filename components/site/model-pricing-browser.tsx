@@ -983,26 +983,34 @@ function BenchSheet({
           </tbody>
         </table>
       </div>
-      <dl className="mt-10 max-w-3xl">
-        {benches.map((bench) => (
-          <div key={bench.id} className="border-t border-border py-3">
-            <dt className="text-sm text-foreground">
-              <a
-                href={bench.url}
-                target="_blank"
-                rel="noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                {bench.name}
-              </a>
-              <span className="text-muted-foreground"> · {bench.task}</span>
-            </dt>
-            <dd className="mt-1 text-sm leading-6 text-muted-foreground">
-              {bench.summary} {bench.protocol}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <details className="group mt-10 max-w-3xl">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-foreground [&::-webkit-details-marker]:hidden">
+          <span aria-hidden className="inline-block text-muted-foreground transition-transform group-open:rotate-90">
+            ›
+          </span>
+          References
+        </summary>
+        <dl className="mt-4">
+          {benches.map((bench) => (
+            <div key={bench.id} className="border-t border-border py-3">
+              <dt className="text-sm text-foreground">
+                <a
+                  href={bench.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  {bench.name}
+                </a>
+                <span className="text-muted-foreground"> · {bench.task}</span>
+              </dt>
+              <dd className="mt-1 text-sm leading-6 text-muted-foreground">
+                {bench.summary} {bench.protocol}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </details>
     </div>
   );
 }
