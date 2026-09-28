@@ -298,7 +298,7 @@ export function ModelPricingBrowser({
         {view === "benches" ? (
           <>
             Prices checked {checkedLabel(modelPricing.updated)}. Bench scores were read from the
-            linked boards on 28 September 2026. A dash means that board published no score. The two
+            linked boards on 28 September 2026. A dash means that board published no score. The
             OSWorld rows use different task sets.
           </>
         ) : (
