@@ -185,7 +185,9 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1824, A, "Anthropic"),
   ],
   "claude-opus-4-8": [
-    score("osworld-strict", 20.6, W, "XLANG", "Partial 54.8%. Batched tools."),
+    score("osworld-strict", 20.6, W, "XLANG", "Partial 54.8%. Batched tools.", [
+      { effort: "max", value: 20.6 },
+    ]),
     terminal(23.6, "max, Claude Code. Run $6.5k.", 6500),
     score("deepswe", 59.0, D, "Datacurve", undefined, levels(
       ["max", 59.0, 13.22],
@@ -196,7 +198,9 @@ export const benchScores: Record<string, BenchScore[]> = {
     )),
   ],
   "claude-opus-4-7": [
-    score("osworld-strict", 18.2, W, "XLANG", "Partial 48.9%. Batched tools."),
+    score("osworld-strict", 18.2, W, "XLANG", "Partial 48.9%. Batched tools.", [
+      { effort: "max", value: 18.2 },
+    ]),
   ],
   "claude-sonnet-4-6": [
     score("osworld-strict", 9.3, W, "XLANG", "Partial 33.9% at medium.", [
@@ -228,7 +232,9 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("automation-bench", 41.4, O, "OpenAI", "OpenAI's run."),
   ],
   "gpt-5.6-sol": [
-    score("osworld-strict", 27.3, W, "XLANG", "max. v2026.08.08. Partial 62.7%."),
+    score("osworld-strict", 27.3, W, "XLANG", "v2026.08.08. Partial 62.7%.", [
+      { effort: "max", value: 27.3 },
+    ]),
     score("osworld-offline", 65.7, O, "OpenAI"),
     terminal(37.3, "max, Codex. Run $2.5k.", 2500),
     score("deepswe", 72.7, D, "Datacurve", undefined, levels(
@@ -287,16 +293,24 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("deepswe", 53.8, D, "Datacurve", "high.", undefined, 2.42),
   ],
   "gpt-5.5": [
-    score("osworld-strict", 13.0, W, "XLANG", "xhigh. Partial 49.5%."),
+    score("osworld-strict", 13.0, W, "XLANG", "Partial 49.5%.", [
+      { effort: "xhigh", value: 13.0 },
+    ]),
   ],
   "kimi-k2.6": [
-    score("osworld-strict", 4.6, W, "XLANG", "Partial 22.1%."),
+    score("osworld-strict", 4.6, W, "XLANG", "Partial 22.1%.", [
+      { effort: "enabled", value: 4.6 },
+    ]),
   ],
   "qwen3.7-plus": [
-    score("osworld-strict", 2.8, W, "XLANG", "Partial 21.5%."),
+    score("osworld-strict", 2.8, W, "XLANG", "Partial 21.5%.", [
+      { effort: "thinking", value: 2.8 },
+    ]),
   ],
   "minimax-m3": [
-    score("osworld-strict", 4.6, W, "XLANG", "Partial 22.3%."),
+    score("osworld-strict", 4.6, W, "XLANG", "Partial 22.3%.", [
+      { effort: "enabled", value: 4.6 },
+    ]),
   ],
   "kimi-k2.7-code": [
     score("deepswe", 30.5, D, "Datacurve", "No effort setting.", undefined, 2.82),

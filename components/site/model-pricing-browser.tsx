@@ -492,6 +492,13 @@ function plotSeries(bench: Bench, points: ChartPoint[]) {
       : [],
   );
   if (run.length) return { kind: "run" as const, series: run };
+  const levelSeries = points.flatMap((point) => {
+    const levels = (point.entry.levels ?? [])
+      .filter((level) => level.effort)
+      .map((level) => ({ effort: level.effort, value: level.value }));
+    return levels.length ? [{ ...point, levels }] : [];
+  });
+  if (levelSeries.some((item) => item.levels.length > 1)) return { kind: "level" as const, series: levelSeries };
   return null;
 }
 
@@ -772,6 +779,273 @@ function ScoreCostChart({
   );
 }
 
+const EFFORT_ORDER = ["low", "medium", "high", "xhigh", "max", "thinking", "enabled"];
+
+function effortRank(effort: string) {
+  const index = EFFORT_ORDER.indexOf(effort);
+  return index === -1 ? EFFORT_ORDER.length : index;
+}
+
+type LevelSeries = ChartPoint & { levels: { effort: string; value: number }[] };
+
+function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[] }) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const pinned = React.useRef(false);
+  const [picked, setPicked] = React.useState<string[]>([]);
+  const [active, setActive] = React.useState<string | null>(null);
+  const [tip, setTip] = React.useState<{
+    x: number;
+    y: number;
+    below: boolean;
+    name: string;
+    providerId: string;
+    effort: string;
+    value: number;
+  } | null>(null);
+  const shown = picked.length ? series.filter((item) => picked.includes(item.model.id)) : series;
+  const width = 720;
+  const height = 340;
+  const pad = { left: 36, right: 20, top: 28, bottom: 36 };
+  const efforts = [...new Set(shown.flatMap((item) => item.levels.map((level) => level.effort)))].sort(
+    (a, b) => effortRank(a) - effortRank(b),
+  );
+  const plotWidth = width - pad.left - pad.right;
+  const plotHeight = height - pad.top - pad.bottom;
+  const yAt = (value: number) => pad.top + (1 - value / 100) * plotHeight;
+  const xAt = (effort: string) => {
+    const index = efforts.indexOf(effort);
+    if (efforts.length <= 1) return pad.left + plotWidth / 2;
+    return pad.left + (index / (efforts.length - 1)) * plotWidth;
+  };
+  const placed = new Map<string, { x: number; y: number }>();
+  for (const effort of efforts) {
+    const column = shown.flatMap((item) =>
+      item.levels
+        .filter((level) => level.effort === effort)
+        .map((level) => ({ key: `${item.model.id}-${level.effort}`, value: level.value })),
+    );
+    const sorted = [...column].sort((a, b) => a.value - b.value);
+    let cluster: typeof sorted = [];
+    const flush = () => {
+      cluster.forEach((point, index) => {
+        const mid = (cluster.length - 1) / 2;
+        placed.set(point.key, { x: xAt(effort) + (index - mid) * 18, y: yAt(point.value) });
+      });
+      cluster = [];
+    };
+    for (const point of sorted) {
+      if (cluster.length && point.value - cluster[cluster.length - 1].value > 8) flush();
+      cluster.push(point);
+    }
+    flush();
+  }
+  const yTicks = [0, 25, 50, 75, 100];
+
+  function showTip(
+    event: React.MouseEvent,
+    item: LevelSeries,
+    level: { effort: string; value: number },
+  ) {
+    const bounds = wrapRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    const x = Math.min(Math.max(event.clientX - bounds.left, 72), bounds.width - 72);
+    const y = event.clientY - bounds.top;
+    setActive(item.model.id);
+    setTip({
+      x,
+      y,
+      below: y < 36,
+      name: item.model.name,
+      providerId: item.providerId,
+      effort: level.effort,
+      value: level.value,
+    });
+  }
+
+  function clearTip() {
+    if (pinned.current) return;
+    setActive(null);
+    setTip(null);
+  }
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative rounded-md border border-border bg-muted/30 px-3 py-3"
+      onClick={() => {
+        pinned.current = false;
+        setActive(null);
+        setTip(null);
+      }}
+    >
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${bench.name}. Score against thinking level.`}
+        className="h-80 w-full sm:h-96"
+      >
+        {yTicks.map((tick) => (
+          <g key={tick}>
+            <line x1={pad.left} x2={width - pad.right} y1={yAt(tick)} y2={yAt(tick)} className="stroke-border" />
+            <text x={pad.left - 8} y={yAt(tick) + 3} textAnchor="end" className="fill-muted-foreground text-[11px]">
+              {tick}
+            </text>
+          </g>
+        ))}
+        {efforts.map((effort, index) => (
+          <g key={effort}>
+            <line x1={xAt(effort)} x2={xAt(effort)} y1={pad.top} y2={height - pad.bottom} className="stroke-border" />
+            <text
+              x={xAt(effort)}
+              y={height - 8}
+              textAnchor={index === 0 ? "start" : index === efforts.length - 1 ? "end" : "middle"}
+              className="fill-muted-foreground text-[11px]"
+            >
+              {effort}
+            </text>
+          </g>
+        ))}
+        {series
+          .map((item, index) => ({ item, index }))
+          .filter(({ item }) => picked.length === 0 || picked.includes(item.model.id))
+          .reverse()
+          .map(({ item, index }) => {
+            const stroke = SERIES[index % SERIES.length];
+            const dashed = index >= SERIES.length;
+            const ordered = [...item.levels].sort((a, b) => effortRank(a.effort) - effortRank(b.effort));
+            const path = ordered
+              .map((level) => {
+                const point = placed.get(`${item.model.id}-${level.effort}`);
+                return point ? `${point.x},${point.y}` : "";
+              })
+              .filter(Boolean)
+              .join(" ");
+            const dimmed = active !== null && active !== item.model.id;
+            return (
+              <g key={item.model.id} opacity={dimmed ? 0.15 : 1}>
+                {ordered.length > 1 ? (
+                  <polyline
+                    points={path}
+                    fill="none"
+                    stroke={stroke}
+                    strokeWidth={active === item.model.id ? 2.5 : 1.75}
+                    strokeDasharray={dashed ? "6 4" : undefined}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {ordered.map((level) => {
+                  const point = placed.get(`${item.model.id}-${level.effort}`);
+                  if (!point) return null;
+                  return (
+                    <g
+                      key={`${item.model.id}-${level.effort}`}
+                      aria-label={`${item.model.name}, ${level.effort}`}
+                      className="cursor-pointer"
+                      onPointerEnter={(event) => showTip(event, item, level)}
+                      onPointerLeave={clearTip}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        pinned.current = true;
+                        showTip(event, item, level);
+                      }}
+                    >
+                      <circle cx={point.x} cy={point.y} r="12" fill="transparent" />
+                      <circle cx={point.x} cy={point.y} r="9" className="fill-background" stroke={stroke} strokeWidth="1.5" />
+                      <PointIcon providerId={item.providerId} x={point.x} y={point.y} size={12} />
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })}
+      </svg>
+      {tip ? (
+        <div
+          className={`pointer-events-none absolute z-10 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-background px-2 py-1 text-xs text-foreground shadow-sm ${tip.below ? "translate-y-2" : "-translate-y-[calc(100%+10px)]"}`}
+          style={{ left: tip.x, top: tip.y }}
+        >
+          <ModelIcon providerId={tip.providerId} />
+          <span>{tip.name}</span>
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-4 text-muted-foreground">
+            {tip.effort}
+          </span>
+          <span className="tabular-nums text-muted-foreground">{formatBench(bench, tip.value)}</span>
+        </div>
+      ) : null}
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+        {series.map((item, index) => {
+          const stroke = SERIES[index % SERIES.length];
+          const dashed = index >= SERIES.length;
+          const selected = picked.includes(item.model.id);
+          return (
+            <li key={item.model.id} className={picked.length > 0 && !selected ? "opacity-40" : undefined}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  pinned.current = false;
+                  setTip(null);
+                  setActive(null);
+                  setPicked((current) => {
+                    if (event.metaKey || event.ctrlKey) {
+                      return current.includes(item.model.id)
+                        ? current.filter((id) => id !== item.model.id)
+                        : [...current, item.model.id];
+                    }
+                    if (current.length === 1 && current[0] === item.model.id) return [];
+                    return [item.model.id];
+                  });
+                }}
+                className="flex cursor-pointer items-center gap-1.5 text-left text-xs text-foreground"
+              >
+                <svg width="16" height="8" aria-hidden className="shrink-0">
+                  {item.levels.length > 1 ? (
+                    <line
+                      x1="0"
+                      y1="4"
+                      x2="16"
+                      y2="4"
+                      stroke={stroke}
+                      strokeWidth="2"
+                      strokeDasharray={dashed ? "3 2" : undefined}
+                    />
+                  ) : (
+                    <circle cx="8" cy="4" r="2.5" fill={stroke} />
+                  )}
+                </svg>
+                <ModelIcon providerId={item.providerId} />
+                <span>{item.model.name}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {picked.length > 0
+        ? shown
+            .filter((item) => item.levels.length > 1 || item.entry.note)
+            .map((item) => (
+              <div key={item.model.id} className="mt-3">
+                {picked.length > 1 ? <p className="text-xs font-medium text-foreground">{item.model.name}</p> : null}
+                {item.levels.length > 1 ? (
+                  <ul className="flex flex-col gap-0.5 text-xs leading-5 text-muted-foreground">
+                    {[...item.levels]
+                      .sort((a, b) => effortRank(a.effort) - effortRank(b.effort))
+                      .map((level) => (
+                        <li key={level.effort}>
+                          {level.effort} {formatBench(bench, level.value)}
+                        </li>
+                      ))}
+                  </ul>
+                ) : null}
+                {item.entry.note ? <p className="text-xs leading-5 text-muted-foreground">{item.entry.note}</p> : null}
+              </div>
+            ))
+        : null}
+    </div>
+  );
+}
+
 function BenchChart({
   bench,
   rows,
@@ -803,7 +1077,9 @@ function BenchChart({
           <p className="text-xs text-muted-foreground">
             {plot.kind === "run"
               ? "The vertical axis is the score and the horizontal axis is the cost of the full run."
-              : "The vertical axis is the score and the horizontal axis is the mean cost per task, on a log scale."}
+              : plot.kind === "level"
+                ? "The vertical axis is the score and the horizontal axis is the thinking level."
+                : "The vertical axis is the score and the horizontal axis is the mean cost per task, on a log scale."}
           </p>
         ) : points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
           <p className="text-xs text-muted-foreground">
@@ -817,7 +1093,11 @@ function BenchChart({
       </figcaption>
       <div className="mt-3 grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_15rem] md:gap-x-8">
       <div className="min-w-0">
-      {plot ? <ScoreCostChart bench={bench} series={plot.series} kind={plot.kind} /> : (
+      {plot?.kind === "level" ? (
+        <ScoreLevelChart bench={bench} series={plot.series} />
+      ) : plot ? (
+        <ScoreCostChart bench={bench} series={plot.series} kind={plot.kind} />
+      ) : (
       <div className="rounded-md border border-border bg-muted/30 px-3 py-3">
         <div className="relative">
           {percent ? (
@@ -918,8 +1198,8 @@ type ScoreLine = { key: string; best: boolean; text: string; wrap?: boolean };
 
 /** Best score in the cell. Hover lists every published figure for that score. */
 function scoreReadout(bench: Bench, entry: BenchScore): { effort: string; lines: ScoreLine[]; caveat: string | null } {
-  const levels = entry.levels && entry.levels.length > 1 ? entry.levels : null;
-  if (levels) {
+  const levels = entry.levels ?? [];
+  if (levels.length > 1) {
     const effort = levels.find((level) => level.value === entry.value)?.effort ?? "";
     const lines: ScoreLine[] = levels.map((level) => ({
       key: level.effort,
@@ -929,7 +1209,7 @@ function scoreReadout(bench: Bench, entry: BenchScore): { effort: string; lines:
     if (entry.note) lines.push({ key: "note", best: false, text: entry.note, wrap: true });
     return { effort, caveat: null, lines };
   }
-  const effort = publishedEffort(entry.note);
+  const effort = (levels.length === 1 ? levels[0].effort : "") || publishedEffort(entry.note);
   const lines: ScoreLine[] = [];
   const noteIsEffort = Boolean(
     entry.note && effort && entry.note.replace(/\.+$/, "").trim().toLowerCase() === effort,
