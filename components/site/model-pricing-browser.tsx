@@ -392,7 +392,8 @@ function BenchCharts({
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
         One chart per board, grouped by the kind of work. Click a name to keep that model, and
-        Command-click to add another.
+        Command-click to add another. On a point chart, hovering a point draws a line at that score
+        and marks every point above it.
       </p>
       <div className="mt-8 flex flex-col gap-10">
         {benchGroups(benches).map((group) => (
@@ -500,6 +501,69 @@ function plotSeries(bench: Bench, points: ChartPoint[]) {
   });
   if (levelSeries.some((item) => item.levels.length > 1)) return { kind: "level" as const, series: levelSeries };
   return null;
+}
+
+type PointTone = "idle" | "hover" | "above" | "below";
+
+function pointTone(value: number, key: string, hover: { key: string; value: number } | null): PointTone {
+  if (!hover) return "idle";
+  if (key === hover.key) return "hover";
+  if (value > hover.value + 0.001) return "above";
+  if (value < hover.value - 0.001) return "below";
+  return "idle";
+}
+
+function ScoreGuide({ x1, x2, y }: { x1: number; x2: number; y: number }) {
+  return (
+    <line
+      data-score-guide=""
+      x1={x1}
+      x2={x2}
+      y1={y}
+      y2={y}
+      strokeWidth="2"
+      strokeDasharray="7 5"
+      className="stroke-foreground"
+      vectorEffect="non-scaling-stroke"
+      pointerEvents="none"
+    />
+  );
+}
+
+function PointFace({
+  tone,
+  x,
+  y,
+  stroke,
+  providerId,
+  children,
+}: {
+  tone: PointTone;
+  x: number;
+  y: number;
+  stroke: string;
+  providerId: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <g opacity={tone === "below" ? 0.35 : 1}>
+      {tone === "above" ? (
+        <circle cx={x} cy={y} r="14" fill={stroke} fillOpacity="0.22" stroke={stroke} strokeWidth="1.5" />
+      ) : null}
+      {tone === "hover" ? <circle cx={x} cy={y} r="13" fill="none" stroke={stroke} strokeWidth="2" /> : null}
+      <circle cx={x} cy={y} r="12" fill="transparent" />
+      <circle
+        cx={x}
+        cy={y}
+        r="9"
+        className="fill-background"
+        stroke={stroke}
+        strokeWidth={tone === "hover" || tone === "above" ? 2 : 1.5}
+      />
+      <PointIcon providerId={providerId} x={x} y={y} size={12} />
+      {children}
+    </g>
+  );
 }
 
 function ScoreCostChart({
@@ -631,6 +695,7 @@ function ScoreCostChart({
             </text>
           </g>
         ))}
+        {tip ? <ScoreGuide x1={pad.left} x2={width - pad.right} y={yAt(tip.value)} /> : null}
         {series
           .map((item, index) => ({ item, index }))
           .filter(({ item }) => picked.length === 0 || picked.includes(item.model.id))
@@ -639,9 +704,9 @@ function ScoreCostChart({
             const stroke = SERIES[index % SERIES.length];
             const dashed = index >= SERIES.length;
             const path = item.levels.map((level) => `${xAt(level.usd)},${yAt(level.value)}`).join(" ");
-            const dimmed = active !== null && active !== item.model.id;
+            const quiet = tip !== null && active !== item.model.id;
             return (
-              <g key={item.model.id} opacity={dimmed ? 0.15 : 1}>
+              <g key={item.model.id}>
                 {item.levels.length > 1 ? (
                   <polyline
                     points={path}
@@ -650,42 +715,41 @@ function ScoreCostChart({
                     strokeWidth={active === item.model.id ? 2.5 : 1.75}
                     strokeDasharray={dashed ? "6 4" : undefined}
                     vectorEffect="non-scaling-stroke"
+                    opacity={quiet ? 0.45 : 1}
                   />
                 ) : null}
-                {item.levels.map((level) => (
-                  <g
-                    key={`${item.model.id}-${level.effort}`}
-                    aria-label={`${item.model.name}${level.effort ? `, ${level.effort}` : ""}`}
-                    className="cursor-pointer"
-                    onPointerEnter={(event) => showTip(event, item, level)}
-                    onPointerLeave={clearTip}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      pinned.current = true;
-                      showTip(event, item, level);
-                    }}
-                  >
-                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="12" fill="transparent" />
-                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="9" className="fill-background" stroke={stroke} strokeWidth="1.5" />
-                    <PointIcon providerId={item.providerId} x={xAt(level.usd)} y={yAt(level.value)} size={12} />
-                    {picked.length === 1 && item.levels.length > 1 ? (
-                      <text
-                        x={xAt(level.usd)}
-                        y={yAt(level.value) > pad.top + 18 ? yAt(level.value) - 14 : yAt(level.value) + 18}
-                        textAnchor={
-                          xAt(level.usd) < pad.left + 36
-                            ? "start"
-                            : xAt(level.usd) > width - pad.right - 36
-                              ? "end"
-                              : "middle"
-                        }
-                        className="fill-foreground text-[11px]"
-                      >
-                        {level.effort}
-                      </text>
-                    ) : null}
-                  </g>
-                ))}
+                {item.levels.map((level) => {
+                  const key = `${item.model.id}-${level.effort}`;
+                  const x = xAt(level.usd);
+                  const y = yAt(level.value);
+                  return (
+                    <g
+                      key={key}
+                      aria-label={`${item.model.name}${level.effort ? `, ${level.effort}` : ""}`}
+                      className="cursor-pointer"
+                      onPointerEnter={(event) => showTip(event, item, level)}
+                      onPointerLeave={clearTip}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        pinned.current = true;
+                        showTip(event, item, level);
+                      }}
+                    >
+                      <PointFace tone={pointTone(level.value, key, tip)} x={x} y={y} stroke={stroke} providerId={item.providerId}>
+                        {picked.length === 1 && item.levels.length > 1 ? (
+                          <text
+                            x={x}
+                            y={y > pad.top + 18 ? y - 14 : y + 18}
+                            textAnchor={x < pad.left + 36 ? "start" : x > width - pad.right - 36 ? "end" : "middle"}
+                            className="fill-foreground text-[11px]"
+                          >
+                            {level.effort}
+                          </text>
+                        ) : null}
+                      </PointFace>
+                    </g>
+                  );
+                })}
               </g>
             );
           })}
@@ -794,6 +858,7 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
   const [picked, setPicked] = React.useState<string[]>([]);
   const [active, setActive] = React.useState<string | null>(null);
   const [tip, setTip] = React.useState<{
+    key: string;
     x: number;
     y: number;
     below: boolean;
@@ -852,6 +917,7 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
     const y = event.clientY - bounds.top;
     setActive(item.model.id);
     setTip({
+      key: `${item.model.id}-${level.effort}`,
       x,
       y,
       below: y < 36,
@@ -905,6 +971,7 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
             </text>
           </g>
         ))}
+        {tip ? <ScoreGuide x1={pad.left} x2={width - pad.right} y={yAt(tip.value)} /> : null}
         {series
           .map((item, index) => ({ item, index }))
           .filter(({ item }) => picked.length === 0 || picked.includes(item.model.id))
@@ -920,9 +987,9 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
               })
               .filter(Boolean)
               .join(" ");
-            const dimmed = active !== null && active !== item.model.id;
+            const quiet = tip !== null && active !== item.model.id;
             return (
-              <g key={item.model.id} opacity={dimmed ? 0.15 : 1}>
+              <g key={item.model.id}>
                 {ordered.length > 1 ? (
                   <polyline
                     points={path}
@@ -931,14 +998,16 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
                     strokeWidth={active === item.model.id ? 2.5 : 1.75}
                     strokeDasharray={dashed ? "6 4" : undefined}
                     vectorEffect="non-scaling-stroke"
+                    opacity={quiet ? 0.45 : 1}
                   />
                 ) : null}
                 {ordered.map((level) => {
                   const point = placed.get(`${item.model.id}-${level.effort}`);
                   if (!point) return null;
+                  const key = `${item.model.id}-${level.effort}`;
                   return (
                     <g
-                      key={`${item.model.id}-${level.effort}`}
+                      key={key}
                       aria-label={`${item.model.name}, ${level.effort}`}
                       className="cursor-pointer"
                       onPointerEnter={(event) => showTip(event, item, level)}
@@ -949,9 +1018,7 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
                         showTip(event, item, level);
                       }}
                     >
-                      <circle cx={point.x} cy={point.y} r="12" fill="transparent" />
-                      <circle cx={point.x} cy={point.y} r="9" className="fill-background" stroke={stroke} strokeWidth="1.5" />
-                      <PointIcon providerId={item.providerId} x={point.x} y={point.y} size={12} />
+                      <PointFace tone={pointTone(level.value, key, tip)} x={point.x} y={point.y} stroke={stroke} providerId={item.providerId} />
                     </g>
                   );
                 })}
