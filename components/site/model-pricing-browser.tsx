@@ -351,8 +351,8 @@ function BenchCharts({
     <div>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        One chart per board, grouped by the kind of work. A model is left off when that board
-        published no score.
+        One chart per board, grouped by the kind of work. A bar is drawn only when that board
+        published a score.
       </p>
       <div className="mt-8 flex flex-col gap-10">
         {benchGroups(benches).map((group) => (
@@ -396,56 +396,86 @@ function BenchChart({
     })
     .sort((a, b) => b.entry.value - a.entry.value);
   if (!points.length) return null;
-  const max = bench.unit === "percent" ? 100 : Math.max(...points.map((point) => point.entry.value));
-  const min = bench.unit === "percent" ? 0 : Math.min(...points.map((point) => point.entry.value));
+  const percent = bench.unit === "percent";
+  const max = percent ? 100 : Math.max(...points.map((point) => point.entry.value));
+  const min = percent ? 0 : Math.min(...points.map((point) => point.entry.value));
   const span = max - min || 1;
+  const ticks = percent ? [0, 25, 50, 75, 100] : [Math.round(min), Math.round(max)];
+  const columns = "grid-cols-[6.75rem_minmax(0,1fr)_3.25rem] sm:grid-cols-[11rem_minmax(0,1fr)_3.5rem]";
   return (
-    <div>
-      <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
-      {bench.unit === "elo" ? (
-        <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
-      ) : null}
-      <ul className="mt-3 flex flex-col gap-3">
-        {points.map((point) => {
-          const width =
-            bench.unit === "percent"
+    <figure className={points.length > 6 ? "lg:col-span-2" : undefined}>
+      <figcaption>
+        <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
+        {percent ? null : (
+          <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
+        )}
+      </figcaption>
+      <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-3">
+        <div className="relative">
+          {percent ? (
+            <div className={`pointer-events-none absolute inset-0 grid gap-x-2 ${columns}`} aria-hidden>
+              <span />
+              <span className="relative">
+                {ticks
+                  .filter((tick) => tick > 0 && tick < 100)
+                  .map((tick) => (
+                    <span
+                      key={tick}
+                      className="absolute inset-y-0 border-l border-border"
+                      style={{ left: `${tick}%` }}
+                    />
+                  ))}
+              </span>
+              <span />
+            </div>
+          ) : null}
+          <ul className="relative flex flex-col gap-2.5">
+          {points.map((point) => {
+            const width = percent
               ? (point.entry.value / max) * 100
-              : 12 + ((point.entry.value - min) / span) * 88;
-          return (
-            <li key={point.model.id}>
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="size-2 shrink-0 rounded-full"
-                    style={{ background: color.get(point.model.id) }}
-                  />
-                  <span className="truncate text-foreground">{point.model.name}</span>
+              : Math.max(((point.entry.value - min) / span) * 100, points.length > 1 ? 3 : 100);
+            return (
+              <li key={point.model.id} className={`grid items-center gap-x-2 ${columns}`}>
+                <span className="min-w-0">
+                  <span className="block truncate text-xs text-foreground" title={point.model.name}>
+                    {point.model.name}
+                  </span>
+                  {point.entry.note ? (
+                    <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
+                  ) : null}
                 </span>
-                <span className="shrink-0 font-mono text-sm tabular-nums text-foreground">
+                <div
+                  className="relative h-3"
+                  role="meter"
+                  aria-valuenow={point.entry.value}
+                  aria-valuemin={min}
+                  aria-valuemax={max}
+                  aria-label={`${point.model.name}, ${bench.name}`}
+                >
+                  <span
+                    className="absolute inset-y-0 left-0 rounded-sm"
+                    style={{ width: `${width}%`, background: color.get(point.model.id) }}
+                  />
+                </div>
+                <span className="text-right font-mono text-xs tabular-nums text-foreground">
                   {formatBench(bench, point.entry.value)}
                 </span>
-              </div>
-              <div
-                className="mt-1 h-1.5 rounded-full bg-muted"
-                role="meter"
-                aria-valuenow={point.entry.value}
-                aria-valuemin={min}
-                aria-valuemax={max}
-                aria-label={`${point.model.name}, ${bench.name}`}
-              >
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${width}%`, background: color.get(point.model.id) }}
-                />
-              </div>
-              {point.entry.note ? (
-                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{point.entry.note}</p>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+              </li>
+            );
+          })}
+        </ul>
+        </div>
+        <div className={`mt-2 grid gap-x-2 ${columns}`} aria-hidden>
+          <span />
+          <div className="flex justify-between text-[10px] tabular-nums text-muted-foreground">
+            {ticks.map((tick) => (
+              <span key={tick}>{percent ? tick : tick.toLocaleString("en-GB")}</span>
+            ))}
+          </div>
+          <span />
+        </div>
+      </div>
+    </figure>
   );
 }
 
