@@ -81,7 +81,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <ThemeProvider>
           <SiteNav />
-          <main>{children}</main>
+          <main className="min-w-0">{children}</main>
         </ThemeProvider>
       </body>
     </html>
