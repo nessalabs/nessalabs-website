@@ -461,6 +461,29 @@ function formatCostTick(kind: "task" | "run", usd: number) {
   return Number.isInteger(rounded) ? `$${rounded}` : `$${rounded.toFixed(2)}`;
 }
 
+/** Cost axis that keeps $0 and compresses the expensive tail. */
+function logCost(usd: number) {
+  return Math.log10(1 + Math.max(usd, 0));
+}
+
+function logCeil(value: number) {
+  const pow = 10 ** Math.floor(Math.log10(Math.max(value, 1)));
+  const n = value / pow;
+  const nice = n <= 1 ? 1 : n <= 2 ? 2 : n <= 3 ? 3 : n <= 5 ? 5 : 10;
+  return nice * pow;
+}
+
+function taskTicks(x0: number, x1: number) {
+  const span = x1 - x0;
+  const candidates = span > 12
+    ? [0, 1, 2, 5, 10, 30, 50]
+    : span > 4
+      ? [0, 0.5, 1, 2, 3, 5, 8, 10, 15, 20]
+      : [0, 0.1, 0.2, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10];
+  const ticks = candidates.filter((tick) => tick >= x0 - 1e-9 && tick <= x1 + 1e-9);
+  return ticks.length >= 2 ? ticks : [x0, (x0 + x1) / 2, x1];
+}
+
 function plotSeries(bench: Bench, points: ChartPoint[]) {
   if (bench.unit !== "percent") return null;
   const task = points.flatMap((point) => {
@@ -513,22 +536,42 @@ function ScoreCostChart({
   const width = 720;
   const height = 340;
   const pad = { left: 36, right: 16, top: 28, bottom: 36 };
+  const useLog = kind === "task";
   const step = kind === "run" ? 2000 : 5;
   const costs = shown.flatMap((item) => item.levels.map((level) => level.usd));
   const costLo = Math.min(...costs);
   const costHi = Math.max(...costs);
   const zoomed = picked.length > 0 && costHi > costLo;
-  const x0 = zoomed ? Math.max(0, costLo - Math.max((costHi - costLo) * 0.18, kind === "run" ? 400 : 0.5)) : 0;
-  const x1 = zoomed ? costHi + Math.max((costHi - costLo) * 0.18, kind === "run" ? 400 : 0.5) : Math.ceil(costHi / step) * step;
+  let x0: number;
+  let x1: number;
+  if (useLog && zoomed) {
+    const padDecades = Math.max((logCost(costHi) - logCost(costLo)) * 0.18, 0.04);
+    x0 = Math.max(0, 10 ** (logCost(costLo) - padDecades) - 1);
+    x1 = 10 ** (logCost(costHi) + padDecades) - 1;
+  } else if (useLog) {
+    x0 = 0;
+    x1 = logCeil(costHi);
+  } else if (zoomed) {
+    x0 = Math.max(0, costLo - Math.max((costHi - costLo) * 0.18, 400));
+    x1 = costHi + Math.max((costHi - costLo) * 0.18, 400);
+  } else {
+    x0 = 0;
+    x1 = Math.ceil(costHi / step) * step;
+  }
   const plotWidth = width - pad.left - pad.right;
   const plotHeight = height - pad.top - pad.bottom;
-  const xAt = (usd: number) => pad.left + ((usd - x0) / (x1 - x0 || 1)) * plotWidth;
+  const xAt = (usd: number) => {
+    if (!useLog) return pad.left + ((usd - x0) / (x1 - x0 || 1)) * plotWidth;
+    return pad.left + ((logCost(usd) - logCost(x0)) / (logCost(x1) - logCost(x0) || 1)) * plotWidth;
+  };
   const yAt = (value: number) => pad.top + (1 - value / 100) * plotHeight;
   const yTicks = [0, 25, 50, 75, 100];
-  const xTicks = zoomed
-    ? [0, 1, 2, 3, 4].map((index) => x0 + ((x1 - x0) * index) / 4)
-    : Array.from({ length: x1 / step + 1 }, (_, index) => index * step);
-  const axisLabel = kind === "run" ? "cost of the full run" : "mean cost per task";
+  const xTicks = useLog
+    ? taskTicks(x0, x1)
+    : zoomed
+      ? [0, 1, 2, 3, 4].map((index) => x0 + ((x1 - x0) * index) / 4)
+      : Array.from({ length: x1 / step + 1 }, (_, index) => index * step);
+  const axisLabel = kind === "run" ? "cost of the full run" : "mean cost per task, on a log scale";
 
   function showTip(event: React.MouseEvent, item: CostSeries, level: CostLevel) {
     const bounds = wrapRef.current?.getBoundingClientRect();
@@ -580,15 +623,19 @@ function ScoreCostChart({
           </g>
         ))}
         {xTicks.map((tick, index) => (
-          <text
-            key={tick}
-            x={xAt(tick)}
-            y={height - 8}
-            textAnchor={index === 0 ? "start" : index === xTicks.length - 1 ? "end" : "middle"}
-            className="fill-muted-foreground text-[11px]"
-          >
-            {formatCostTick(kind, tick)}
-          </text>
+          <g key={tick}>
+            {useLog && tick > 0 ? (
+              <line x1={xAt(tick)} x2={xAt(tick)} y1={pad.top} y2={height - pad.bottom} className="stroke-border" />
+            ) : null}
+            <text
+              x={xAt(tick)}
+              y={height - 8}
+              textAnchor={index === 0 ? "start" : index === xTicks.length - 1 ? "end" : "middle"}
+              className="fill-muted-foreground text-[11px]"
+            >
+              {formatCostTick(kind, tick)}
+            </text>
+          </g>
         ))}
         {series
           .map((item, index) => ({ item, index }))
@@ -769,7 +816,7 @@ function BenchChart({
           <p className="text-xs text-muted-foreground">
             {plot.kind === "run"
               ? "The vertical axis is the score and the horizontal axis is the cost of the full run."
-              : "The vertical axis is the score and the horizontal axis is the mean cost per task."}
+              : "The vertical axis is the score and the horizontal axis is the mean cost per task, on a log scale."}
           </p>
         ) : points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
           <p className="text-xs text-muted-foreground">
