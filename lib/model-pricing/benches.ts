@@ -16,6 +16,8 @@ export const benches: Bench[] = [
     name: "OSWorld 2.0 strict",
     task: "Computer use",
     summary: "A desktop task counts only when the whole task finishes.",
+    reading:
+      "A desktop task scores only when it finishes completely. This is Anthropic's August 2026 set, and partial credit is named in the note.",
     unit: "percent",
     url: ANTHROPIC,
     protocol:
@@ -26,6 +28,8 @@ export const benches: Bench[] = [
     name: "OSWorld 2.0 offline",
     task: "Computer use",
     summary: "A desktop task without internet, with partial credit.",
+    reading:
+      "Desktop tasks with no internet, scored with partial credit. This is OpenAI's offline set, so it is a different task list from the strict row.",
     unit: "percent",
     url: OPENAI,
     protocol: "OpenAI's v2026.08.08 offline set, partial score.",
@@ -35,6 +39,8 @@ export const benches: Bench[] = [
     name: "Terminal-Bench 4.0",
     task: "Terminal agent",
     summary: "Terminal tasks covering software, configuration and data analysis.",
+    reading:
+      "Terminal tasks in software, configuration and data analysis. Each point is one model, and the dollar amount is the cost of the full 66-task run.",
     unit: "percent",
     url: TERMINAL,
     protocol:
@@ -45,6 +51,8 @@ export const benches: Bench[] = [
     name: "DeepSWE v1.1",
     task: "Coding agent",
     summary: "Long-horizon changes in real repositories.",
+    reading:
+      "Long coding tasks in real repositories. A line joins one model's thinking levels, and each point is that level's mean cost per task.",
     unit: "percent",
     url: DEEPSWE,
     protocol:
@@ -55,6 +63,7 @@ export const benches: Bench[] = [
     name: "CursorBench 3.2",
     task: "Coding agent",
     summary: "Agentic coding tasks in Cursor.",
+    reading: "Agentic coding tasks run in Cursor. The bar is the score published for that model.",
     unit: "percent",
     url: ANTHROPIC,
     protocol: "Anthropic's comparison.",
@@ -64,6 +73,8 @@ export const benches: Bench[] = [
     name: "Terminal-Bench Science 0.1",
     task: "Research agent",
     summary: "Scientific workflows that analyse data, run simulations and fit models.",
+    reading:
+      "Scientific workflows that analyse data, run simulations and fit models. A note names a score from another lab's run.",
     unit: "percent",
     url: ANTHROPIC,
     protocol:
@@ -74,6 +85,7 @@ export const benches: Bench[] = [
     name: "AutomationBench",
     task: "Workflow agent",
     summary: "Multi-step business workflows.",
+    reading: "Multi-step business workflows. A note names a score from another lab's run.",
     unit: "percent",
     url: ANTHROPIC,
     protocol: "Anthropic's comparison, unless the cell names another run.",
@@ -83,6 +95,8 @@ export const benches: Bench[] = [
     name: "GDPval-AA v2",
     task: "Knowledge work",
     summary: "Professional knowledge-work tasks, scored as Elo.",
+    reading:
+      "Professional knowledge-work tasks, scored as Elo. A longer bar is a higher score, and the axis runs from the lowest score here to the highest.",
     unit: "elo",
     url: ANTHROPIC,
     protocol: "Anthropic's comparison.",

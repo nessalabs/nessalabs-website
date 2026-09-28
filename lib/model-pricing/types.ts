@@ -55,6 +55,8 @@ export interface Bench {
   /** The kind of work, such as "Computer use" or "Coding agent". */
   task: string;
   summary: string;
+  /** Two short sentences beside the chart. */
+  reading: string;
   unit: "percent" | "elo";
   url: string;
   /** How the numbers in this column were produced. */

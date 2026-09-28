@@ -405,13 +405,13 @@ function BenchCharts({
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
         One chart per board, grouped by the kind of work. Where a board published a cost, the
-        score is plotted against that cost, and a point's model and thinking level show on hover.
+        score is plotted against that cost, and clicking a name keeps that model.
       </p>
       <div className="mt-8 flex flex-col gap-10">
         {benchGroups(benches).map((group) => (
           <section key={group.task} aria-label={group.task}>
             <h3 className="text-sm font-medium text-muted-foreground">{group.task}</h3>
-            <div className="mt-4 grid gap-x-10 gap-y-8 lg:grid-cols-2">
+            <div className="mt-4 flex flex-col gap-8">
               {group.benches.map((bench) => (
                 <BenchChart key={bench.id} bench={bench} rows={rows} color={color} />
               ))}
@@ -454,6 +454,13 @@ function formatRunUsd(usd: number) {
   return `$${text}k`;
 }
 
+function formatCostTick(kind: "task" | "run", usd: number) {
+  if (Math.abs(usd) < 0.005) return "$0";
+  if (kind === "run") return formatRunUsd(usd);
+  const rounded = Math.round(usd * 100) / 100;
+  return Number.isInteger(rounded) ? `$${rounded}` : `$${rounded.toFixed(2)}`;
+}
+
 function plotSeries(bench: Bench, points: ChartPoint[]) {
   if (bench.unit !== "percent") return null;
   const task = points.flatMap((point) => {
@@ -489,6 +496,7 @@ function ScoreCostChart({
 }) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const pinned = React.useRef(false);
+  const [picked, setPicked] = React.useState<string | null>(null);
   const [active, setActive] = React.useState<string | null>(null);
   const [tip, setTip] = React.useState<{
     key: string;
@@ -501,17 +509,25 @@ function ScoreCostChart({
     value: number;
     usd: number;
   } | null>(null);
+  const shown = picked ? series.filter((item) => item.model.id === picked) : series;
   const width = 720;
   const height = 340;
-  const pad = { left: 36, right: 16, top: 20, bottom: 36 };
+  const pad = { left: 36, right: 16, top: 28, bottom: 36 };
   const step = kind === "run" ? 2000 : 5;
-  const xMax = Math.ceil(Math.max(...series.flatMap((item) => item.levels.map((level) => level.usd))) / step) * step;
+  const costs = shown.flatMap((item) => item.levels.map((level) => level.usd));
+  const costLo = Math.min(...costs);
+  const costHi = Math.max(...costs);
+  const zoomed = picked !== null && costHi > costLo;
+  const x0 = zoomed ? Math.max(0, costLo - Math.max((costHi - costLo) * 0.18, kind === "run" ? 400 : 0.5)) : 0;
+  const x1 = zoomed ? costHi + Math.max((costHi - costLo) * 0.18, kind === "run" ? 400 : 0.5) : Math.ceil(costHi / step) * step;
   const plotWidth = width - pad.left - pad.right;
   const plotHeight = height - pad.top - pad.bottom;
-  const xAt = (usd: number) => pad.left + (usd / xMax) * plotWidth;
+  const xAt = (usd: number) => pad.left + ((usd - x0) / (x1 - x0 || 1)) * plotWidth;
   const yAt = (value: number) => pad.top + (1 - value / 100) * plotHeight;
   const yTicks = [0, 25, 50, 75, 100];
-  const xTicks = Array.from({ length: xMax / step + 1 }, (_, index) => index * step);
+  const xTicks = zoomed
+    ? [0, 1, 2, 3, 4].map((index) => x0 + ((x1 - x0) * index) / 4)
+    : Array.from({ length: x1 / step + 1 }, (_, index) => index * step);
   const axisLabel = kind === "run" ? "cost of the full run" : "mean cost per task";
 
   function showTip(event: React.MouseEvent, item: CostSeries, level: CostLevel) {
@@ -563,19 +579,20 @@ function ScoreCostChart({
             </text>
           </g>
         ))}
-        {xTicks.map((tick) => (
+        {xTicks.map((tick, index) => (
           <text
             key={tick}
             x={xAt(tick)}
             y={height - 8}
-            textAnchor={tick === 0 ? "start" : tick === xMax ? "end" : "middle"}
+            textAnchor={index === 0 ? "start" : index === xTicks.length - 1 ? "end" : "middle"}
             className="fill-muted-foreground text-[11px]"
           >
-            {tick === 0 ? "$0" : kind === "run" ? formatRunUsd(tick) : `$${tick}`}
+            {formatCostTick(kind, tick)}
           </text>
         ))}
         {series
           .map((item, index) => ({ item, index }))
+          .filter(({ item }) => picked === null || item.model.id === picked)
           .reverse()
           .map(({ item, index }) => {
             const stroke = SERIES[index % SERIES.length];
@@ -594,7 +611,7 @@ function ScoreCostChart({
                     vectorEffect="non-scaling-stroke"
                   />
                 ) : null}
-                {item.levels.map((level) => (
+                {item.levels.map((level, levelIndex) => (
                   <g
                     key={`${item.model.id}-${level.effort}`}
                     aria-label={`${item.model.name}${level.effort ? `, ${level.effort}` : ""}`}
@@ -610,6 +627,16 @@ function ScoreCostChart({
                     <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="12" fill="transparent" />
                     <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="9" className="fill-background" stroke={stroke} strokeWidth="1.5" />
                     <PointIcon providerId={item.providerId} x={xAt(level.usd)} y={yAt(level.value)} size={12} />
+                    {picked && item.levels.length > 1 ? (
+                      <text
+                        x={xAt(level.usd)}
+                        y={yAt(level.value) + (levelIndex % 2 === 0 ? -14 : 18)}
+                        textAnchor="middle"
+                        className="fill-foreground text-[11px]"
+                      >
+                        {level.effort}
+                      </text>
+                    ) : null}
                   </g>
                 ))}
               </g>
@@ -639,10 +666,21 @@ function ScoreCostChart({
         {series.map((item, index) => {
           const stroke = SERIES[index % SERIES.length];
           const dashed = index >= SERIES.length;
-          const selected = active === item.model.id;
+          const selected = picked === item.model.id;
           return (
-            <li key={item.model.id} className={active && !selected ? "opacity-40" : undefined}>
-              <span className="flex items-center gap-1.5 text-xs text-foreground">
+            <li key={item.model.id} className={picked && !selected ? "opacity-40" : undefined}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  pinned.current = false;
+                  setTip(null);
+                  setActive(null);
+                  setPicked(selected ? null : item.model.id);
+                }}
+                className="flex cursor-pointer items-center gap-1.5 text-left text-xs text-foreground"
+              >
                 <svg width="16" height="8" aria-hidden className="shrink-0">
                   {item.levels.length > 1 ? (
                     <line
@@ -660,11 +698,21 @@ function ScoreCostChart({
                 </svg>
                 <ModelIcon providerId={item.providerId} />
                 <span>{item.model.name}</span>
-              </span>
+              </button>
             </li>
           );
         })}
       </ul>
+      {picked && shown[0] && shown[0].levels.length > 1 ? (
+        <ul className="mt-3 flex flex-col gap-0.5 text-xs leading-5 text-muted-foreground">
+          {shown[0].levels.map((level) => (
+            <li key={level.effort || "score"}>
+              {level.effort ? `${level.effort} ` : ""}
+              {formatBench(bench, level.value)} · {kind === "run" ? `Run ${formatRunUsd(level.usd)}` : `${formatTaskUsd(level.usd)} a task`}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
@@ -693,7 +741,8 @@ function BenchChart({
   const ticks = percent ? [0, 25, 50, 75, 100] : [Math.round(min), Math.round(max)];
   const columns = "grid-cols-[8.25rem_minmax(0,1fr)_3.75rem] sm:grid-cols-[12.5rem_minmax(0,1fr)_4rem]";
   return (
-    <figure className={points.length > 6 ? "lg:col-span-2" : undefined}>
+    <figure className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_15rem] md:gap-8">
+      <div className="min-w-0">
       <figcaption>
         <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
         {plot ? (
@@ -799,6 +848,8 @@ function BenchChart({
         </div>
       </div>
       )}
+      </div>
+      <p className="max-w-sm text-sm leading-6 text-muted-foreground">{bench.reading}</p>
     </figure>
   );
 }
