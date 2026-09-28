@@ -99,10 +99,36 @@ function editDistance(a: string, b: string) {
   return dp[a.length][b.length];
 }
 
+function editLimit(length: number) {
+  if (length <= 3) return 0;
+  if (length <= 5) return 1;
+  return 2;
+}
+
+/** One swapped pair, so "gtp" still meets "gpt" when a longer edit is not allowed. */
+function adjacentSwap(query: string, candidate: string) {
+  if (query.length !== candidate.length) return false;
+  for (let i = 0; i < query.length - 1; i++) {
+    if (query[i] === candidate[i]) continue;
+    return (
+      query[i] === candidate[i + 1] &&
+      query[i + 1] === candidate[i] &&
+      query.slice(i + 2) === candidate.slice(i + 2)
+    );
+  }
+  return false;
+}
+
 function tokenClose(query: string, candidate: string) {
-  if (candidate.includes(query) || (query.length >= 4 && query.includes(candidate) && candidate.length >= 4)) return true;
-  const limit = query.length <= 3 ? 0 : query.length <= 5 ? 1 : 2;
-  if (Math.abs(query.length - candidate.length) > limit) return false;
+  if (query === candidate) return true;
+  const limit = editLimit(query.length);
+  const gap = Math.abs(query.length - candidate.length);
+  // A contained word only counts when the two lengths are already within the edit limit.
+  // Otherwise "minimax" matches every "mini", and "opus4.7" matches every "opus".
+  if (gap <= limit && candidate.includes(query)) return true;
+  if (gap <= limit && query.length >= 4 && candidate.length >= 4 && query.includes(candidate)) return true;
+  if (query.length === 3 && candidate.length === 3) return adjacentSwap(query, candidate);
+  if (gap > limit) return false;
   return editDistance(query, candidate) <= limit;
 }
 
@@ -114,7 +140,11 @@ function lexicalMatch(haystack: string, query: string) {
   if (h.includes(q) || compact(h).includes(compact(q))) return true;
   const qTokens = q.split(" ").filter(Boolean);
   const hTokens = h.split(" ").filter((token) => token.length > 1);
-  return qTokens.every((token) => hTokens.some((candidate) => tokenClose(token, candidate)));
+  return qTokens.every((token) => {
+    // A version such as "5" or "4.6" is not a spelling. It has to occur in the name.
+    if (/^\d+(\.\d+)?$/.test(token)) return h.includes(token);
+    return hTokens.some((candidate) => tokenClose(token, candidate));
+  });
 }
 
 function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery): boolean {
@@ -126,7 +156,6 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
     model.name,
     model.id,
     model.category,
-    model.note,
     model.retiring,
     ...(model.scores ?? []).flatMap((entry) => {
       const bench = modelPricing.benches.find((item) => item.id === entry.bench);
@@ -134,13 +163,7 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
         entry.bench,
         entry.note,
         entry.reportedBy,
-        ...(entry.levels ?? []).flatMap((level) => [
-          level.effort,
-          String(level.value),
-          level.usd !== undefined ? String(level.usd) : "",
-        ]),
-        entry.usd !== undefined ? String(entry.usd) : "",
-        entry.runUsd !== undefined ? String(entry.runUsd) : "",
+        ...(entry.levels ?? []).map((level) => level.effort),
         bench?.name,
         bench?.task,
       ];
@@ -149,7 +172,10 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
     .filter(Boolean)
     .join(" ");
   const identity = [provider.name, provider.id, model.name, model.id].join(" ");
-  return lexicalMatch(identity, query.q) || matchesText(blob, query.q);
+  if (lexicalMatch(identity, query.q)) return true;
+  // A one or two character query is a name fragment. Notes and scores contain too many digits to search.
+  if (query.q.trim().length <= 2) return false;
+  return matchesText(blob, query.q);
 }
 
 export function queryCatalog(

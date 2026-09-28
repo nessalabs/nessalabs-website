@@ -108,7 +108,11 @@ export function ModelPricingBrowser({
   const view = mounted ? urlView : initialView;
 
   function hrefFor(next: "prices" | "benches", reset = false) {
-    const params = reset ? new URLSearchParams() : new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(reset ? undefined : searchParams.toString());
+    if (reset) {
+      const current = searchParams.get("q");
+      if (current) params.set("q", current);
+    }
     if (next === "benches") params.set("view", "benches");
     else params.delete("view");
     const search = params.toString();
@@ -513,6 +517,31 @@ function pointTone(value: number, key: string, hover: { key: string; value: numb
   return "idle";
 }
 
+function pointerInViewBox(event: React.MouseEvent, svg: SVGSVGElement, width: number, height: number) {
+  const rect = svg.getBoundingClientRect();
+  const scale = Math.min(rect.width / width, rect.height / height);
+  if (!scale) return null;
+  const offsetX = (rect.width - width * scale) / 2;
+  const offsetY = (rect.height - height * scale) / 2;
+  return {
+    x: (event.clientX - rect.left - offsetX) / scale,
+    y: (event.clientY - rect.top - offsetY) / scale,
+  };
+}
+
+function nearestPlotHit<T extends { x: number; y: number }>(hits: T[], x: number, y: number, radius = 16) {
+  let best: T | null = null;
+  let bestD = radius * radius;
+  for (const hit of hits) {
+    const distance = (hit.x - x) ** 2 + (hit.y - y) ** 2;
+    if (distance < bestD) {
+      best = hit;
+      bestD = distance;
+    }
+  }
+  return best;
+}
+
 function ScoreGuide({ x1, x2, y }: { x1: number; x2: number; y: number }) {
   return (
     <line
@@ -576,7 +605,9 @@ function ScoreCostChart({
   kind: "task" | "run";
 }) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
+  const svgRef = React.useRef<SVGSVGElement>(null);
   const pinned = React.useRef(false);
+  const tipKey = React.useRef<string | null>(null);
   const [picked, setPicked] = React.useState<string[]>([]);
   const [active, setActive] = React.useState<string | null>(null);
   const [tip, setTip] = React.useState<{
@@ -630,15 +661,26 @@ function ScoreCostChart({
       ? [0, 1, 2, 3, 4].map((index) => x0 + ((x1 - x0) * index) / 4)
       : Array.from({ length: x1 / step + 1 }, (_, index) => index * step);
   const axisLabel = kind === "run" ? "cost of the full run" : "mean cost per task, on a log scale";
+  const hits = shown.flatMap((item) =>
+    item.levels.map((level) => ({
+      key: `${item.model.id}-${level.effort}`,
+      x: xAt(level.usd),
+      y: yAt(level.value),
+      item,
+      level,
+    })),
+  );
 
   function showTip(event: React.MouseEvent, item: CostSeries, level: CostLevel) {
     const bounds = wrapRef.current?.getBoundingClientRect();
     if (!bounds) return;
+    const key = `${item.model.id}-${level.effort}`;
     const x = Math.min(Math.max(event.clientX - bounds.left, 72), bounds.width - 72);
     const y = event.clientY - bounds.top;
+    tipKey.current = key;
     setActive(item.model.id);
     setTip({
-      key: `${item.model.id}-${level.effort}`,
+      key,
       x,
       y,
       below: y < 36,
@@ -651,26 +693,57 @@ function ScoreCostChart({
   }
 
   function clearTip() {
-    if (pinned.current) return;
+    if (pinned.current || tipKey.current === null) return;
+    tipKey.current = null;
     setActive(null);
     setTip(null);
+  }
+
+  function dismiss() {
+    pinned.current = false;
+    tipKey.current = null;
+    setActive(null);
+    setTip(null);
+  }
+
+  function hitFrom(event: React.MouseEvent) {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const point = pointerInViewBox(event, svg, width, height);
+    if (!point) return null;
+    return nearestPlotHit(hits, point.x, point.y);
   }
 
   return (
     <div
       ref={wrapRef}
       className="relative rounded-md border border-border bg-muted/30 px-3 py-3"
-      onClick={() => {
-        pinned.current = false;
-        setActive(null);
-        setTip(null);
-      }}
+      onClick={dismiss}
     >
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={`${bench.name}. Score against ${axisLabel}.`}
         className="h-80 w-full sm:h-96"
+        onPointerMove={(event) => {
+          if (pinned.current) return;
+          const hit = hitFrom(event);
+          if (!hit) {
+            clearTip();
+            return;
+          }
+          if (hit.key === tipKey.current) return;
+          showTip(event, hit.item, hit.level);
+        }}
+        onPointerLeave={clearTip}
+        onClick={(event) => {
+          const hit = hitFrom(event);
+          if (!hit) return;
+          event.stopPropagation();
+          pinned.current = true;
+          showTip(event, hit.item, hit.level);
+        }}
       >
         {yTicks.map((tick) => (
           <g key={tick}>
@@ -727,13 +800,6 @@ function ScoreCostChart({
                       key={key}
                       aria-label={`${item.model.name}${level.effort ? `, ${level.effort}` : ""}`}
                       className="cursor-pointer"
-                      onPointerEnter={(event) => showTip(event, item, level)}
-                      onPointerLeave={clearTip}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        pinned.current = true;
-                        showTip(event, item, level);
-                      }}
                     >
                       <PointFace tone={pointTone(level.value, key, tip)} x={x} y={y} stroke={stroke} providerId={item.providerId}>
                         {picked.length === 1 && item.levels.length > 1 ? (
@@ -785,9 +851,7 @@ function ScoreCostChart({
                 aria-pressed={selected}
                 onClick={(event) => {
                   event.stopPropagation();
-                  pinned.current = false;
-                  setTip(null);
-                  setActive(null);
+                  dismiss();
                   setPicked((current) => {
                     if (event.metaKey || event.ctrlKey) {
                       return current.includes(item.model.id)
@@ -854,7 +918,9 @@ type LevelSeries = ChartPoint & { levels: { effort: string; value: number }[] };
 
 function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[] }) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
+  const svgRef = React.useRef<SVGSVGElement>(null);
   const pinned = React.useRef(false);
+  const tipKey = React.useRef<string | null>(null);
   const [picked, setPicked] = React.useState<string[]>([]);
   const [active, setActive] = React.useState<string | null>(null);
   const [tip, setTip] = React.useState<{
@@ -892,9 +958,17 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
     const sorted = [...column].sort((a, b) => a.value - b.value);
     let cluster: typeof sorted = [];
     const flush = () => {
+      if (!cluster.length) return;
+      const mid = (cluster.length - 1) / 2;
+      const raw = cluster.map((_, index) => xAt(effort) + (index - mid) * 18);
+      const room = 16;
+      let shift = 0;
+      const maxX = Math.max(...raw);
+      const minX = Math.min(...raw);
+      if (maxX > width - pad.right - room) shift = width - pad.right - room - maxX;
+      if (minX + shift < pad.left + room) shift += pad.left + room - (minX + shift);
       cluster.forEach((point, index) => {
-        const mid = (cluster.length - 1) / 2;
-        placed.set(point.key, { x: xAt(effort) + (index - mid) * 18, y: yAt(point.value) });
+        placed.set(point.key, { x: raw[index] + shift, y: yAt(point.value) });
       });
       cluster = [];
     };
@@ -906,6 +980,13 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
   }
   const yTicks = [0, 25, 50, 75, 100];
 
+  const hits = shown.flatMap((item) =>
+    item.levels.flatMap((level) => {
+      const point = placed.get(`${item.model.id}-${level.effort}`);
+      return point ? [{ key: `${item.model.id}-${level.effort}`, x: point.x, y: point.y, item, level }] : [];
+    }),
+  );
+
   function showTip(
     event: React.MouseEvent,
     item: LevelSeries,
@@ -913,11 +994,13 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
   ) {
     const bounds = wrapRef.current?.getBoundingClientRect();
     if (!bounds) return;
+    const key = `${item.model.id}-${level.effort}`;
     const x = Math.min(Math.max(event.clientX - bounds.left, 72), bounds.width - 72);
     const y = event.clientY - bounds.top;
+    tipKey.current = key;
     setActive(item.model.id);
     setTip({
-      key: `${item.model.id}-${level.effort}`,
+      key,
       x,
       y,
       below: y < 36,
@@ -929,26 +1012,57 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
   }
 
   function clearTip() {
-    if (pinned.current) return;
+    if (pinned.current || tipKey.current === null) return;
+    tipKey.current = null;
     setActive(null);
     setTip(null);
+  }
+
+  function dismiss() {
+    pinned.current = false;
+    tipKey.current = null;
+    setActive(null);
+    setTip(null);
+  }
+
+  function hitFrom(event: React.MouseEvent) {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const point = pointerInViewBox(event, svg, width, height);
+    if (!point) return null;
+    return nearestPlotHit(hits, point.x, point.y);
   }
 
   return (
     <div
       ref={wrapRef}
       className="relative rounded-md border border-border bg-muted/30 px-3 py-3"
-      onClick={() => {
-        pinned.current = false;
-        setActive(null);
-        setTip(null);
-      }}
+      onClick={dismiss}
     >
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={`${bench.name}. Score against thinking level.`}
         className="h-80 w-full sm:h-96"
+        onPointerMove={(event) => {
+          if (pinned.current) return;
+          const hit = hitFrom(event);
+          if (!hit) {
+            clearTip();
+            return;
+          }
+          if (hit.key === tipKey.current) return;
+          showTip(event, hit.item, hit.level);
+        }}
+        onPointerLeave={clearTip}
+        onClick={(event) => {
+          const hit = hitFrom(event);
+          if (!hit) return;
+          event.stopPropagation();
+          pinned.current = true;
+          showTip(event, hit.item, hit.level);
+        }}
       >
         {yTicks.map((tick) => (
           <g key={tick}>
@@ -1010,13 +1124,6 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
                       key={key}
                       aria-label={`${item.model.name}, ${level.effort}`}
                       className="cursor-pointer"
-                      onPointerEnter={(event) => showTip(event, item, level)}
-                      onPointerLeave={clearTip}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        pinned.current = true;
-                        showTip(event, item, level);
-                      }}
                     >
                       <PointFace tone={pointTone(level.value, key, tip)} x={point.x} y={point.y} stroke={stroke} providerId={item.providerId} />
                     </g>
@@ -1051,9 +1158,7 @@ function ScoreLevelChart({ bench, series }: { bench: Bench; series: LevelSeries[
                 aria-pressed={selected}
                 onClick={(event) => {
                   event.stopPropagation();
-                  pinned.current = false;
-                  setTip(null);
-                  setActive(null);
+                  dismiss();
                   setPicked((current) => {
                     if (event.metaKey || event.ctrlKey) {
                       return current.includes(item.model.id)

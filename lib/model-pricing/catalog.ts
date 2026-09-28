@@ -651,7 +651,7 @@ export const modelPricing: ModelPricingCatalog = {
           standard: { output: [price(0.08, SECOND)] },
         }),
         quote({
-          id: "web-search",
+          id: "x-web-search",
           name: "Web search",
           category: "tool",
           standard: { input: [price(5, CALLS)] },

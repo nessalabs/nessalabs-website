@@ -164,7 +164,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1723, A, "Anthropic"),
   ],
   "claude-opus-5": [
-    score("osworld-strict", 44.3, W, "XLANG", "v2.1. Partial 77.7%.", [
+    score("osworld-strict", 44.3, W, "XLANG", "v2.1. Partial 77.7% at max.", [
       { effort: "max", value: 44.3 },
       { effort: "xhigh", value: 33.3 },
       { effort: "high", value: 36.9 },
