@@ -430,58 +430,66 @@ function BenchSheet({
     return <p className="mt-10 text-sm text-muted-foreground">No published scores match.</p>;
   }
 
-  const groups: { id: string; name: string; models: ModelQuote[] }[] = [];
-  for (const row of rows) {
-    const last = groups[groups.length - 1];
-    if (!last || last.id !== row.provider.id) {
-      groups.push({ id: row.provider.id, name: row.provider.name, models: [row.model] });
-    } else {
-      last.models.push(row.model);
-    }
-  }
-
   return (
     <div className="mt-8">
       <BenchCharts rows={rows} benches={benches} />
       <h2 className="mt-14 text-lg font-semibold tracking-tight text-foreground">Scores</h2>
+      <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
+        The marked cell is the highest published score on that row.
+      </p>
       <div className="mt-4 min-w-0 overflow-x-auto">
-        <table className="w-full min-w-[920px] border-collapse text-left">
+        <table className="w-full min-w-[760px] border-collapse text-center">
           <thead>
-            <tr className="border-b border-border text-xs text-muted-foreground">
-              <th className="sticky left-0 z-10 bg-background py-2 pr-4 text-left font-medium">Model</th>
-              {benches.map((bench) => (
-                <th key={bench.id} className="px-3 py-2 text-right font-medium">
-                  <a href={bench.url} target="_blank" rel="noreferrer" className="hover:text-foreground">
-                    {bench.name}
-                  </a>
-                  <span className="mt-0.5 block font-normal">{bench.task}</span>
+            <tr>
+              <th className="sticky left-0 z-10 border border-border bg-background px-3 py-3 text-left text-xs font-medium text-muted-foreground">
+                Bench
+              </th>
+              {rows.map((row, index) => (
+                <th
+                  key={row.model.id}
+                  id={rows[index - 1]?.provider.id === row.provider.id ? undefined : row.provider.id}
+                  className="scroll-mt-[var(--pricing-sticky)] border border-border bg-background px-3 py-3 text-sm font-medium text-foreground"
+                >
+                  {row.model.name}
+                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                    {row.provider.name}
+                  </span>
                 </th>
               ))}
             </tr>
           </thead>
-          {groups.map((group) => (
-            <tbody key={group.id} id={group.id} className="scroll-mt-[var(--pricing-sticky)]">
-              <tr>
-                <td
-                  colSpan={benches.length + 1}
-                  className="sticky left-0 bg-background pb-1 pt-6 text-xs font-medium text-muted-foreground"
-                >
-                  {group.name}
-                </td>
-              </tr>
-              {group.models.map((model) => (
-                <tr key={model.id} className="border-b border-border align-top">
+          <tbody>
+            {benches.map((bench) => {
+              const cells = rows.map((row) => row.model.scores?.find((item) => item.bench === bench.id));
+              const published = cells.flatMap((entry) => (entry ? [entry.value] : []));
+              const best = published.length ? Math.max(...published) : undefined;
+              return (
+                <tr key={bench.id}>
                   <th
                     scope="row"
-                    className="sticky left-0 z-10 bg-background py-3 pr-4 text-left font-normal"
+                    className="sticky left-0 z-10 border border-border bg-background px-3 py-3 text-left font-normal"
                   >
-                    <div className="font-medium text-foreground">{model.name}</div>
-                    <div className="mt-0.5 font-mono text-xs text-muted-foreground">{model.id}</div>
+                    <div className="text-xs text-muted-foreground">{bench.task}</div>
+                    <a
+                      href={bench.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-0.5 block text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                    >
+                      {bench.name}
+                    </a>
                   </th>
-                  {benches.map((bench) => {
-                    const entry = model.scores?.find((item) => item.bench === bench.id);
+                  {cells.map((entry, index) => {
+                    const leads = entry !== undefined && entry.value === best;
                     return (
-                      <td key={bench.id} className="px-3 py-3 text-right">
+                      <td
+                        key={rows[index].model.id}
+                        className={
+                          leads
+                            ? "border border-border bg-foreground/[0.08] px-3 py-3"
+                            : "border border-border px-3 py-3"
+                        }
+                      >
                         {entry ? (
                           <>
                             <span className="font-mono text-sm tabular-nums text-foreground">
@@ -500,9 +508,9 @@ function BenchSheet({
                     );
                   })}
                 </tr>
-              ))}
-            </tbody>
-          ))}
+              );
+            })}
+          </tbody>
         </table>
       </div>
       <dl className="mt-10 max-w-3xl">
