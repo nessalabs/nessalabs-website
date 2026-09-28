@@ -340,6 +340,21 @@ const MODEL_ICONS: Record<string, { src: string; dark?: string; invert?: boolean
   deepseek: { src: "/model-icons/deepseek-color.svg" },
 };
 
+function PointIcon({ providerId, x, y, size }: { providerId: string; x: number; y: number; size: number }) {
+  const icon = MODEL_ICONS[providerId];
+  if (!icon) return null;
+  const box = { x: x - size / 2, y: y - size / 2, width: size, height: size };
+  if (icon.dark) {
+    return (
+      <>
+        <image href={icon.src} {...box} className="dark:hidden" />
+        <image href={icon.dark} {...box} className="hidden dark:block" />
+      </>
+    );
+  }
+  return <image href={icon.src} {...box} className={icon.invert ? "dark:invert" : undefined} />;
+}
+
 function ModelIcon({ providerId }: { providerId: string }) {
   const icon = MODEL_ICONS[providerId];
   if (!icon) return null;
@@ -592,8 +607,9 @@ function ScoreCostChart({
                       showTip(event, item, level);
                     }}
                   >
-                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="11" fill="transparent" />
-                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="4.5" fill={stroke} />
+                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="12" fill="transparent" />
+                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="9" className="fill-background" stroke={stroke} strokeWidth="1.5" />
+                    <PointIcon providerId={item.providerId} x={xAt(level.usd)} y={yAt(level.value)} size={12} />
                   </g>
                 ))}
               </g>
