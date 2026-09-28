@@ -97,39 +97,59 @@ export function ModelPricingBrowser() {
   ];
 
   const narrowed = Boolean(provider || category !== "all");
+  const barRef = React.useRef<HTMLDivElement>(null);
+  const [stickyOffset, setStickyOffset] = React.useState(168);
+
+  React.useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const update = () => setStickyOffset(56 + bar.offsetHeight + 16);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-6 pb-20 sm:px-8">
-      <div className="mt-8 flex items-center gap-3">
-        <Input
-          value={q}
-          onChange={(event) => setQ(event.target.value)}
-          placeholder="Filter models"
-          aria-label="Filter models"
-          className="min-w-0 flex-1 sm:max-w-xs sm:flex-none"
-        />
-        <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-          {result.modelCount} {result.modelCount === 1 ? "model" : "models"}
-        </span>
+    <div style={{ "--pricing-sticky": `${stickyOffset}px` } as React.CSSProperties}>
+      <div
+        ref={barRef}
+        className="sticky top-14 z-40 border-b border-border bg-background/95 backdrop-blur"
+      >
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-3 sm:px-8 md:flex-row md:items-center md:gap-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Input
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              placeholder="Filter models"
+              aria-label="Filter models"
+              className="min-w-0 flex-1 md:w-56 md:flex-none"
+            />
+            <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+              {result.modelCount} {result.modelCount === 1 ? "model" : "models"}
+            </span>
+          </div>
+          <nav aria-label="Providers" className="flex flex-wrap gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground md:ml-auto md:justify-end">
+            {jumps.map((item) => (
+              <a key={item.id} href={`#${item.id}`} className="hover:text-foreground">
+                {item.name}
+              </a>
+            ))}
+            {narrowed ? (
+              <a href="/tools/model-pricing" className="hover:text-foreground">
+                Show every provider
+              </a>
+            ) : null}
+          </nav>
+        </div>
       </div>
-      <nav aria-label="Providers" className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground">
-        {jumps.map((item) => (
-          <a key={item.id} href={`#${item.id}`} className="hover:text-foreground">
-            {item.name}
-          </a>
-        ))}
-        {narrowed ? (
-          <a href="/tools/model-pricing" className="hover:text-foreground">
-            Show every provider
-          </a>
-        ) : null}
-      </nav>
 
-      <div className="mt-12 flex flex-col">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-6 pb-20 sm:px-8">
+      <div className="mt-8 flex flex-col">
         {result.providers.map((item) => {
           const several = new Set(item.models.map((model) => model.category)).size > 1;
           return (
-            <section key={item.id} id={item.id} className="scroll-mt-20 border-t border-border py-10 first:border-t-0 first:pt-0">
+            <section key={item.id} id={item.id} className="scroll-mt-[var(--pricing-sticky)] border-t border-border py-10 first:border-t-0 first:pt-0">
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-xl font-semibold tracking-tight text-foreground">{item.name}</h2>
                 <a
@@ -204,7 +224,7 @@ export function ModelPricingBrowser() {
         })}
 
         {result.gateways.map((gateway) => (
-          <section key={gateway.id} id={gateway.id} className="scroll-mt-20 border-t border-border py-10">
+          <section key={gateway.id} id={gateway.id} className="scroll-mt-[var(--pricing-sticky)] border-t border-border py-10">
             <div className="flex items-baseline justify-between gap-4">
               <h2 className="text-xl font-semibold tracking-tight text-foreground">{gateway.name}</h2>
               <a
@@ -237,6 +257,7 @@ export function ModelPricingBrowser() {
         Checked {checkedLabel(modelPricing.updated)}. The table shows the standard list price.
         Batch and fast tiers are in the JSON.
       </p>
+    </div>
     </div>
   );
 }
