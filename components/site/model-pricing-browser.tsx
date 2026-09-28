@@ -404,8 +404,8 @@ function BenchCharts({
     <div>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        One chart per board, grouped by the kind of work. Where a board published a cost, the
-        score is plotted against that cost, and clicking a name keeps that model.
+        One chart per board, grouped by the kind of work. Click a name to keep that model, and
+        Command-click to add another.
       </p>
       <div className="mt-8 flex flex-col gap-10">
         {benchGroups(benches).map((group) => (
@@ -496,7 +496,7 @@ function ScoreCostChart({
 }) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const pinned = React.useRef(false);
-  const [picked, setPicked] = React.useState<string | null>(null);
+  const [picked, setPicked] = React.useState<string[]>([]);
   const [active, setActive] = React.useState<string | null>(null);
   const [tip, setTip] = React.useState<{
     key: string;
@@ -509,7 +509,7 @@ function ScoreCostChart({
     value: number;
     usd: number;
   } | null>(null);
-  const shown = picked ? series.filter((item) => item.model.id === picked) : series;
+  const shown = picked.length ? series.filter((item) => picked.includes(item.model.id)) : series;
   const width = 720;
   const height = 340;
   const pad = { left: 36, right: 16, top: 28, bottom: 36 };
@@ -517,7 +517,7 @@ function ScoreCostChart({
   const costs = shown.flatMap((item) => item.levels.map((level) => level.usd));
   const costLo = Math.min(...costs);
   const costHi = Math.max(...costs);
-  const zoomed = picked !== null && costHi > costLo;
+  const zoomed = picked.length > 0 && costHi > costLo;
   const x0 = zoomed ? Math.max(0, costLo - Math.max((costHi - costLo) * 0.18, kind === "run" ? 400 : 0.5)) : 0;
   const x1 = zoomed ? costHi + Math.max((costHi - costLo) * 0.18, kind === "run" ? 400 : 0.5) : Math.ceil(costHi / step) * step;
   const plotWidth = width - pad.left - pad.right;
@@ -558,7 +558,7 @@ function ScoreCostChart({
   return (
     <div
       ref={wrapRef}
-      className="relative mt-3 rounded-md border border-border bg-muted/30 px-3 py-3"
+      className="relative rounded-md border border-border bg-muted/30 px-3 py-3"
       onClick={() => {
         pinned.current = false;
         setActive(null);
@@ -592,7 +592,7 @@ function ScoreCostChart({
         ))}
         {series
           .map((item, index) => ({ item, index }))
-          .filter(({ item }) => picked === null || item.model.id === picked)
+          .filter(({ item }) => picked.length === 0 || picked.includes(item.model.id))
           .reverse()
           .map(({ item, index }) => {
             const stroke = SERIES[index % SERIES.length];
@@ -611,7 +611,7 @@ function ScoreCostChart({
                     vectorEffect="non-scaling-stroke"
                   />
                 ) : null}
-                {item.levels.map((level, levelIndex) => (
+                {item.levels.map((level) => (
                   <g
                     key={`${item.model.id}-${level.effort}`}
                     aria-label={`${item.model.name}${level.effort ? `, ${level.effort}` : ""}`}
@@ -627,11 +627,17 @@ function ScoreCostChart({
                     <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="12" fill="transparent" />
                     <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="9" className="fill-background" stroke={stroke} strokeWidth="1.5" />
                     <PointIcon providerId={item.providerId} x={xAt(level.usd)} y={yAt(level.value)} size={12} />
-                    {picked && item.levels.length > 1 ? (
+                    {picked.length === 1 && item.levels.length > 1 ? (
                       <text
                         x={xAt(level.usd)}
-                        y={yAt(level.value) + (levelIndex % 2 === 0 ? -14 : 18)}
-                        textAnchor="middle"
+                        y={yAt(level.value) > pad.top + 18 ? yAt(level.value) - 14 : yAt(level.value) + 18}
+                        textAnchor={
+                          xAt(level.usd) < pad.left + 36
+                            ? "start"
+                            : xAt(level.usd) > width - pad.right - 36
+                              ? "end"
+                              : "middle"
+                        }
                         className="fill-foreground text-[11px]"
                       >
                         {level.effort}
@@ -666,9 +672,9 @@ function ScoreCostChart({
         {series.map((item, index) => {
           const stroke = SERIES[index % SERIES.length];
           const dashed = index >= SERIES.length;
-          const selected = picked === item.model.id;
+          const selected = picked.includes(item.model.id);
           return (
-            <li key={item.model.id} className={picked && !selected ? "opacity-40" : undefined}>
+            <li key={item.model.id} className={picked.length > 0 && !selected ? "opacity-40" : undefined}>
               <button
                 type="button"
                 aria-pressed={selected}
@@ -677,7 +683,15 @@ function ScoreCostChart({
                   pinned.current = false;
                   setTip(null);
                   setActive(null);
-                  setPicked(selected ? null : item.model.id);
+                  setPicked((current) => {
+                    if (event.metaKey || event.ctrlKey) {
+                      return current.includes(item.model.id)
+                        ? current.filter((id) => id !== item.model.id)
+                        : [...current, item.model.id];
+                    }
+                    if (current.length === 1 && current[0] === item.model.id) return [];
+                    return [item.model.id];
+                  });
                 }}
                 className="flex cursor-pointer items-center gap-1.5 text-left text-xs text-foreground"
               >
@@ -703,16 +717,23 @@ function ScoreCostChart({
           );
         })}
       </ul>
-      {picked && shown[0] && shown[0].levels.length > 1 ? (
-        <ul className="mt-3 flex flex-col gap-0.5 text-xs leading-5 text-muted-foreground">
-          {shown[0].levels.map((level) => (
-            <li key={level.effort || "score"}>
-              {level.effort ? `${level.effort} ` : ""}
-              {formatBench(bench, level.value)} · {kind === "run" ? `Run ${formatRunUsd(level.usd)}` : `${formatTaskUsd(level.usd)} a task`}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {picked.length > 0
+        ? shown
+            .filter((item) => item.levels.length > 1)
+            .map((item) => (
+              <div key={item.model.id} className="mt-3">
+                {picked.length > 1 ? <p className="text-xs font-medium text-foreground">{item.model.name}</p> : null}
+                <ul className="flex flex-col gap-0.5 text-xs leading-5 text-muted-foreground">
+                  {item.levels.map((level) => (
+                    <li key={level.effort || "score"}>
+                      {level.effort ? `${level.effort} ` : ""}
+                      {formatBench(bench, level.value)} · {kind === "run" ? `Run ${formatRunUsd(level.usd)}` : `${formatTaskUsd(level.usd)} a task`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+        : null}
     </div>
   );
 }
@@ -741,8 +762,7 @@ function BenchChart({
   const ticks = percent ? [0, 25, 50, 75, 100] : [Math.round(min), Math.round(max)];
   const columns = "grid-cols-[8.25rem_minmax(0,1fr)_3.75rem] sm:grid-cols-[12.5rem_minmax(0,1fr)_4rem]";
   return (
-    <figure className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_15rem] md:gap-8">
-      <div className="min-w-0">
+    <figure>
       <figcaption>
         <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
         {plot ? (
@@ -759,8 +779,10 @@ function BenchChart({
           <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
         )}
       </figcaption>
+      <div className="mt-3 grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_15rem] md:gap-x-8">
+      <div className="min-w-0">
       {plot ? <ScoreCostChart bench={bench} series={plot.series} kind={plot.kind} /> : (
-      <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-3">
+      <div className="rounded-md border border-border bg-muted/30 px-3 py-3">
         <div className="relative">
           {percent ? (
             <div className={`pointer-events-none absolute inset-0 grid gap-x-2 ${columns}`} aria-hidden>
@@ -849,7 +871,8 @@ function BenchChart({
       </div>
       )}
       </div>
-      <p className="max-w-sm text-sm leading-6 text-muted-foreground">{bench.reading}</p>
+      <p className="text-sm leading-6 text-muted-foreground">{bench.reading}</p>
+      </div>
     </figure>
   );
 }
