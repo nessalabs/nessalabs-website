@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@nessa-ui/react";
@@ -12,6 +13,7 @@ import {
   queryCatalog,
   unitLabel,
   type Bench,
+  type BenchScore,
   type Category,
   type ModelQuote,
   type Price,
@@ -924,6 +926,145 @@ function BenchChart({
   );
 }
 
+type ScoreLine = { key: string; best: boolean; text: string; wrap?: boolean };
+
+/** Best score in the cell. Hover lists every published figure for that score. */
+function scoreReadout(bench: Bench, entry: BenchScore): { effort: string; lines: ScoreLine[]; caveat: string | null } {
+  const levels = entry.levels && entry.levels.length > 1 ? entry.levels : null;
+  if (levels) {
+    const effort = levels.find((level) => level.value === entry.value)?.effort ?? "";
+    return {
+      effort,
+      caveat: null,
+      lines: levels.map((level) => ({
+        key: level.effort,
+        best: level.effort === effort && level.value === entry.value,
+        text: `${level.effort} ${formatBench(bench, level.value)}${level.usd !== undefined ? ` · ${formatTaskUsd(level.usd)} a task` : ""}`,
+      })),
+    };
+  }
+  const effort = publishedEffort(entry.note);
+  const lines: ScoreLine[] = [];
+  const noteIsEffort = Boolean(
+    entry.note && effort && entry.note.replace(/\.+$/, "").trim().toLowerCase() === effort,
+  );
+  if (entry.note && !noteIsEffort && effort) lines.push({ key: "note", best: false, text: entry.note, wrap: true });
+  if (!effort && entry.note && entry.usd !== undefined) lines.push({ key: "note", best: false, text: entry.note, wrap: true });
+  if (entry.usd !== undefined) lines.push({ key: "usd", best: false, text: `${formatTaskUsd(entry.usd)} a task` });
+  const caveat = !effort && entry.note && entry.usd === undefined ? entry.note : null;
+  return { effort, lines, caveat };
+}
+
+function ScoreTip({ lines, children }: { lines: ScoreLine[]; children: React.ReactNode }) {
+  const id = React.useId();
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const touch = React.useRef(false);
+  const [place, setPlace] = React.useState<{ left: number; top: number; above: boolean } | null>(null);
+
+  function show() {
+    const node = buttonRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    const width = 240;
+    const center = rect.left + rect.width / 2;
+    const left = Math.min(Math.max(center, width / 2 + 12), window.innerWidth - width / 2 - 12);
+    const above = rect.bottom + 160 > window.innerHeight && rect.top > 160;
+    setPlace({ left, top: above ? rect.top - 6 : rect.bottom + 6, above });
+  }
+
+  React.useEffect(() => {
+    if (!place) return;
+    const close = () => setPlace(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [place]);
+
+  return (
+    <>
+      <button
+        type="button"
+        ref={buttonRef}
+        className="cursor-help whitespace-nowrap rounded-sm font-[inherit] underline decoration-dotted decoration-muted-foreground/70 underline-offset-[3px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-describedby={id}
+        onPointerDown={(event) => {
+          touch.current = event.pointerType === "touch";
+        }}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "touch") return;
+          show();
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "touch") return;
+          setPlace(null);
+        }}
+        onFocus={show}
+        onBlur={() => setPlace(null)}
+        onClick={() => {
+          if (!touch.current) return;
+          if (place) setPlace(null);
+          else show();
+        }}
+      >
+        {children}
+      </button>
+      <span id={id} className="sr-only">
+        {lines.map((line) => line.text).join(". ")}
+      </span>
+      {place
+        ? createPortal(
+            <div
+              role="presentation"
+              className="pointer-events-none fixed z-50 w-max max-w-xs -translate-x-1/2 rounded-md border border-border bg-background px-2.5 py-1.5 text-left shadow-sm"
+              style={{
+                left: place.left,
+                top: place.top,
+                transform: place.above ? "translate(-50%, -100%)" : undefined,
+              }}
+            >
+              <ul className="flex flex-col gap-0.5">
+                {lines.map((line) => (
+                  <li
+                    key={line.key}
+                    className={
+                      line.best
+                        ? "text-xs font-medium text-foreground"
+                        : `text-xs text-muted-foreground ${line.wrap ? "" : "whitespace-nowrap"}`
+                    }
+                  >
+                    {line.text}
+                  </li>
+                ))}
+              </ul>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
+function BenchScoreReadout({ bench, entry }: { bench: Bench; entry: BenchScore }) {
+  const { effort, lines, caveat } = scoreReadout(bench, entry);
+  const figure = (
+    <>
+      <span className="font-mono text-sm tabular-nums text-foreground">{formatBench(bench, entry.value)}</span>
+      {effort ? <span className="text-muted-foreground"> ({effort})</span> : null}
+    </>
+  );
+  return (
+    <>
+      {lines.length ? <ScoreTip lines={lines}>{figure}</ScoreTip> : figure}
+      {caveat ? (
+        <span className="mt-0.5 block text-[11px] leading-4 whitespace-normal text-muted-foreground">{caveat}</span>
+      ) : null}
+    </>
+  );
+}
+
 function BenchSheet({
   rows,
   benches,
@@ -940,7 +1081,7 @@ function BenchSheet({
       <BenchCharts rows={rows} benches={benches} />
       <h2 className="mt-14 text-lg font-semibold tracking-tight text-foreground">Scores</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        Each row is one board. A list is every published thinking level, and a dollar amount there is the mean cost per task. The marked cell is the highest score on that row.
+        Each row is one board, and the shaded cell is the highest score on that row. A cell shows the best score with its thinking level in brackets, and hovering it lists the other figures for that score.
       </p>
       <div className="mt-4 min-w-0 overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-center">
@@ -996,28 +1137,7 @@ function BenchSheet({
                         }
                       >
                         {entry ? (
-                          <>
-                            <span className="font-mono text-sm tabular-nums text-foreground">
-                              {formatBench(bench, entry.value)}
-                            </span>
-                            {entry.levels && entry.levels.length > 1 ? (
-                              <span className="mt-1 flex flex-col gap-0.5 text-[11px] leading-4 text-muted-foreground">
-                                {entry.levels.map((level) => (
-                                  <span key={level.effort}>
-                                    {level.effort} {formatBench(bench, level.value)}
-                                    {level.usd !== undefined ? ` · ${formatTaskUsd(level.usd)}` : ""}
-                                  </span>
-                                ))}
-                              </span>
-                            ) : entry.note || entry.usd !== undefined ? (
-                              <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
-                                {entry.note}
-                                {entry.usd !== undefined ? (
-                                  <span className="mt-0.5 block">{formatTaskUsd(entry.usd)} a task</span>
-                                ) : null}
-                              </span>
-                            ) : null}
-                          </>
+                          <BenchScoreReadout bench={bench} entry={entry} />
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
