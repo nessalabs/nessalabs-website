@@ -389,8 +389,8 @@ function BenchCharts({
     <div>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        One chart per board, grouped by the kind of work. A bar is drawn only when that board
-        published a score.
+        One chart per board, grouped by the kind of work. A line joins a model's thinking levels
+        by cost per task, and a bar is used when that board published no cost series.
       </p>
       <div className="mt-8 flex flex-col gap-10">
         {benchGroups(benches).map((group) => (
@@ -418,6 +418,180 @@ function benchGroups(benches: Bench[]) {
   return groups;
 }
 
+type ChartPoint = {
+  model: ModelQuote;
+  providerId: string;
+  entry: NonNullable<ModelQuote["scores"]>[number];
+};
+
+type CostLevel = { effort: string; value: number; usd: number };
+
+type CostSeries = ChartPoint & { levels: CostLevel[] };
+
+function costSeries(bench: Bench, points: ChartPoint[]) {
+  if (bench.unit !== "percent") return null;
+  const series = points.flatMap((point) => {
+    const levels = (point.entry.levels?.length
+      ? point.entry.levels
+      : [{ effort: "", value: point.entry.value, usd: point.entry.usd }]
+    )
+      .filter((level): level is CostLevel => level.usd !== undefined)
+      .sort((a, b) => a.usd - b.usd || b.value - a.value);
+    return levels.length ? [{ ...point, levels }] : [];
+  });
+  if (!series.some((item) => item.levels.length > 1)) return null;
+  return series;
+}
+
+function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }) {
+  const [active, setActive] = React.useState<string | null>(null);
+  const pinned = React.useRef(false);
+  const width = 720;
+  const height = 340;
+  const pad = { left: 36, right: 16, top: 16, bottom: 36 };
+  const xMax = Math.ceil(Math.max(...series.flatMap((item) => item.levels.map((level) => level.usd))) / 5) * 5;
+  const plotWidth = width - pad.left - pad.right;
+  const plotHeight = height - pad.top - pad.bottom;
+  const xAt = (usd: number) => pad.left + (usd / xMax) * plotWidth;
+  const yAt = (value: number) => pad.top + (1 - value / 100) * plotHeight;
+  const yTicks = [0, 25, 50, 75, 100];
+  const xTicks = Array.from({ length: xMax / 5 + 1 }, (_, index) => index * 5);
+
+  function show(id: string) {
+    if (!pinned.current) setActive(id);
+  }
+
+  function hide() {
+    if (!pinned.current) setActive(null);
+  }
+
+  function toggle(id: string) {
+    if (pinned.current && active === id) {
+      pinned.current = false;
+      setActive(null);
+      return;
+    }
+    pinned.current = true;
+    setActive(id);
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-3">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${bench.name}. Score against mean cost per task.`}
+        className="h-80 w-full sm:h-96"
+      >
+        {yTicks.map((tick) => (
+          <g key={tick}>
+            <line
+              x1={pad.left}
+              x2={width - pad.right}
+              y1={yAt(tick)}
+              y2={yAt(tick)}
+              className="stroke-border"
+            />
+            <text x={pad.left - 8} y={yAt(tick) + 3} textAnchor="end" className="fill-muted-foreground text-[11px]">
+              {tick}
+            </text>
+          </g>
+        ))}
+        {xTicks.map((tick) => (
+          <text
+            key={tick}
+            x={xAt(tick)}
+            y={height - 8}
+            textAnchor={tick === 0 ? "start" : tick === xMax ? "end" : "middle"}
+            className="fill-muted-foreground text-[11px]"
+          >
+            {tick === 0 ? "$0" : `$${tick}`}
+          </text>
+        ))}
+        {series
+          .map((item, index) => ({ item, index }))
+          .reverse()
+          .map(({ item, index }) => {
+            const stroke = SERIES[index % SERIES.length];
+            const dashed = index >= SERIES.length;
+            const path = item.levels.map((level) => `${xAt(level.usd)},${yAt(level.value)}`).join(" ");
+            const dimmed = active !== null && active !== item.model.id;
+            return (
+              <g key={item.model.id} opacity={dimmed ? 0.12 : 1}>
+                {item.levels.length > 1 ? (
+                  <polyline
+                    points={path}
+                    fill="none"
+                    stroke={stroke}
+                    strokeWidth={active === item.model.id ? 2.5 : 1.75}
+                    strokeDasharray={dashed ? "6 4" : undefined}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {item.levels.map((level) => (
+                  <circle key={`${item.model.id}-${level.effort}`} cx={xAt(level.usd)} cy={yAt(level.value)} r="4" fill={stroke}>
+                    <title>
+                      {`${item.model.name}${level.effort ? `, ${level.effort}` : ""}, ${formatBench(bench, level.value)}, ${formatTaskUsd(level.usd)} a task`}
+                    </title>
+                  </circle>
+                ))}
+              </g>
+            );
+          })}
+      </svg>
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+        {series.map((item, index) => {
+          const stroke = SERIES[index % SERIES.length];
+          const dashed = index >= SERIES.length;
+          const selected = active === item.model.id;
+          return (
+            <li key={item.model.id} className={active && !selected ? "opacity-40" : undefined}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                onMouseEnter={() => show(item.model.id)}
+                onMouseLeave={hide}
+                onFocus={() => show(item.model.id)}
+                onBlur={hide}
+                onClick={() => toggle(item.model.id)}
+                className="flex items-center gap-1.5 text-left text-xs text-foreground"
+              >
+                <svg width="16" height="8" aria-hidden className="shrink-0">
+                  {item.levels.length > 1 ? (
+                    <line
+                      x1="0"
+                      y1="4"
+                      x2="16"
+                      y2="4"
+                      stroke={stroke}
+                      strokeWidth="2"
+                      strokeDasharray={dashed ? "3 2" : undefined}
+                    />
+                  ) : (
+                    <circle cx="8" cy="4" r="2.5" fill={stroke} />
+                  )}
+                </svg>
+                <ModelIcon providerId={item.providerId} />
+                <span>{item.model.name}</span>
+              </button>
+              {selected ? (
+                <span className="mt-1 flex flex-col gap-0.5 pl-6 text-[11px] leading-4 text-muted-foreground">
+                  {item.levels.map((level) => (
+                    <span key={level.effort || "score"}>
+                      {level.effort ? `${level.effort} ` : ""}
+                      {formatBench(bench, level.value)} · {formatTaskUsd(level.usd)}
+                    </span>
+                  ))}
+                </span>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function BenchChart({
   bench,
   rows,
@@ -427,13 +601,14 @@ function BenchChart({
   rows: { provider: { id: string; name: string }; model: ModelQuote }[];
   color: Map<string, string>;
 }) {
-  const points = rows
+  const points: ChartPoint[] = rows
     .flatMap((row) => {
       const entry = row.model.scores?.find((item) => item.bench === bench.id);
       return entry ? [{ model: row.model, providerId: row.provider.id, entry }] : [];
     })
     .sort((a, b) => b.entry.value - a.entry.value);
   if (!points.length) return null;
+  const series = costSeries(bench, points);
   const percent = bench.unit === "percent";
   const max = percent ? 100 : Math.max(...points.map((point) => point.entry.value));
   const min = percent ? 0 : Math.min(...points.map((point) => point.entry.value));
@@ -444,7 +619,12 @@ function BenchChart({
     <figure className={points.length > 6 ? "lg:col-span-2" : undefined}>
       <figcaption>
         <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
-        {points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
+        {series ? (
+          <p className="text-xs text-muted-foreground">
+            The vertical axis is the score and the horizontal axis is the mean cost per task. Each
+            point is one published thinking level.
+          </p>
+        ) : points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
           <p className="text-xs text-muted-foreground">
             Each thinking level that board published, with its mean cost per task.
           </p>
@@ -452,6 +632,7 @@ function BenchChart({
           <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
         )}
       </figcaption>
+      {series ? <CostLineChart bench={bench} series={series} /> : (
       <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-3">
         <div className="relative">
           {percent ? (
@@ -539,6 +720,7 @@ function BenchChart({
           <span />
         </div>
       </div>
+      )}
     </figure>
   );
 }
