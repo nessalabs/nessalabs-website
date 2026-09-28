@@ -82,6 +82,8 @@ export interface BenchScore {
   levels?: BenchLevel[];
   /** Mean USD per task, when the board published one row and a per-task cost. */
   usd?: number;
+  /** USD for the whole evaluation run, when the board published that total and not a per-task cost. */
+  runUsd?: number;
 }
 
 export interface Provider {

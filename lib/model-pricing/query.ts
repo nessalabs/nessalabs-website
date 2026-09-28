@@ -95,6 +95,7 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
           level.usd !== undefined ? String(level.usd) : "",
         ]),
         entry.usd !== undefined ? String(entry.usd) : "",
+        entry.runUsd !== undefined ? String(entry.runUsd) : "",
         bench?.name,
         bench?.task,
       ];

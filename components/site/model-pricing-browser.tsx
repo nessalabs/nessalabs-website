@@ -389,8 +389,8 @@ function BenchCharts({
     <div>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        One chart per board, grouped by the kind of work. A line joins a model's thinking levels
-        by cost per task, and a bar is used when that board published no cost series.
+        One chart per board, grouped by the kind of work. Where a board published a cost, the
+        score is plotted against that cost, and a point's model and thinking level show on hover.
       </p>
       <div className="mt-8 flex flex-col gap-10">
         {benchGroups(benches).map((group) => (
@@ -428,70 +428,121 @@ type CostLevel = { effort: string; value: number; usd: number };
 
 type CostSeries = ChartPoint & { levels: CostLevel[] };
 
-function costSeries(bench: Bench, points: ChartPoint[]) {
+function publishedEffort(note?: string) {
+  const match = note?.match(/^(max|xhigh|high|medium|low)\b/i);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function formatRunUsd(usd: number) {
+  const thousands = usd / 1000;
+  const text = Number.isInteger(thousands) ? String(thousands) : thousands.toFixed(1);
+  return `$${text}k`;
+}
+
+function plotSeries(bench: Bench, points: ChartPoint[]) {
   if (bench.unit !== "percent") return null;
-  const series = points.flatMap((point) => {
+  const task = points.flatMap((point) => {
     const levels = (point.entry.levels?.length
       ? point.entry.levels
-      : [{ effort: "", value: point.entry.value, usd: point.entry.usd }]
+      : [{ effort: publishedEffort(point.entry.note), value: point.entry.value, usd: point.entry.usd }]
     )
       .filter((level): level is CostLevel => level.usd !== undefined)
       .sort((a, b) => a.usd - b.usd || b.value - a.value);
     return levels.length ? [{ ...point, levels }] : [];
   });
-  if (!series.some((item) => item.levels.length > 1)) return null;
-  return series;
+  if (task.length) return { kind: "task" as const, series: task };
+  const run = points.flatMap((point) =>
+    point.entry.runUsd !== undefined
+      ? [{
+          ...point,
+          levels: [{ effort: publishedEffort(point.entry.note), value: point.entry.value, usd: point.entry.runUsd }],
+        }]
+      : [],
+  );
+  if (run.length) return { kind: "run" as const, series: run };
+  return null;
 }
 
-function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }) {
-  const [active, setActive] = React.useState<string | null>(null);
+function ScoreCostChart({
+  bench,
+  series,
+  kind,
+}: {
+  bench: Bench;
+  series: CostSeries[];
+  kind: "task" | "run";
+}) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
   const pinned = React.useRef(false);
+  const [active, setActive] = React.useState<string | null>(null);
+  const [tip, setTip] = React.useState<{
+    key: string;
+    x: number;
+    y: number;
+    below: boolean;
+    name: string;
+    providerId: string;
+    effort: string;
+    value: number;
+    usd: number;
+  } | null>(null);
   const width = 720;
   const height = 340;
-  const pad = { left: 36, right: 16, top: 16, bottom: 36 };
-  const xMax = Math.ceil(Math.max(...series.flatMap((item) => item.levels.map((level) => level.usd))) / 5) * 5;
+  const pad = { left: 36, right: 16, top: 20, bottom: 36 };
+  const step = kind === "run" ? 2000 : 5;
+  const xMax = Math.ceil(Math.max(...series.flatMap((item) => item.levels.map((level) => level.usd))) / step) * step;
   const plotWidth = width - pad.left - pad.right;
   const plotHeight = height - pad.top - pad.bottom;
   const xAt = (usd: number) => pad.left + (usd / xMax) * plotWidth;
   const yAt = (value: number) => pad.top + (1 - value / 100) * plotHeight;
   const yTicks = [0, 25, 50, 75, 100];
-  const xTicks = Array.from({ length: xMax / 5 + 1 }, (_, index) => index * 5);
+  const xTicks = Array.from({ length: xMax / step + 1 }, (_, index) => index * step);
+  const axisLabel = kind === "run" ? "cost of the full run" : "mean cost per task";
 
-  function show(id: string) {
-    if (!pinned.current) setActive(id);
+  function showTip(event: React.MouseEvent, item: CostSeries, level: CostLevel) {
+    const bounds = wrapRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    const x = Math.min(Math.max(event.clientX - bounds.left, 72), bounds.width - 72);
+    const y = event.clientY - bounds.top;
+    setActive(item.model.id);
+    setTip({
+      key: `${item.model.id}-${level.effort}`,
+      x,
+      y,
+      below: y < 36,
+      name: item.model.name,
+      providerId: item.providerId,
+      effort: level.effort,
+      value: level.value,
+      usd: level.usd,
+    });
   }
 
-  function hide() {
-    if (!pinned.current) setActive(null);
-  }
-
-  function toggle(id: string) {
-    if (pinned.current && active === id) {
-      pinned.current = false;
-      setActive(null);
-      return;
-    }
-    pinned.current = true;
-    setActive(id);
+  function clearTip() {
+    if (pinned.current) return;
+    setActive(null);
+    setTip(null);
   }
 
   return (
-    <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-3">
+    <div
+      ref={wrapRef}
+      className="relative mt-3 rounded-md border border-border bg-muted/30 px-3 py-3"
+      onClick={() => {
+        pinned.current = false;
+        setActive(null);
+        setTip(null);
+      }}
+    >
       <svg
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label={`${bench.name}. Score against mean cost per task.`}
+        aria-label={`${bench.name}. Score against ${axisLabel}.`}
         className="h-80 w-full sm:h-96"
       >
         {yTicks.map((tick) => (
           <g key={tick}>
-            <line
-              x1={pad.left}
-              x2={width - pad.right}
-              y1={yAt(tick)}
-              y2={yAt(tick)}
-              className="stroke-border"
-            />
+            <line x1={pad.left} x2={width - pad.right} y1={yAt(tick)} y2={yAt(tick)} className="stroke-border" />
             <text x={pad.left - 8} y={yAt(tick) + 3} textAnchor="end" className="fill-muted-foreground text-[11px]">
               {tick}
             </text>
@@ -505,7 +556,7 @@ function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }
             textAnchor={tick === 0 ? "start" : tick === xMax ? "end" : "middle"}
             className="fill-muted-foreground text-[11px]"
           >
-            {tick === 0 ? "$0" : `$${tick}`}
+            {tick === 0 ? "$0" : kind === "run" ? formatRunUsd(tick) : `$${tick}`}
           </text>
         ))}
         {series
@@ -517,7 +568,7 @@ function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }
             const path = item.levels.map((level) => `${xAt(level.usd)},${yAt(level.value)}`).join(" ");
             const dimmed = active !== null && active !== item.model.id;
             return (
-              <g key={item.model.id} opacity={dimmed ? 0.12 : 1}>
+              <g key={item.model.id} opacity={dimmed ? 0.15 : 1}>
                 {item.levels.length > 1 ? (
                   <polyline
                     points={path}
@@ -529,16 +580,45 @@ function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }
                   />
                 ) : null}
                 {item.levels.map((level) => (
-                  <circle key={`${item.model.id}-${level.effort}`} cx={xAt(level.usd)} cy={yAt(level.value)} r="4" fill={stroke}>
-                    <title>
-                      {`${item.model.name}${level.effort ? `, ${level.effort}` : ""}, ${formatBench(bench, level.value)}, ${formatTaskUsd(level.usd)} a task`}
-                    </title>
-                  </circle>
+                  <g
+                    key={`${item.model.id}-${level.effort}`}
+                    aria-label={`${item.model.name}${level.effort ? `, ${level.effort}` : ""}`}
+                    className="cursor-pointer"
+                    onPointerEnter={(event) => showTip(event, item, level)}
+                    onPointerLeave={clearTip}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      pinned.current = true;
+                      showTip(event, item, level);
+                    }}
+                  >
+                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="11" fill="transparent" />
+                    <circle cx={xAt(level.usd)} cy={yAt(level.value)} r="4.5" fill={stroke} />
+                  </g>
                 ))}
               </g>
             );
           })}
       </svg>
+      {tip ? (
+        <div
+          className={`pointer-events-none absolute z-10 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-background px-2 py-1 text-xs text-foreground shadow-sm ${tip.below ? "translate-y-2" : "-translate-y-[calc(100%+10px)]"}`}
+          style={{ left: tip.x, top: tip.y }}
+        >
+          <ModelIcon providerId={tip.providerId} />
+          <span>{tip.name}</span>
+          {tip.effort ? (
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-4 text-muted-foreground">
+              {tip.effort}
+            </span>
+          ) : null}
+          <span className="tabular-nums text-muted-foreground">
+            {formatBench(bench, tip.value)}
+            {" · "}
+            {kind === "run" ? `Run ${formatRunUsd(tip.usd)}` : `${formatTaskUsd(tip.usd)} a task`}
+          </span>
+        </div>
+      ) : null}
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
         {series.map((item, index) => {
           const stroke = SERIES[index % SERIES.length];
@@ -546,16 +626,7 @@ function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }
           const selected = active === item.model.id;
           return (
             <li key={item.model.id} className={active && !selected ? "opacity-40" : undefined}>
-              <button
-                type="button"
-                aria-pressed={selected}
-                onMouseEnter={() => show(item.model.id)}
-                onMouseLeave={hide}
-                onFocus={() => show(item.model.id)}
-                onBlur={hide}
-                onClick={() => toggle(item.model.id)}
-                className="flex items-center gap-1.5 text-left text-xs text-foreground"
-              >
+              <span className="flex items-center gap-1.5 text-xs text-foreground">
                 <svg width="16" height="8" aria-hidden className="shrink-0">
                   {item.levels.length > 1 ? (
                     <line
@@ -573,17 +644,7 @@ function CostLineChart({ bench, series }: { bench: Bench; series: CostSeries[] }
                 </svg>
                 <ModelIcon providerId={item.providerId} />
                 <span>{item.model.name}</span>
-              </button>
-              {selected ? (
-                <span className="mt-1 flex flex-col gap-0.5 pl-6 text-[11px] leading-4 text-muted-foreground">
-                  {item.levels.map((level) => (
-                    <span key={level.effort || "score"}>
-                      {level.effort ? `${level.effort} ` : ""}
-                      {formatBench(bench, level.value)} · {formatTaskUsd(level.usd)}
-                    </span>
-                  ))}
-                </span>
-              ) : null}
+              </span>
             </li>
           );
         })}
@@ -608,7 +669,7 @@ function BenchChart({
     })
     .sort((a, b) => b.entry.value - a.entry.value);
   if (!points.length) return null;
-  const series = costSeries(bench, points);
+  const plot = plotSeries(bench, points);
   const percent = bench.unit === "percent";
   const max = percent ? 100 : Math.max(...points.map((point) => point.entry.value));
   const min = percent ? 0 : Math.min(...points.map((point) => point.entry.value));
@@ -619,10 +680,11 @@ function BenchChart({
     <figure className={points.length > 6 ? "lg:col-span-2" : undefined}>
       <figcaption>
         <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
-        {series ? (
+        {plot ? (
           <p className="text-xs text-muted-foreground">
-            The vertical axis is the score and the horizontal axis is the mean cost per task. Each
-            point is one published thinking level.
+            {plot.kind === "run"
+              ? "The vertical axis is the score and the horizontal axis is the cost of the full run."
+              : "The vertical axis is the score and the horizontal axis is the mean cost per task."}
           </p>
         ) : points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
           <p className="text-xs text-muted-foreground">
@@ -632,7 +694,7 @@ function BenchChart({
           <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
         )}
       </figcaption>
-      {series ? <CostLineChart bench={bench} series={series} /> : (
+      {plot ? <ScoreCostChart bench={bench} series={plot.series} kind={plot.kind} /> : (
       <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-3">
         <div className="relative">
           {percent ? (

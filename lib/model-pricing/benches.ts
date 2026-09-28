@@ -97,6 +97,7 @@ function score(
   note?: string,
   levels?: BenchScore["levels"],
   usd?: number,
+  runUsd?: number,
 ): BenchScore {
   return {
     bench,
@@ -106,7 +107,12 @@ function score(
     ...(note ? { note } : {}),
     ...(levels ? { levels } : {}),
     ...(usd !== undefined ? { usd } : {}),
+    ...(runUsd !== undefined ? { runUsd } : {}),
   };
+}
+
+function terminal(value: number, note: string, runUsd: number) {
+  return score("terminal-bench-4", value, T, "Snorkel", note, undefined, undefined, runUsd);
 }
 
 function levels(...rows: [string, number, number][]): NonNullable<BenchScore["levels"]> {
@@ -122,7 +128,7 @@ const D = DEEPSWE;
 export const benchScores: Record<string, BenchScore[]> = {
   "claude-fable-5-1": [
     score("osworld-strict", 41.7, A, "Anthropic", "Partial 77.9%."),
-    score("terminal-bench-4", 57.9, T, "Snorkel", "max, Claude Code. Run $6.2k."),
+    terminal(57.9, "max, Claude Code. Run $6.2k.", 6200),
     score("terminal-bench-science", 52.6, A, "Anthropic"),
     score("automation-bench", 31.4, A, "Anthropic"),
     score("cursorbench", 73.4, A, "Anthropic"),
@@ -130,7 +136,7 @@ export const benchScores: Record<string, BenchScore[]> = {
   ],
   "claude-fable-5": [
     score("osworld-strict", 36.1, A, "Anthropic", "Partial 72.9%."),
-    score("terminal-bench-4", 44.5, T, "Snorkel", "max, Claude Code. Run $7.3k."),
+    terminal(44.5, "max, Claude Code. Run $7.3k.", 7300),
     score("deepswe", 69.9, D, "Datacurve", undefined, levels(
       ["max", 69.7, 21.63],
       ["xhigh", 69.9, 13.41],
@@ -145,7 +151,7 @@ export const benchScores: Record<string, BenchScore[]> = {
   ],
   "claude-opus-5": [
     score("osworld-strict", 39.6, A, "Anthropic", "Partial 75.4%."),
-    score("terminal-bench-4", 53.9, T, "Snorkel", "xhigh, Claude Code. Run $6.1k."),
+    terminal(53.9, "xhigh, Claude Code. Run $6.1k.", 6100),
     score("deepswe", 73.6, D, "Datacurve", undefined, levels(
       ["max", 73.6, 11.84],
       ["xhigh", 73.2, 9.07],
@@ -159,7 +165,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1824, A, "Anthropic"),
   ],
   "claude-opus-4-8": [
-    score("terminal-bench-4", 23.6, T, "Snorkel", "max, Claude Code. Run $6.5k."),
+    terminal(23.6, "max, Claude Code. Run $6.5k.", 6500),
     score("deepswe", 59.0, D, "Datacurve", undefined, levels(
       ["max", 59.0, 13.22],
       ["xhigh", 54.4, 8.01],
@@ -169,7 +175,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     )),
   ],
   "claude-sonnet-5": [
-    score("terminal-bench-4", 12.4, T, "Snorkel", "max, Claude Code. Run $9.6k."),
+    terminal(12.4, "max, Claude Code. Run $9.6k.", 9600),
     score("deepswe", 53.8, D, "Datacurve", undefined, levels(
       ["max", 53.8, 26.4],
       ["xhigh", 49.7, 11.89],
@@ -180,7 +186,7 @@ export const benchScores: Record<string, BenchScore[]> = {
   ],
   "gpt-6-astra": [
     score("osworld-offline", 72.6, O, "OpenAI"),
-    score("terminal-bench-4", 58.2, T, "Snorkel", "max, Codex. Run $3.3k."),
+    terminal(58.2, "max, Codex. Run $3.3k.", 3300),
     score("deepswe", 74.1, D, "Datacurve", undefined, levels(
       ["max", 73.2, 7.5],
       ["xhigh", 74.1, 4.43],
@@ -193,7 +199,7 @@ export const benchScores: Record<string, BenchScore[]> = {
   ],
   "gpt-5.6-sol": [
     score("osworld-offline", 65.7, O, "OpenAI"),
-    score("terminal-bench-4", 37.3, T, "Snorkel", "max, Codex. Run $2.5k."),
+    terminal(37.3, "max, Codex. Run $2.5k.", 2500),
     score("deepswe", 72.7, D, "Datacurve", undefined, levels(
       ["max", 72.7, 6.46],
       ["xhigh", 70.7, 3.6],
@@ -207,7 +213,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1711, A, "Anthropic"),
   ],
   "gpt-5.6-terra": [
-    score("terminal-bench-4", 21.5, T, "Snorkel", "max, Codex. Run $1.7k."),
+    terminal(21.5, "max, Codex. Run $1.7k.", 1700),
     score("deepswe", 69.6, D, "Datacurve", undefined, levels(
       ["max", 69.6, 3.96],
       ["xhigh", 60.2, 1.7],
@@ -217,7 +223,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     )),
   ],
   "gpt-5.6-luna": [
-    score("terminal-bench-4", 17.3, T, "Snorkel", "max, Codex. Run $0.3k."),
+    terminal(17.3, "max, Codex. Run $0.3k.", 300),
     score("deepswe", 67.2, D, "Datacurve", undefined, levels(
       ["max", 67.2, 0.61],
       ["xhigh", 56.9, 0.31],
@@ -227,17 +233,17 @@ export const benchScores: Record<string, BenchScore[]> = {
     )),
   ],
   "gemini-3.8-flash": [
-    score("terminal-bench-4", 19.1, T, "Snorkel", "high, mini-SWE-agent. Run $1.8k."),
+    terminal(19.1, "high, mini-SWE-agent. Run $1.8k.", 1800),
     score("deepswe", 73.8, D, "Datacurve", undefined, levels(
       ["high", 73.8, 2.36],
       ["medium", 71.0, 1.97],
     )),
   ],
   "grok-4.7": [
-    score("terminal-bench-4", 37.6, T, "Snorkel", "xhigh, Grok Build. Run $3.7k."),
+    terminal(37.6, "xhigh, Grok Build. Run $3.7k.", 3700),
   ],
   "grok-4.6": [
-    score("terminal-bench-4", 20.3, T, "Snorkel", "high, Grok Build. Run $3.6k."),
+    terminal(20.3, "high, Grok Build. Run $3.6k.", 3600),
     score("deepswe", 67.5, D, "Datacurve", undefined, levels(
       ["xhigh", 66.7, 5.5],
       ["high", 65.2, 4.38],
@@ -246,7 +252,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     )),
   ],
   "grok-4.5": [
-    score("terminal-bench-4", 12.4, T, "Snorkel", "high, Grok Build. Run $2.1k."),
+    terminal(12.4, "high, Grok Build. Run $2.1k.", 2100),
     score("deepswe", 53.8, D, "Datacurve", "high.", undefined, 2.42),
   ],
   "kimi-k2.7-code": [

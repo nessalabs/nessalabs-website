@@ -41,6 +41,9 @@ for (const provider of modelPricing.providers) {
       if (entry.usd !== undefined && (!Number.isFinite(entry.usd) || entry.usd < 0)) {
         throw new Error(`Invalid score cost on ${key}`);
       }
+      if (entry.runUsd !== undefined && (!Number.isFinite(entry.runUsd) || entry.runUsd < 0)) {
+        throw new Error(`Invalid run cost on ${key}`);
+      }
     }
   }
 }
