@@ -327,6 +327,40 @@ function formatBench(bench: Bench, value: number) {
   return `${value.toFixed(1)}%`;
 }
 
+const MODEL_ICONS: Record<string, { src: string; dark?: string; invert?: boolean }> = {
+  anthropic: { src: "/model-icons/claude-color.svg" },
+  openai: { src: "/model-icons/openai.svg", invert: true },
+  google: { src: "/model-icons/gemini-color.svg" },
+  xai: { src: "/model-icons/grok.svg", invert: true },
+  moonshot: { src: "/model-icons/kimi-color.svg", dark: "/model-icons/kimi-color-dark.svg" },
+  deepseek: { src: "/model-icons/deepseek-color.svg" },
+};
+
+function ModelIcon({ providerId }: { providerId: string }) {
+  const icon = MODEL_ICONS[providerId];
+  if (!icon) return null;
+  if (icon.dark) {
+    return (
+      <span aria-hidden className="inline-grid size-3.5 shrink-0 place-items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={icon.src} alt="" draggable={false} className="col-start-1 row-start-1 size-3.5 dark:hidden" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={icon.dark} alt="" draggable={false} className="col-start-1 row-start-1 hidden size-3.5 dark:block" />
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={icon.src}
+      alt=""
+      aria-hidden
+      draggable={false}
+      className={icon.invert ? "size-3.5 shrink-0 dark:invert" : "size-3.5 shrink-0"}
+    />
+  );
+}
+
 const SERIES = [
   "var(--nessa-chart-series-1-strong)",
   "var(--nessa-chart-series-2-strong)",
@@ -392,7 +426,7 @@ function BenchChart({
   const points = rows
     .flatMap((row) => {
       const entry = row.model.scores?.find((item) => item.bench === bench.id);
-      return entry ? [{ model: row.model, entry }] : [];
+      return entry ? [{ model: row.model, providerId: row.provider.id, entry }] : [];
     })
     .sort((a, b) => b.entry.value - a.entry.value);
   if (!points.length) return null;
@@ -401,7 +435,7 @@ function BenchChart({
   const min = percent ? 0 : Math.min(...points.map((point) => point.entry.value));
   const span = max - min || 1;
   const ticks = percent ? [0, 25, 50, 75, 100] : [Math.round(min), Math.round(max)];
-  const columns = "grid-cols-[6.75rem_minmax(0,1fr)_3.25rem] sm:grid-cols-[11rem_minmax(0,1fr)_3.5rem]";
+  const columns = "grid-cols-[8.25rem_minmax(0,1fr)_3.25rem] sm:grid-cols-[12.5rem_minmax(0,1fr)_3.5rem]";
   return (
     <figure className={points.length > 6 ? "lg:col-span-2" : undefined}>
       <figcaption>
@@ -436,13 +470,18 @@ function BenchChart({
               : Math.max(((point.entry.value - min) / span) * 100, points.length > 1 ? 3 : 100);
             return (
               <li key={point.model.id} className={`grid items-center gap-x-2 ${columns}`}>
-                <span className="min-w-0">
-                  <span className="block truncate text-xs text-foreground" title={point.model.name}>
-                    {point.model.name}
+                <span className="flex min-w-0 items-start gap-1.5">
+                  <span className="mt-0.5">
+                    <ModelIcon providerId={point.providerId} />
                   </span>
-                  {point.entry.note ? (
-                    <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
-                  ) : null}
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs text-foreground" title={point.model.name}>
+                      {point.model.name}
+                    </span>
+                    {point.entry.note ? (
+                      <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
+                    ) : null}
+                  </span>
                 </span>
                 <div
                   className="relative h-3"
