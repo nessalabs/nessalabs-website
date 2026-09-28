@@ -40,9 +40,9 @@ export const modelPricing: ModelPricingCatalog = {
       id: "anthropic",
       name: "Anthropic",
       docsUrl: "https://docs.anthropic.com/en/docs/about-claude/pricing",
-      line: "Cache reads are 0.1× input, or 0.025× on Fable 5.1.",
+      line: "Cache reads are 0.1× input, 0.05× on Opus 5.5 and 0.025× on Fable 5.1.",
       billing:
-        "Claude bills input, output and prompt-cache tokens per million. A five-minute cache write is 1.25× input and a one-hour write is 2×. Cache reads are 0.1× input, or 0.025× on Fable 5.1. The Batch API is half price. Fast mode, where listed, is 2× and is not available on the Batch API. US-only inference on Claude 4.6 and later is 1.1×. Claude 4.6 and later keep one rate out to 1M tokens.",
+        "Claude bills input, output and prompt-cache tokens per million. A five-minute cache write is 1.25× input and a one-hour write is 2×. Cache reads are 0.1× input, 0.05× on Opus 5.5 and 0.025× on Fable 5.1. The Batch API is half price. Fast mode, where listed, is 2× and is not available on the Batch API. US-only inference on Claude 4.6 and later is 1.1×. Claude 4.6 and later keep one rate out to 1M tokens.",
       models: [
         claude({
           id: "claude-fable-5-1",
@@ -60,6 +60,16 @@ export const modelPricing: ModelPricingCatalog = {
           input: 10,
           output: 50,
           note: "Cache reads stay at 0.1× input. Max output 128k.",
+        }),
+        claude({
+          id: "claude-opus-5-5",
+          name: "Claude Opus 5.5",
+          context: "1M",
+          input: 4,
+          output: 20,
+          read: 0.05,
+          fast: true,
+          note: "Cache reads are 0.05× input. Fast mode is 2× across the full window. Max output 128k.",
         }),
         claude({
           id: "claude-opus-5",
@@ -94,6 +104,14 @@ export const modelPricing: ModelPricingCatalog = {
           input: 5,
           output: 25,
           note: "Opus 4.5 uses this rate. Fast mode is not available.",
+        }),
+        claude({
+          id: "claude-sonnet-5-5",
+          name: "Claude Sonnet 5.5",
+          context: "1M",
+          input: 2,
+          output: 10,
+          note: "Same token rates as Sonnet 5. Max output 128k.",
         }),
         claude({
           id: "claude-sonnet-5",

@@ -1,6 +1,7 @@
 import type { Bench, BenchScore } from "./types";
 
 const ANTHROPIC = "https://www.anthropic.com/claude-fable-and-mythos-5-1";
+const SONNET = "https://www.anthropic.com/claude-sonnet-5-5";
 const OPENAI = "https://openai.com/index/gpt-6-astra/";
 const OSWORLD = "https://osworld-v2.xlang.ai/";
 const TERMINAL = "https://snorkel.ai/leaderboard/terminal-bench-4-0/";
@@ -36,6 +37,18 @@ export const benches: Bench[] = [
     protocol: "OpenAI's v2026.08.08 offline set, partial score.",
   },
   {
+    id: "osworld-2-1",
+    name: "OSWorld 2.1 partial",
+    task: "Computer use",
+    summary: "A desktop task scored with partial credit.",
+    reading:
+      "Desktop tasks scored with partial credit on OSWorld 2.1. This is Anthropic's published partial score, not the binary strict board above.",
+    unit: "percent",
+    url: SONNET,
+    protocol:
+      "Anthropic's Sonnet 5.5 comparison, partial score, read on 28 September 2026. Not XLANG's binary strict board.",
+  },
+  {
     id: "terminal-bench-4",
     name: "Terminal-Bench 4.0",
     task: "Terminal agent",
@@ -46,6 +59,18 @@ export const benches: Bench[] = [
     url: TERMINAL,
     protocol:
       "Snorkel's Harbor run of terminal-bench/terminal-bench@4.0.0, 66 tasks. The note names the effort, the agent and the cost of that full run. The board does not publish a cost per task.",
+  },
+  {
+    id: "terminal-bench-4-anthropic",
+    name: "Terminal-Bench 4.0, Anthropic",
+    task: "Terminal agent",
+    summary: "Anthropic's Terminal-Bench 4.0 run.",
+    reading:
+      "Anthropic's own Terminal-Bench 4.0 run, published with Sonnet 5.5. It is not the Snorkel board in the row above.",
+    unit: "percent",
+    url: SONNET,
+    protocol:
+      "Anthropic's comparison, read on 28 September 2026. Opus 5.5 is at xhigh, its highest score. Sonnet 5.5's cell names no effort. No full-run cost is published. Not Snorkel's Harbor board.",
   },
   {
     id: "deepswe",
@@ -68,6 +93,28 @@ export const benches: Bench[] = [
     unit: "percent",
     url: ANTHROPIC,
     protocol: "Anthropic's comparison.",
+  },
+  {
+    id: "frontiercode",
+    name: "FrontierCode 1.1",
+    task: "Coding agent",
+    summary: "Whether an agent's code change would be merged.",
+    reading:
+      "Whether a code change would be merged without extra edits. Sonnet 5.5's marked score is xhigh, and max is named in the note.",
+    unit: "percent",
+    url: SONNET,
+    protocol:
+      "Anthropic's FrontierCode 1.1 main set, read on 28 September 2026. Sonnet 5.5's best published score is xhigh. Max scored lower because the bench penalises out-of-scope edits.",
+  },
+  {
+    id: "cursorbench-4",
+    name: "CursorBench 4.0",
+    task: "Coding agent",
+    summary: "Coding tasks taken from real Cursor sessions.",
+    reading: "Coding tasks from real Cursor sessions. This is CursorBench 4.0, not the 3.2 comparison above.",
+    unit: "percent",
+    url: SONNET,
+    protocol: "Anthropic's CursorBench 4.0 comparison, read on 28 September 2026. Not CursorBench 3.2.",
   },
   {
     id: "terminal-bench-science",
@@ -102,6 +149,51 @@ export const benches: Bench[] = [
     url: ANTHROPIC,
     protocol: "Anthropic's comparison.",
   },
+  {
+    id: "gdpval-v2-1",
+    name: "GDPval-AA v2.1",
+    task: "Knowledge work",
+    summary: "Professional knowledge-work tasks, scored as Elo.",
+    reading:
+      "Professional knowledge-work tasks, scored as Elo on GDPval-AA v2.1. A note names a pre-release run or a score that may predate a fix.",
+    unit: "elo",
+    url: SONNET,
+    protocol:
+      "Anthropic's comparison of Artificial Analysis GDPval-AA v2.1, read on 28 September 2026. Not GDPval-AA v2. Sonnet 5.5 was a pre-release run that may understate the score. GPT-6 Sol may predate an image-understanding fix.",
+  },
+  {
+    id: "aa-briefcase",
+    name: "AA-Briefcase v1.1",
+    task: "Knowledge work",
+    summary: "Long-horizon knowledge work, scored as Elo.",
+    reading:
+      "Long-horizon knowledge work, scored as Elo. A note names a pre-release run or a score that may predate a fix.",
+    unit: "elo",
+    url: SONNET,
+    protocol:
+      "Anthropic's comparison of Artificial Analysis AA-Briefcase v1.1, read on 28 September 2026. Sonnet 5.5 was a pre-release run that may understate the score. GPT-6 Sol may predate an image-understanding fix.",
+  },
+  {
+    id: "hle",
+    name: "Humanity's Last Exam",
+    task: "Reasoning",
+    summary: "Multidisciplinary questions, with tools.",
+    reading: "Multidisciplinary questions, answered with tools. Every cell on this board is a with-tools score.",
+    unit: "percent",
+    url: SONNET,
+    protocol: "Anthropic's comparison, with tools, read on 28 September 2026.",
+  },
+  {
+    id: "chartography",
+    name: "Chartography",
+    task: "Vision",
+    summary: "Reading charts, without tools.",
+    reading: "Reading charts, without tools. A note names a score checked after an image-understanding fix.",
+    unit: "percent",
+    url: SONNET,
+    protocol:
+      "Anthropic's comparison of Surge Chartography, no tools, read on 28 September 2026. GPT-6 Sol's official score may predate an image-understanding fix. Anthropic's own check says that score did not change.",
+  },
 ];
 
 function score(
@@ -135,6 +227,7 @@ function levels(...rows: [string, number, number][]): NonNullable<BenchScore["le
 }
 
 const A = ANTHROPIC;
+const S = SONNET;
 const O = OPENAI;
 const W = OSWORLD;
 const T = TERMINAL;
@@ -208,8 +301,36 @@ export const benchScores: Record<string, BenchScore[]> = {
       { effort: "medium", value: 9.3 },
     ]),
   ],
+  "claude-opus-5-5": [
+    score("terminal-bench-4-anthropic", 66.4, S, "Anthropic", "xhigh."),
+    score("frontiercode", 54.4, S, "Anthropic"),
+    score("cursorbench-4", 57.8, S, "Anthropic"),
+    score("gdpval-v2-1", 1846, S, "Anthropic"),
+    score("aa-briefcase", 1822, S, "Anthropic"),
+    score("hle", 67.7, S, "Anthropic", "With tools."),
+    score("osworld-2-1", 81.8, S, "Anthropic", "Partial."),
+    score("chartography", 64.4, S, "Anthropic", "No tools."),
+  ],
+  "claude-sonnet-5-5": [
+    score("terminal-bench-4-anthropic", 70.6, S, "Anthropic"),
+    score("frontiercode", 52.1, S, "Anthropic", "Xhigh. Max scored 46.2%."),
+    score("cursorbench-4", 55.5, S, "Anthropic"),
+    score("gdpval-v2-1", 1844, S, "Anthropic", "Pre-release run. A structured-output bug may understate this score."),
+    score("aa-briefcase", 1811, S, "Anthropic", "Pre-release run. A structured-output bug may understate this score."),
+    score("hle", 64.5, S, "Anthropic", "With tools."),
+    score("osworld-2-1", 80.1, S, "Anthropic", "Partial."),
+    score("chartography", 61.6, S, "Anthropic", "No tools."),
+  ],
   "claude-sonnet-5": [
+    score("terminal-bench-4-anthropic", 10.3, S, "Anthropic"),
     terminal(12.4, "max, Claude Code. Run $9.6k.", 9600),
+    score("frontiercode", 42.4, S, "Anthropic"),
+    score("cursorbench-4", 34.1, S, "Anthropic"),
+    score("gdpval-v2-1", 1449, S, "Anthropic"),
+    score("aa-briefcase", 1359, S, "Anthropic"),
+    score("hle", 54.9, S, "Anthropic", "With tools."),
+    score("osworld-2-1", 57.0, S, "Anthropic", "Partial."),
+    score("chartography", 15.6, S, "Anthropic", "No tools."),
     score("deepswe", 53.8, D, "Datacurve", undefined, levels(
       ["max", 53.8, 26.4],
       ["xhigh", 49.7, 11.89],
@@ -217,6 +338,12 @@ export const benchScores: Record<string, BenchScore[]> = {
       ["medium", 39.8, 4.08],
       ["low", 30.5, 2.19],
     )),
+  ],
+  "gpt-6-sol": [
+    score("frontiercode", 49.3, S, "Anthropic"),
+    score("gdpval-v2-1", 1487, S, "Anthropic", "May predate an image-understanding fix."),
+    score("aa-briefcase", 1483, S, "Anthropic", "May predate an image-understanding fix."),
+    score("chartography", 53.6, S, "Anthropic", "No tools. Image-understanding fix. Anthropic's check says this score did not change."),
   ],
   "gpt-6-astra": [
     score("osworld-offline", 72.6, O, "OpenAI"),

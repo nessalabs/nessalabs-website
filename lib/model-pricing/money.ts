@@ -109,7 +109,7 @@ export function claude(args: {
   context: string;
   input: number;
   output: number;
-  /** Cache-read multiplier. 0.1 on most models, 0.025 on Fable 5.1. */
+  /** Cache-read multiplier. 0.1 on most models, 0.05 on Opus 5.5, 0.025 on Fable 5.1. */
   read?: number;
   fast?: boolean;
   note?: string;
