@@ -1,4 +1,5 @@
 import type { ModelPricingCatalog, ModelQuote, PriceTier } from "./types";
+import { benches } from "./benches";
 import { claude, contextBands, joinTiers, price, scaleTier, tokens } from "./money";
 
 const MINUTE = "per_minute" as const;
@@ -850,4 +851,5 @@ export const modelPricing: ModelPricingCatalog = {
       ],
     },
   ],
+  benches,
 };

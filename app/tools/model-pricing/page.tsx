@@ -6,7 +6,7 @@ import { ModelPricingBrowser } from "@/components/site/model-pricing-browser";
 export const metadata: Metadata = {
   title: "Model API pricing",
   description:
-    "Published list prices for major model APIs, grouped by provider, including voice, image and tool meters.",
+    "List prices and published task-bench scores for major model APIs, grouped by provider.",
   alternates: {
     types: {
       "application/json": "/api/model-pricing",
@@ -14,7 +14,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ModelPricingPage() {
+export default async function ModelPricingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const raw = Array.isArray(params.view) ? params.view[0] : params.view;
+  const initialView = raw === "benches" ? "benches" : "prices";
+
   return (
     <div>
       <header className="mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-6 pt-10 sm:px-8 sm:pt-12">
@@ -36,12 +44,12 @@ export default function ModelPricingPage() {
           </a>
         </div>
         <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-          List prices for major model APIs, grouped by provider. Token rates are
-          USD per million tokens.
+          List prices and published task-bench scores for major model APIs. An empty
+          bench cell means that source did not publish a number.
         </p>
       </header>
       <Suspense fallback={<div className="mx-auto w-full max-w-6xl px-6 py-10 text-sm text-muted-foreground sm:px-8">Loading prices.</div>}>
-        <ModelPricingBrowser />
+        <ModelPricingBrowser initialView={initialView} />
       </Suspense>
     </div>
   );

@@ -44,6 +44,32 @@ export interface ModelQuote {
   note?: string;
   /** Set when the provider has announced an API shutdown date. */
   retiring?: string;
+  /** Published task-bench results. Absent when this catalog has none. */
+  scores?: BenchScore[];
+}
+
+/** A task bench. Cells that share a bench id share the protocol described here. */
+export interface Bench {
+  id: string;
+  name: string;
+  /** The kind of work, such as "Computer use" or "Coding agent". */
+  task: string;
+  summary: string;
+  unit: "percent" | "elo";
+  url: string;
+  /** How the numbers in this column were produced. */
+  protocol: string;
+}
+
+export interface BenchScore {
+  bench: string;
+  /** Percent from 0 to 100, or an Elo, matching the bench unit. */
+  value: number;
+  source: string;
+  /** Lab that published this cell. */
+  reportedBy: string;
+  /** Set when this cell is not the bench's main protocol. */
+  note?: string;
 }
 
 export interface Provider {
@@ -76,6 +102,8 @@ export interface ModelPricingCatalog {
   currency: "USD";
   providers: Provider[];
   gateways: Gateway[];
+  /** Task benches referenced by `ModelQuote.scores`. */
+  benches: Bench[];
 }
 
 export type TierName = "standard" | "batch" | "fast";

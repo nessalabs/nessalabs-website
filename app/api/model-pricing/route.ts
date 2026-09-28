@@ -23,7 +23,8 @@ const headers = {
  *   GET /api/model-pricing?q=kimi
  *
  * Every model includes standard, batch and fast tiers when the provider
- * publishes them. `tier` is not a filter.
+ * publishes them, plus `scores` when a task bench has a published result.
+ * Bench definitions are the top-level `benches` array. `tier` is not a filter.
  */
 export function GET(request: NextRequest) {
   const parsed = parsePricingQuery(request.nextUrl.searchParams);

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@nessa-ui/react";
 import { MONTHS, parseISO } from "@/lib/date";
@@ -10,6 +11,7 @@ import {
   modelPricing,
   queryCatalog,
   unitLabel,
+  type Bench,
   type Category,
   type ModelQuote,
   type Price,
@@ -53,7 +55,11 @@ function PriceList({ prices }: { prices?: Price[] }) {
   );
 }
 
-export function ModelPricingBrowser() {
+export function ModelPricingBrowser({
+  initialView = "prices",
+}: {
+  initialView?: "prices" | "benches";
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -97,6 +103,29 @@ export function ModelPricingBrowser() {
   ];
 
   const narrowed = Boolean(provider || category !== "all");
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const urlView = searchParams.get("view") === "benches" ? "benches" : "prices";
+  // The server passes the query in, and the address bar takes over after mount.
+  // Reading the query during the first client render disagrees with a static shell.
+  const view = mounted ? urlView : initialView;
+
+  function hrefFor(next: "prices" | "benches", reset = false) {
+    const params = reset ? new URLSearchParams() : new URLSearchParams(searchParams.toString());
+    if (next === "benches") params.set("view", "benches");
+    else params.delete("view");
+    const search = params.toString();
+    return search ? `${pathname}?${search}` : pathname;
+  }
+
+  const benchRows = result.providers.flatMap((item) =>
+    item.models.filter((model) => model.scores?.length).map((model) => ({ provider: item, model })),
+  );
+  const shownJumps = view === "benches"
+    ? benchRows
+        .filter((row, index) => benchRows[index - 1]?.provider.id !== row.provider.id)
+        .map((row) => ({ id: row.provider.id, name: row.provider.name }))
+    : jumps;
   const barRef = React.useRef<HTMLDivElement>(null);
   const [stickyOffset, setStickyOffset] = React.useState(168);
 
@@ -126,25 +155,45 @@ export function ModelPricingBrowser() {
               className="min-w-0 flex-1 md:w-56 md:flex-none"
             />
             <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-              {result.modelCount} {result.modelCount === 1 ? "model" : "models"}
+              {view === "benches" ? benchRows.length : result.modelCount}{" "}
+              {(view === "benches" ? benchRows.length : result.modelCount) === 1 ? "model" : "models"}
             </span>
           </div>
-          <nav aria-label="Providers" className="flex flex-wrap gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground md:ml-auto md:justify-end">
-            {jumps.map((item) => (
+          <nav aria-label="Providers" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground md:ml-auto md:justify-end">
+            <Link
+              href={hrefFor("prices")}
+              scroll={false}
+              aria-current={view === "prices" ? "page" : undefined}
+              className={view === "prices" ? "text-foreground" : "hover:text-foreground"}
+            >
+              Prices
+            </Link>
+            <Link
+              href={hrefFor("benches")}
+              scroll={false}
+              aria-current={view === "benches" ? "page" : undefined}
+              className={view === "benches" ? "text-foreground" : "hover:text-foreground"}
+            >
+              Benches
+            </Link>
+            {shownJumps.map((item) => (
               <a key={item.id} href={`#${item.id}`} className="hover:text-foreground">
                 {item.name}
               </a>
             ))}
             {narrowed ? (
-              <a href="/tools/model-pricing" className="hover:text-foreground">
+              <Link href={hrefFor(view, true)} scroll={false} className="hover:text-foreground">
                 Show every provider
-              </a>
+              </Link>
             ) : null}
           </nav>
         </div>
       </div>
 
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-6 pb-20 sm:px-8">
+      {view === "benches" ? (
+        <BenchSheet rows={benchRows} benches={result.benches} />
+      ) : (
       <div className="mt-8 flex flex-col">
         {result.providers.map((item) => {
           const several = new Set(item.models.map((model) => model.category)).size > 1;
@@ -252,12 +301,135 @@ export function ModelPricingBrowser() {
           <p className="text-sm text-muted-foreground">No models match.</p>
         ) : null}
       </div>
+      )}
 
       <p className="mt-16 text-xs leading-5 text-muted-foreground">
-        Checked {checkedLabel(modelPricing.updated)}. The table shows the standard list price.
-        Batch and fast tiers are in the JSON.
+        {view === "benches" ? (
+          <>
+            Checked {checkedLabel(modelPricing.updated)}. A dash means that source published no score.
+            The two OSWorld columns are different task sets.
+          </>
+        ) : (
+          <>
+            Checked {checkedLabel(modelPricing.updated)}. The table shows the standard list price.
+            Batch and fast tiers are in the JSON.
+          </>
+        )}
       </p>
     </div>
+    </div>
+  );
+}
+
+function formatBench(bench: Bench, value: number) {
+  if (bench.unit === "elo") return Math.round(value).toLocaleString("en-GB");
+  return `${value.toFixed(1)}%`;
+}
+
+function BenchSheet({
+  rows,
+  benches,
+}: {
+  rows: { provider: { id: string; name: string }; model: ModelQuote }[];
+  benches: Bench[];
+}) {
+  if (!rows.length) {
+    return <p className="mt-10 text-sm text-muted-foreground">No published scores match.</p>;
+  }
+
+  const groups: { id: string; name: string; models: ModelQuote[] }[] = [];
+  for (const row of rows) {
+    const last = groups[groups.length - 1];
+    if (!last || last.id !== row.provider.id) {
+      groups.push({ id: row.provider.id, name: row.provider.name, models: [row.model] });
+    } else {
+      last.models.push(row.model);
+    }
+  }
+
+  return (
+    <div className="mt-8">
+      <div className="min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[920px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-border text-xs text-muted-foreground">
+              <th className="sticky left-0 z-10 bg-background py-2 pr-4 text-left font-medium">Model</th>
+              {benches.map((bench) => (
+                <th key={bench.id} className="px-3 py-2 text-right font-medium">
+                  <a href={bench.url} target="_blank" rel="noreferrer" className="hover:text-foreground">
+                    {bench.name}
+                  </a>
+                  <span className="mt-0.5 block font-normal">{bench.task}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          {groups.map((group) => (
+            <tbody key={group.id} id={group.id} className="scroll-mt-[var(--pricing-sticky)]">
+              <tr>
+                <td
+                  colSpan={benches.length + 1}
+                  className="sticky left-0 bg-background pb-1 pt-6 text-xs font-medium text-muted-foreground"
+                >
+                  {group.name}
+                </td>
+              </tr>
+              {group.models.map((model) => (
+                <tr key={model.id} className="border-b border-border align-top">
+                  <th
+                    scope="row"
+                    className="sticky left-0 z-10 bg-background py-3 pr-4 text-left font-normal"
+                  >
+                    <div className="font-medium text-foreground">{model.name}</div>
+                    <div className="mt-0.5 font-mono text-xs text-muted-foreground">{model.id}</div>
+                  </th>
+                  {benches.map((bench) => {
+                    const entry = model.scores?.find((item) => item.bench === bench.id);
+                    return (
+                      <td key={bench.id} className="px-3 py-3 text-right">
+                        {entry ? (
+                          <>
+                            <span className="font-mono text-sm tabular-nums text-foreground">
+                              {formatBench(bench, entry.value)}
+                            </span>
+                            {entry.note ? (
+                              <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
+                                {entry.note}
+                              </span>
+                            ) : null}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          ))}
+        </table>
+      </div>
+      <dl className="mt-10 max-w-3xl">
+        {benches.map((bench) => (
+          <div key={bench.id} className="border-t border-border py-3">
+            <dt className="text-sm text-foreground">
+              <a
+                href={bench.url}
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                {bench.name}
+              </a>
+              <span className="text-muted-foreground"> · {bench.task}</span>
+            </dt>
+            <dd className="mt-1 text-sm leading-6 text-muted-foreground">
+              {bench.summary} {bench.protocol}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { benchScores } from "./benches";
 import { modelPricing } from "./catalog";
 
 const seen = new Set<string>();
@@ -8,6 +9,8 @@ for (const provider of modelPricing.providers) {
       throw new Error(`Duplicate model id ${key}`);
     }
     seen.add(key);
+    const scores = benchScores[model.id];
+    if (scores) model.scores = scores;
     const tiers = [model.standard, model.batch, model.fast];
     for (const tier of tiers) {
       if (!tier) continue;
@@ -19,7 +22,22 @@ for (const provider of modelPricing.providers) {
         }
       }
     }
+    for (const entry of model.scores ?? []) {
+      const bench = modelPricing.benches.find((item) => item.id === entry.bench);
+      if (!bench) throw new Error(`Unknown bench ${entry.bench} on ${key}`);
+      if (!Number.isFinite(entry.value)) throw new Error(`Invalid score on ${key}`);
+      if (bench.unit === "percent" && (entry.value < 0 || entry.value > 100)) {
+        throw new Error(`Percent score out of range on ${key}`);
+      }
+    }
   }
+}
+
+const modelIds = new Set(
+  modelPricing.providers.flatMap((provider) => provider.models.map((model) => model.id)),
+);
+for (const id of Object.keys(benchScores)) {
+  if (!modelIds.has(id)) throw new Error(`Bench score for unknown model ${id}`);
 }
 
 export { modelPricing } from "./catalog";
@@ -28,6 +46,8 @@ export { parsePricingQuery, providerIds, queryCatalog } from "./query";
 export type { PricingQuery, PricingQueryResult } from "./query";
 export { CATEGORIES, TIERS } from "./types";
 export type {
+  Bench,
+  BenchScore,
   Category,
   Gateway,
   ModelPricingCatalog,

@@ -20,6 +20,7 @@ export interface PricingQueryResult {
   query: PricingQuery;
   providers: Provider[];
   gateways: Gateway[];
+  benches: ModelPricingCatalog["benches"];
   modelCount: number;
 }
 
@@ -82,6 +83,10 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
     model.category,
     model.note,
     model.retiring,
+    ...(model.scores ?? []).flatMap((entry) => {
+      const bench = modelPricing.benches.find((item) => item.id === entry.bench);
+      return [entry.bench, entry.note, entry.reportedBy, bench?.name, bench?.task];
+    }),
   ]
     .filter(Boolean)
     .join(" ");
@@ -122,6 +127,7 @@ export function queryCatalog(
     query,
     providers,
     gateways,
+    benches: catalog.benches,
     modelCount: providers.reduce((sum, provider) => sum + provider.models.length, 0),
   };
 }
