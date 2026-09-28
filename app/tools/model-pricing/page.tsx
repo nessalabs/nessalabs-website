@@ -44,8 +44,8 @@ export default async function ModelPricingPage({
           </a>
         </div>
         <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-          List prices and published task-bench scores for major model APIs. An empty
-          bench cell means that source did not publish a number.
+          List prices and published task-bench scores for major model APIs. Each bench
+          is one board, and an empty cell means that board published no score.
         </p>
       </header>
       <Suspense fallback={<div className="mx-auto w-full max-w-6xl px-6 py-10 text-sm text-muted-foreground sm:px-8">Loading prices.</div>}>

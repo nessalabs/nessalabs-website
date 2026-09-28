@@ -306,8 +306,9 @@ export function ModelPricingBrowser({
       <p className="mt-16 text-xs leading-5 text-muted-foreground">
         {view === "benches" ? (
           <>
-            Checked {checkedLabel(modelPricing.updated)}. A dash means that source published no score.
-            The two OSWorld columns are different task sets.
+            Prices checked {checkedLabel(modelPricing.updated)}. Bench scores were read from the
+            linked boards on 28 September 2026. A dash means that board published no score. The two
+            OSWorld rows use different task sets.
           </>
         ) : (
           <>
@@ -350,71 +351,100 @@ function BenchCharts({
     <div>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">By bench</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        One chart per bench. A model is left off when that source published no score.
+        One chart per board, grouped by the kind of work. A model is left off when that board
+        published no score.
       </p>
-      <div className="mt-6 grid gap-x-10 gap-y-8 lg:grid-cols-2">
-        {benches.map((bench) => {
-          const points = rows
-            .flatMap((row) => {
-              const entry = row.model.scores?.find((item) => item.bench === bench.id);
-              return entry ? [{ model: row.model, entry }] : [];
-            })
-            .sort((a, b) => b.entry.value - a.entry.value);
-          if (!points.length) return null;
-          const max = bench.unit === "percent" ? 100 : Math.max(...points.map((point) => point.entry.value));
-          const min = bench.unit === "percent" ? 0 : Math.min(...points.map((point) => point.entry.value));
-          const span = max - min || 1;
+      <div className="mt-8 flex flex-col gap-10">
+        {benchGroups(benches).map((group) => (
+          <section key={group.task} aria-label={group.task}>
+            <h3 className="text-sm font-medium text-muted-foreground">{group.task}</h3>
+            <div className="mt-4 grid gap-x-10 gap-y-8 lg:grid-cols-2">
+              {group.benches.map((bench) => (
+                <BenchChart key={bench.id} bench={bench} rows={rows} color={color} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function benchGroups(benches: Bench[]) {
+  const groups: { task: string; benches: Bench[] }[] = [];
+  for (const bench of benches) {
+    const last = groups.at(-1);
+    if (last?.task === bench.task) last.benches.push(bench);
+    else groups.push({ task: bench.task, benches: [bench] });
+  }
+  return groups;
+}
+
+function BenchChart({
+  bench,
+  rows,
+  color,
+}: {
+  bench: Bench;
+  rows: { provider: { id: string; name: string }; model: ModelQuote }[];
+  color: Map<string, string>;
+}) {
+  const points = rows
+    .flatMap((row) => {
+      const entry = row.model.scores?.find((item) => item.bench === bench.id);
+      return entry ? [{ model: row.model, entry }] : [];
+    })
+    .sort((a, b) => b.entry.value - a.entry.value);
+  if (!points.length) return null;
+  const max = bench.unit === "percent" ? 100 : Math.max(...points.map((point) => point.entry.value));
+  const min = bench.unit === "percent" ? 0 : Math.min(...points.map((point) => point.entry.value));
+  const span = max - min || 1;
+  return (
+    <div>
+      <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
+      {bench.unit === "elo" ? (
+        <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
+      ) : null}
+      <ul className="mt-3 flex flex-col gap-3">
+        {points.map((point) => {
+          const width =
+            bench.unit === "percent"
+              ? (point.entry.value / max) * 100
+              : 12 + ((point.entry.value - min) / span) * 88;
           return (
-            <section key={bench.id} aria-label={bench.name}>
-              <h3 className="text-sm font-medium text-foreground">{bench.name}</h3>
-              <p className="text-xs text-muted-foreground">
-                {bench.task}
-                {bench.unit === "elo" ? ". Bars show the spread between these scores." : ""}
-              </p>
-              <ul className="mt-3 flex flex-col gap-3">
-                {points.map((point) => {
-                  const width =
-                    bench.unit === "percent"
-                      ? (point.entry.value / max) * 100
-                      : 12 + ((point.entry.value - min) / span) * 88;
-                  return (
-                    <li key={point.model.id}>
-                      <div className="flex items-baseline justify-between gap-3 text-sm">
-                        <span className="flex min-w-0 items-center gap-2">
-                          <span
-                            className="size-2 shrink-0 rounded-full"
-                            style={{ background: color.get(point.model.id) }}
-                          />
-                          <span className="truncate text-foreground">{point.model.name}</span>
-                        </span>
-                        <span className="shrink-0 font-mono text-sm tabular-nums text-foreground">
-                          {formatBench(bench, point.entry.value)}
-                        </span>
-                      </div>
-                      <div
-                        className="mt-1 h-1.5 rounded-full bg-muted"
-                        role="meter"
-                        aria-valuenow={point.entry.value}
-                        aria-valuemin={min}
-                        aria-valuemax={max}
-                        aria-label={`${point.model.name}, ${bench.name}`}
-                      >
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${width}%`, background: color.get(point.model.id) }}
-                        />
-                      </div>
-                      {point.entry.note ? (
-                        <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{point.entry.note}</p>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
+            <li key={point.model.id}>
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ background: color.get(point.model.id) }}
+                  />
+                  <span className="truncate text-foreground">{point.model.name}</span>
+                </span>
+                <span className="shrink-0 font-mono text-sm tabular-nums text-foreground">
+                  {formatBench(bench, point.entry.value)}
+                </span>
+              </div>
+              <div
+                className="mt-1 h-1.5 rounded-full bg-muted"
+                role="meter"
+                aria-valuenow={point.entry.value}
+                aria-valuemin={min}
+                aria-valuemax={max}
+                aria-label={`${point.model.name}, ${bench.name}`}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${width}%`, background: color.get(point.model.id) }}
+                />
+              </div>
+              {point.entry.note ? (
+                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{point.entry.note}</p>
+              ) : null}
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -435,7 +465,7 @@ function BenchSheet({
       <BenchCharts rows={rows} benches={benches} />
       <h2 className="mt-14 text-lg font-semibold tracking-tight text-foreground">Scores</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        The marked cell is the highest published score on that row.
+        Each row is one board. The marked cell is the highest score on that row.
       </p>
       <div className="mt-4 min-w-0 overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-center">

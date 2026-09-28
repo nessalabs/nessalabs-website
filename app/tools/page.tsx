@@ -13,7 +13,7 @@ const tools = [
     endpoint: "/api/model-pricing",
     name: "Model API pricing",
     description:
-      "List prices and published scores on computer-use, coding-agent and research benches, grouped by provider.",
+      "List prices and published scores on computer-use, terminal, coding and research benches, grouped by provider.",
   },
 ];
 
