@@ -327,6 +327,10 @@ function formatBench(bench: Bench, value: number) {
   return `${value.toFixed(1)}%`;
 }
 
+function formatTaskUsd(usd: number) {
+  return `$${usd.toFixed(2)}`;
+}
+
 const MODEL_ICONS: Record<string, { src: string; dark?: string; invert?: boolean }> = {
   anthropic: { src: "/model-icons/claude-color.svg" },
   openai: { src: "/model-icons/openai.svg", invert: true },
@@ -435,12 +439,16 @@ function BenchChart({
   const min = percent ? 0 : Math.min(...points.map((point) => point.entry.value));
   const span = max - min || 1;
   const ticks = percent ? [0, 25, 50, 75, 100] : [Math.round(min), Math.round(max)];
-  const columns = "grid-cols-[8.25rem_minmax(0,1fr)_3.25rem] sm:grid-cols-[12.5rem_minmax(0,1fr)_3.5rem]";
+  const columns = "grid-cols-[8.25rem_minmax(0,1fr)_3.75rem] sm:grid-cols-[12.5rem_minmax(0,1fr)_4rem]";
   return (
     <figure className={points.length > 6 ? "lg:col-span-2" : undefined}>
       <figcaption>
         <h4 className="text-sm font-medium text-foreground">{bench.name}</h4>
-        {percent ? null : (
+        {points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
+          <p className="text-xs text-muted-foreground">
+            Each thinking level that board published, with its mean cost per task.
+          </p>
+        ) : percent ? null : (
           <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
         )}
       </figcaption>
@@ -465,42 +473,59 @@ function BenchChart({
           ) : null}
           <ul className="relative flex flex-col gap-2.5">
           {points.map((point) => {
-            const width = percent
-              ? (point.entry.value / max) * 100
-              : Math.max(((point.entry.value - min) / span) * 100, points.length > 1 ? 3 : 100);
-            return (
-              <li key={point.model.id} className={`grid items-center gap-x-2 ${columns}`}>
-                <span className="flex min-w-0 items-start gap-1.5">
-                  <span className="mt-0.5">
-                    <ModelIcon providerId={point.providerId} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-xs text-foreground" title={point.model.name}>
-                      {point.model.name}
+            const ladder = (point.entry.levels?.length ?? 0) > 1 ? point.entry.levels! : null;
+            const reads = ladder ?? [{ effort: point.entry.note ?? "", value: point.entry.value, usd: point.entry.usd }];
+            return reads.map((level, index) => {
+              const width = percent
+                ? (level.value / max) * 100
+                : Math.max(((level.value - min) / span) * 100, points.length > 1 ? 3 : 100);
+              const label = ladder ? `${point.model.name}, ${level.effort}` : point.model.name;
+              return (
+                <li
+                  key={ladder ? `${point.model.id}-${level.effort}` : point.model.id}
+                  className={`grid items-center gap-x-2 ${columns} ${index === 0 ? "mt-3 first:mt-0" : ""}`}
+                >
+                  {index === 0 ? (
+                    <span className="flex min-w-0 items-start gap-1.5">
+                      <span className="mt-0.5">
+                        <ModelIcon providerId={point.providerId} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-xs text-foreground" title={point.model.name}>
+                          {point.model.name}
+                        </span>
+                        {ladder ? (
+                          <span className="block text-[11px] leading-4 text-muted-foreground">{level.effort}</span>
+                        ) : point.entry.note ? (
+                          <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
+                        ) : null}
+                      </span>
                     </span>
-                    {point.entry.note ? (
-                      <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
+                  ) : (
+                    <span className="truncate pl-5 text-[11px] leading-4 text-muted-foreground">{level.effort}</span>
+                  )}
+                  <div
+                    className="relative h-2.5"
+                    role="meter"
+                    aria-valuenow={level.value}
+                    aria-valuemin={min}
+                    aria-valuemax={max}
+                    aria-label={`${label}, ${bench.name}`}
+                  >
+                    <span
+                      className="absolute inset-y-0 left-0 rounded-sm"
+                      style={{ width: `${width}%`, background: color.get(point.model.id) }}
+                    />
+                  </div>
+                  <span className="text-right font-mono text-xs tabular-nums text-foreground">
+                    <span className="block">{formatBench(bench, level.value)}</span>
+                    {level.usd !== undefined ? (
+                      <span className="block text-[11px] text-muted-foreground">{formatTaskUsd(level.usd)}</span>
                     ) : null}
                   </span>
-                </span>
-                <div
-                  className="relative h-3"
-                  role="meter"
-                  aria-valuenow={point.entry.value}
-                  aria-valuemin={min}
-                  aria-valuemax={max}
-                  aria-label={`${point.model.name}, ${bench.name}`}
-                >
-                  <span
-                    className="absolute inset-y-0 left-0 rounded-sm"
-                    style={{ width: `${width}%`, background: color.get(point.model.id) }}
-                  />
-                </div>
-                <span className="text-right font-mono text-xs tabular-nums text-foreground">
-                  {formatBench(bench, point.entry.value)}
-                </span>
-              </li>
-            );
+                </li>
+              );
+            });
           })}
         </ul>
         </div>
@@ -534,7 +559,7 @@ function BenchSheet({
       <BenchCharts rows={rows} benches={benches} />
       <h2 className="mt-14 text-lg font-semibold tracking-tight text-foreground">Scores</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-        Each row is one board. The marked cell is the highest score on that row.
+        Each row is one board. A list is every published thinking level, and a dollar amount there is the mean cost per task. The marked cell is the highest score on that row.
       </p>
       <div className="mt-4 min-w-0 overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-center">
@@ -594,9 +619,21 @@ function BenchSheet({
                             <span className="font-mono text-sm tabular-nums text-foreground">
                               {formatBench(bench, entry.value)}
                             </span>
-                            {entry.note ? (
+                            {entry.levels && entry.levels.length > 1 ? (
+                              <span className="mt-1 flex flex-col gap-0.5 text-[11px] leading-4 text-muted-foreground">
+                                {entry.levels.map((level) => (
+                                  <span key={level.effort}>
+                                    {level.effort} {formatBench(bench, level.value)}
+                                    {level.usd !== undefined ? ` · ${formatTaskUsd(level.usd)}` : ""}
+                                  </span>
+                                ))}
+                              </span>
+                            ) : entry.note || entry.usd !== undefined ? (
                               <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
                                 {entry.note}
+                                {entry.usd !== undefined ? (
+                                  <span className="mt-0.5 block">{formatTaskUsd(entry.usd)} a task</span>
+                                ) : null}
                               </span>
                             ) : null}
                           </>

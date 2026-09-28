@@ -29,6 +29,18 @@ for (const provider of modelPricing.providers) {
       if (bench.unit === "percent" && (entry.value < 0 || entry.value > 100)) {
         throw new Error(`Percent score out of range on ${key}`);
       }
+      for (const level of entry.levels ?? []) {
+        if (!level.effort || !Number.isFinite(level.value)) throw new Error(`Invalid level on ${key}`);
+        if (bench.unit === "percent" && (level.value < 0 || level.value > 100)) {
+          throw new Error(`Percent level out of range on ${key}`);
+        }
+        if (level.usd !== undefined && (!Number.isFinite(level.usd) || level.usd < 0)) {
+          throw new Error(`Invalid level cost on ${key}`);
+        }
+      }
+      if (entry.usd !== undefined && (!Number.isFinite(entry.usd) || entry.usd < 0)) {
+        throw new Error(`Invalid score cost on ${key}`);
+      }
     }
   }
 }
@@ -47,6 +59,7 @@ export type { PricingQuery, PricingQueryResult } from "./query";
 export { CATEGORIES, TIERS } from "./types";
 export type {
   Bench,
+  BenchLevel,
   BenchScore,
   Category,
   Gateway,

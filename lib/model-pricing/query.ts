@@ -85,7 +85,19 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
     model.retiring,
     ...(model.scores ?? []).flatMap((entry) => {
       const bench = modelPricing.benches.find((item) => item.id === entry.bench);
-      return [entry.bench, entry.note, entry.reportedBy, bench?.name, bench?.task];
+      return [
+        entry.bench,
+        entry.note,
+        entry.reportedBy,
+        ...(entry.levels ?? []).flatMap((level) => [
+          level.effort,
+          String(level.value),
+          level.usd !== undefined ? String(level.usd) : "",
+        ]),
+        entry.usd !== undefined ? String(entry.usd) : "",
+        bench?.name,
+        bench?.task,
+      ];
     }),
   ]
     .filter(Boolean)

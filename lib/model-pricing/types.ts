@@ -61,15 +61,27 @@ export interface Bench {
   protocol: string;
 }
 
+export interface BenchLevel {
+  /** Harness thinking setting, such as "max" or "xhigh". */
+  effort: string;
+  value: number;
+  /** Mean USD per task, when that board published one. */
+  usd?: number;
+}
+
 export interface BenchScore {
   bench: string;
-  /** Percent from 0 to 100, or an Elo, matching the bench unit. */
+  /** Percent from 0 to 100, or an Elo, matching the bench unit. The best level when `levels` is set. */
   value: number;
   source: string;
   /** Lab that published this cell. */
   reportedBy: string;
   /** Set when this cell is not the bench's main protocol. */
   note?: string;
+  /** Every thinking level that board published. Absent when it published one row. */
+  levels?: BenchLevel[];
+  /** Mean USD per task, when the board published one row and a per-task cost. */
+  usd?: number;
 }
 
 export interface Provider {
