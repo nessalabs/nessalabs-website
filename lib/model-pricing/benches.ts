@@ -2,6 +2,7 @@ import type { Bench, BenchScore } from "./types";
 
 const ANTHROPIC = "https://www.anthropic.com/claude-fable-and-mythos-5-1";
 const OPENAI = "https://openai.com/index/gpt-6-astra/";
+const OSWORLD = "https://osworld-v2.xlang.ai/";
 const TERMINAL = "https://snorkel.ai/leaderboard/terminal-bench-4-0/";
 const DEEPSWE = "https://deepswe.datacurve.ai/";
 
@@ -17,11 +18,11 @@ export const benches: Bench[] = [
     task: "Computer use",
     summary: "A desktop task counts only when the whole task finishes.",
     reading:
-      "A desktop task scores only when it finishes completely. This is Anthropic's August 2026 set, and partial credit is named in the note.",
+      "A desktop task scores only when it finishes completely. Each cell is that model's latest run on XLANG's full set at 500 steps, and partial credit is named in the note.",
     unit: "percent",
-    url: ANTHROPIC,
+    url: OSWORLD,
     protocol:
-      "Anthropic's run on the authors' August 2026 task release. Safeguards scored a zero where they stopped Fable. Not the same set as the offline row.",
+      "XLANG's official board, full set, 500-step budget, binary accuracy. Read on 28 September 2026 from the board dated 17 September 2026. Where a model has several thinking levels, each one is listed and the marked number is the best binary score. The board prints one or two decimals. These figures keep one. A note names the partial score and, where the row is not from the original runs, the release. v2.1, the August 2026 release and the original runs are not one task list. Not the same set as the offline row.",
   },
   {
     id: "osworld-offline",
@@ -135,13 +136,13 @@ function levels(...rows: [string, number, number][]): NonNullable<BenchScore["le
 
 const A = ANTHROPIC;
 const O = OPENAI;
+const W = OSWORLD;
 const T = TERMINAL;
 const D = DEEPSWE;
 
 /** Keyed by model id. Models with no entry have no published score in this catalog. */
 export const benchScores: Record<string, BenchScore[]> = {
   "claude-fable-5-1": [
-    score("osworld-strict", 41.7, A, "Anthropic", "Partial 77.9%."),
     terminal(57.9, "max, Claude Code. Run $6.2k.", 6200),
     score("terminal-bench-science", 52.6, A, "Anthropic"),
     score("automation-bench", 31.4, A, "Anthropic"),
@@ -149,7 +150,6 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1853, A, "Anthropic"),
   ],
   "claude-fable-5": [
-    score("osworld-strict", 36.1, A, "Anthropic", "Partial 72.9%."),
     terminal(44.5, "max, Claude Code. Run $7.3k.", 7300),
     score("deepswe", 69.9, D, "Datacurve", undefined, levels(
       ["max", 69.7, 21.63],
@@ -164,7 +164,13 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1723, A, "Anthropic"),
   ],
   "claude-opus-5": [
-    score("osworld-strict", 39.6, A, "Anthropic", "Partial 75.4%."),
+    score("osworld-strict", 44.3, W, "XLANG", "v2.1. Partial 77.7%.", [
+      { effort: "max", value: 44.3 },
+      { effort: "xhigh", value: 33.3 },
+      { effort: "high", value: 36.9 },
+      { effort: "medium", value: 33.0 },
+      { effort: "low", value: 18.8 },
+    ]),
     terminal(53.9, "xhigh, Claude Code. Run $6.1k.", 6100),
     score("deepswe", 73.6, D, "Datacurve", undefined, levels(
       ["max", 73.6, 11.84],
@@ -179,6 +185,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("gdpval", 1824, A, "Anthropic"),
   ],
   "claude-opus-4-8": [
+    score("osworld-strict", 20.6, W, "XLANG", "Partial 54.8%. Batched tools."),
     terminal(23.6, "max, Claude Code. Run $6.5k.", 6500),
     score("deepswe", 59.0, D, "Datacurve", undefined, levels(
       ["max", 59.0, 13.22],
@@ -187,6 +194,15 @@ export const benchScores: Record<string, BenchScore[]> = {
       ["medium", 48.7, 3.44],
       ["low", 40.8, 2.29],
     )),
+  ],
+  "claude-opus-4-7": [
+    score("osworld-strict", 18.2, W, "XLANG", "Partial 48.9%. Batched tools."),
+  ],
+  "claude-sonnet-4-6": [
+    score("osworld-strict", 9.3, W, "XLANG", "Partial 33.9% at medium.", [
+      { effort: "max", value: 8.3 },
+      { effort: "medium", value: 9.3 },
+    ]),
   ],
   "claude-sonnet-5": [
     terminal(12.4, "max, Claude Code. Run $9.6k.", 9600),
@@ -212,6 +228,7 @@ export const benchScores: Record<string, BenchScore[]> = {
     score("automation-bench", 41.4, O, "OpenAI", "OpenAI's run."),
   ],
   "gpt-5.6-sol": [
+    score("osworld-strict", 27.3, W, "XLANG", "max. v2026.08.08. Partial 62.7%."),
     score("osworld-offline", 65.7, O, "OpenAI"),
     terminal(37.3, "max, Codex. Run $2.5k.", 2500),
     score("deepswe", 72.7, D, "Datacurve", undefined, levels(
@@ -268,6 +285,18 @@ export const benchScores: Record<string, BenchScore[]> = {
   "grok-4.5": [
     terminal(12.4, "high, Grok Build. Run $2.1k.", 2100),
     score("deepswe", 53.8, D, "Datacurve", "high.", undefined, 2.42),
+  ],
+  "gpt-5.5": [
+    score("osworld-strict", 13.0, W, "XLANG", "xhigh. Partial 49.5%."),
+  ],
+  "kimi-k2.6": [
+    score("osworld-strict", 4.6, W, "XLANG", "Partial 22.1%."),
+  ],
+  "qwen3.7-plus": [
+    score("osworld-strict", 2.8, W, "XLANG", "Partial 21.5%."),
+  ],
+  "minimax-m3": [
+    score("osworld-strict", 4.6, W, "XLANG", "Partial 22.3%."),
   ],
   "kimi-k2.7-code": [
     score("deepswe", 30.5, D, "Datacurve", "No effort setting.", undefined, 2.82),

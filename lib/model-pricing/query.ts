@@ -72,6 +72,51 @@ function matchesText(haystack: string, needle: string): boolean {
   return haystack.toLowerCase().includes(needle.toLowerCase());
 }
 
+function normalize(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9.]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function compact(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+/** Adjacent transpositions count as one change, which covers a swapped pair of letters. */
+function editDistance(a: string, b: string) {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const dp: number[][] = Array.from({ length: rows }, () => Array(cols).fill(0));
+  for (let i = 0; i < rows; i++) dp[i][0] = i;
+  for (let j = 0; j < cols; j++) dp[0][j] = j;
+  for (let i = 1; i < rows; i++) {
+    for (let j = 1; j < cols; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function tokenClose(query: string, candidate: string) {
+  if (candidate.includes(query) || (query.length >= 4 && query.includes(candidate) && candidate.length >= 4)) return true;
+  const limit = query.length <= 3 ? 0 : query.length <= 5 ? 1 : 2;
+  if (Math.abs(query.length - candidate.length) > limit) return false;
+  return editDistance(query, candidate) <= limit;
+}
+
+/** Model names, ids and provider names. A misspelt word still matches when it is one or two edits away. */
+function lexicalMatch(haystack: string, query: string) {
+  const q = normalize(query);
+  const h = normalize(haystack);
+  if (!q) return true;
+  if (h.includes(q) || compact(h).includes(compact(q))) return true;
+  const qTokens = q.split(" ").filter(Boolean);
+  const hTokens = h.split(" ").filter((token) => token.length > 1);
+  return qTokens.every((token) => hTokens.some((candidate) => tokenClose(token, candidate)));
+}
+
 function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery): boolean {
   if (query.category && model.category !== query.category) return false;
   if (!query.q) return true;
@@ -103,7 +148,8 @@ function modelMatches(provider: Provider, model: ModelQuote, query: PricingQuery
   ]
     .filter(Boolean)
     .join(" ");
-  return matchesText(blob, query.q);
+  const identity = [provider.name, provider.id, model.name, model.id].join(" ");
+  return lexicalMatch(identity, query.q) || matchesText(blob, query.q);
 }
 
 export function queryCatalog(
@@ -128,7 +174,8 @@ export function queryCatalog(
       gateway.summary,
       ...gateway.fees.flatMap((fee) => [fee.name, fee.detail]),
     ].join(" ");
-    return matchesText(blob, query.q);
+    const identity = [gateway.name, gateway.id].join(" ");
+    return lexicalMatch(identity, query.q) || matchesText(blob, query.q);
   });
 
   // A category or text filter with no provider should still be able to hide

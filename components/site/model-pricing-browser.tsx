@@ -99,11 +99,6 @@ export function ModelPricingBrowser({
     q: q || undefined,
   });
 
-  const jumps = [
-    ...result.providers.map((item) => ({ id: item.id, name: item.name })),
-    ...result.gateways.map((item) => ({ id: item.id, name: item.name })),
-  ];
-
   const narrowed = Boolean(provider || category !== "all");
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -123,11 +118,6 @@ export function ModelPricingBrowser({
   const benchRows = result.providers.flatMap((item) =>
     item.models.filter((model) => model.scores?.length).map((model) => ({ provider: item, model })),
   );
-  const shownJumps = view === "benches"
-    ? benchRows
-        .filter((row, index) => benchRows[index - 1]?.provider.id !== row.provider.id)
-        .map((row) => ({ id: row.provider.id, name: row.provider.name }))
-    : jumps;
   const barRef = React.useRef<HTMLDivElement>(null);
   const [stickyOffset, setStickyOffset] = React.useState(168);
 
@@ -152,8 +142,8 @@ export function ModelPricingBrowser({
             <Input
               value={q}
               onChange={(event) => setQ(event.target.value)}
-              placeholder="Filter models"
-              aria-label="Filter models"
+              placeholder="Find a model"
+              aria-label="Find a model"
               className="min-w-0 flex-1 md:w-56 md:flex-none"
             />
             <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
@@ -161,7 +151,7 @@ export function ModelPricingBrowser({
               {(view === "benches" ? benchRows.length : result.modelCount) === 1 ? "model" : "models"}
             </span>
           </div>
-          <nav aria-label="Providers" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground md:ml-auto md:justify-end">
+          <nav aria-label="View" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-6 text-muted-foreground md:ml-auto md:justify-end">
             <Link
               href={hrefFor("prices")}
               scroll={false}
@@ -178,11 +168,6 @@ export function ModelPricingBrowser({
             >
               Benches
             </Link>
-            {shownJumps.map((item) => (
-              <a key={item.id} href={`#${item.id}`} className="hover:text-foreground">
-                {item.name}
-              </a>
-            ))}
             {narrowed ? (
               <Link href={hrefFor(view, true)} scroll={false} className="hover:text-foreground">
                 Show every provider
@@ -822,7 +807,9 @@ function BenchChart({
           </p>
         ) : points.some((point) => (point.entry.levels?.length ?? 0) > 1) ? (
           <p className="text-xs text-muted-foreground">
-            Each thinking level that board published, with its mean cost per task.
+            {points.some((point) => point.entry.levels?.some((level) => level.usd !== undefined))
+              ? "Each thinking level that board published, with its mean cost per task."
+              : "Each thinking level that board published."}
           </p>
         ) : percent ? null : (
           <p className="text-xs text-muted-foreground">Bars show the spread between these scores.</p>
@@ -873,10 +860,11 @@ function BenchChart({
                         <span className="block truncate text-xs text-foreground" title={point.model.name}>
                           {point.model.name}
                         </span>
+                        {point.entry.note ? (
+                          <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
+                        ) : null}
                         {ladder ? (
                           <span className="block text-[11px] leading-4 text-muted-foreground">{level.effort}</span>
-                        ) : point.entry.note ? (
-                          <span className="block text-[11px] leading-4 text-muted-foreground">{point.entry.note}</span>
                         ) : null}
                       </span>
                     </span>
@@ -933,15 +921,13 @@ function scoreReadout(bench: Bench, entry: BenchScore): { effort: string; lines:
   const levels = entry.levels && entry.levels.length > 1 ? entry.levels : null;
   if (levels) {
     const effort = levels.find((level) => level.value === entry.value)?.effort ?? "";
-    return {
-      effort,
-      caveat: null,
-      lines: levels.map((level) => ({
-        key: level.effort,
-        best: level.effort === effort && level.value === entry.value,
-        text: `${level.effort} ${formatBench(bench, level.value)}${level.usd !== undefined ? ` · ${formatTaskUsd(level.usd)} a task` : ""}`,
-      })),
-    };
+    const lines: ScoreLine[] = levels.map((level) => ({
+      key: level.effort,
+      best: level.effort === effort && level.value === entry.value,
+      text: `${level.effort} ${formatBench(bench, level.value)}${level.usd !== undefined ? ` · ${formatTaskUsd(level.usd)} a task` : ""}`,
+    }));
+    if (entry.note) lines.push({ key: "note", best: false, text: entry.note, wrap: true });
+    return { effort, caveat: null, lines };
   }
   const effort = publishedEffort(entry.note);
   const lines: ScoreLine[] = [];
@@ -1083,8 +1069,9 @@ function BenchSheet({
       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
         Each row is one board, and the shaded cell is the highest score on that row. A cell shows the best score with its thinking level in brackets, and hovering it lists the other figures for that score.
       </p>
-      <div className="mt-4 min-w-0 overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-center">
+      <div className="mt-4 max-w-full overflow-hidden [contain:paint]">
+        <div className="min-w-0 overflow-x-auto">
+        <table className="w-max min-w-full border-collapse text-center">
           <thead>
             <tr>
               <th className="sticky left-0 z-10 border border-border bg-background px-3 py-3 text-left text-xs font-medium text-muted-foreground">
@@ -1149,6 +1136,7 @@ function BenchSheet({
             })}
           </tbody>
         </table>
+        </div>
       </div>
       <details className="group mt-10 max-w-3xl">
         <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-foreground [&::-webkit-details-marker]:hidden">
@@ -1182,6 +1170,12 @@ function BenchSheet({
   );
 }
 
+function hasListPrice(model: ModelQuote) {
+  return [model.standard, model.batch, model.fast].some((tier) =>
+    Boolean(tier && [tier.input, tier.cachedInput, tier.cacheWrite, tier.output].some((list) => list && list.length > 0)),
+  );
+}
+
 function ModelCard({ model }: { model: ModelQuote }) {
   const rates = model.standard;
   const fields = [
@@ -1195,6 +1189,9 @@ function ModelCard({ model }: { model: ModelQuote }) {
     <article className="border-b border-border py-4">
       <h3 className="font-medium text-foreground">{model.name}</h3>
       <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">{model.id}</p>
+      {!hasListPrice(model) && model.note ? (
+        <p className="mt-1 text-xs text-muted-foreground">{model.note}</p>
+      ) : null}
       {model.retiring ? <p className="mt-1 text-xs text-muted-foreground">{model.retiring}</p> : null}
       <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-y-1.5">
         {model.context ? (
@@ -1225,6 +1222,9 @@ function ModelRow({ model }: { model: ModelQuote }) {
       <th scope="row" className="min-w-52 py-3 pr-4 text-left font-normal">
         <div className="font-medium text-foreground">{model.name}</div>
         <div className="mt-0.5 font-mono text-xs text-muted-foreground">{model.id}</div>
+        {!hasListPrice(model) && model.note ? (
+          <div className="mt-1 text-xs text-muted-foreground">{model.note}</div>
+        ) : null}
         {model.retiring ? (
           <div className="mt-1 text-xs text-muted-foreground">{model.retiring}</div>
         ) : null}

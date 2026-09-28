@@ -80,12 +80,20 @@ export const modelPricing: ModelPricingCatalog = {
           note: "Same token rates as Opus 5, including fast mode.",
         }),
         claude({
+          id: "claude-opus-4-7",
+          name: "Claude Opus 4.7",
+          context: "1M",
+          input: 5,
+          output: 25,
+          note: "Same token rates as Opus 4.6. Fast mode is not available.",
+        }),
+        claude({
           id: "claude-opus-4-6",
           name: "Claude Opus 4.6",
           context: "1M",
           input: 5,
           output: 25,
-          note: "Opus 4.5 and Opus 4.7 use this rate. Fast mode is not available on either.",
+          note: "Opus 4.5 uses this rate. Fast mode is not available.",
         }),
         claude({
           id: "claude-sonnet-5",
@@ -175,6 +183,13 @@ export const modelPricing: ModelPricingCatalog = {
           shortWhen: undefined,
           short: { input: 12.5, cached: 1.25, write: 15.625, output: 75 },
           note: "No separate long-context tier on the pricing page.",
+        }),
+        quote({
+          id: "gpt-5.5",
+          name: "GPT-5.5",
+          category: "language",
+          standard: {},
+          note: "No list price is recorded on this sheet.",
         }),
         contextBands({
           id: "gpt-5.3-codex",
@@ -763,6 +778,13 @@ export const modelPricing: ModelPricingCatalog = {
           ]),
           note: "China (Beijing) deployment, billed in USD on the Model Studio price card. Batch file input is half of the realtime input rate.",
         }),
+        quote({
+          id: "qwen3.7-plus",
+          name: "Qwen 3.7-Plus",
+          category: "language",
+          standard: {},
+          note: "No list price is recorded on this sheet.",
+        }),
       ],
     },
     {
@@ -816,6 +838,21 @@ export const modelPricing: ModelPricingCatalog = {
             output: [price(0.4)],
           },
           note: "Audio understanding on /v1/chat/completions. Audio input is also quoted per million tokens on the price card.",
+        }),
+      ],
+    },
+    {
+      id: "minimax",
+      name: "MiniMax",
+      docsUrl: "https://www.minimax.io/",
+      billing: "MiniMax M3 is on the OSWorld board. This sheet has no list price for it.",
+      models: [
+        quote({
+          id: "minimax-m3",
+          name: "MiniMax M3",
+          category: "language",
+          standard: {},
+          note: "No list price is recorded on this sheet.",
         }),
       ],
     },
