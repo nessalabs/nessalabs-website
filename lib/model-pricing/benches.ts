@@ -3,12 +3,14 @@ import type { Bench, BenchScore } from "./types";
 const ANTHROPIC = "https://www.anthropic.com/claude-fable-and-mythos-5-1";
 const SONNET = "https://www.anthropic.com/claude-sonnet-5-5";
 const OPENAI = "https://openai.com/index/gpt-6-astra/";
+const GPT61 = "https://openai.com/index/introducing-gpt-6-1-sol";
 const OSWORLD = "https://osworld-v2.xlang.ai/";
 const TERMINAL = "https://snorkel.ai/leaderboard/terminal-bench-4-0/";
 const DEEPSWE = "https://deepswe.datacurve.ai/";
 
 /**
  * Task-bench scores read from the linked boards on 2026-09-28.
+ * The GPT-6.1 Sol charts were read on 2026-10-02.
  * A column is one board and one protocol. A cell from a different lab's run
  * carries `note` and is not treated as the same setup.
  */
@@ -35,6 +37,18 @@ export const benches: Bench[] = [
     unit: "percent",
     url: OPENAI,
     protocol: "OpenAI's v2026.08.08 offline set, partial score.",
+  },
+  {
+    id: "osworld-offline-effort",
+    name: "OSWorld 2.0 offline by effort",
+    task: "Computer use",
+    summary: "Partial credit on the offline set, at each thinking level.",
+    reading:
+      "Partial credit on the same offline set, with one point per thinking level. The single score in the row above is an earlier OpenAI figure.",
+    unit: "percent",
+    url: GPT61,
+    protocol:
+      "OpenAI's GPT-6.1 Sol chart, read on 2 October 2026. Partial reward on the v2026.08.08 offline set. Each point is one effort and its mean cost per task.",
   },
   {
     id: "osworld-2-1",
@@ -85,6 +99,18 @@ export const benches: Bench[] = [
       "Datacurve's board, 113 tasks, mini-swe-agent, four runs, dated 22 September 2026. Where that board published several thinking levels, each one is listed with its mean cost per task. The marked number is the best score. The board prints a whole percent. These figures keep one decimal from the same pass rate.",
   },
   {
+    id: "deepswe-openai",
+    name: "DeepSWE v1.1, OpenAI",
+    task: "Coding agent",
+    summary: "OpenAI's DeepSWE chart from the GPT-6.1 Sol post.",
+    reading:
+      "Long coding tasks from OpenAI's GPT-6.1 Sol chart. It is not the Datacurve board in the row above.",
+    unit: "percent",
+    url: GPT61,
+    protocol:
+      "OpenAI's GPT-6.1 Sol chart, read on 2 October 2026. Each point is one effort and its mean cost per task. Astra's points match the Datacurve row. GPT-6.1 Sol and GPT-6 Sol are from this chart.",
+  },
+  {
     id: "cursorbench",
     name: "CursorBench 3.2",
     task: "Coding agent",
@@ -129,6 +155,18 @@ export const benches: Bench[] = [
       "Anthropic's setup, with a standard error of about 4 points, unless the cell names another run.",
   },
   {
+    id: "terminal-bench-science-openai",
+    name: "Terminal-Bench Science 0.1, OpenAI",
+    task: "Research agent",
+    summary: "OpenAI's science chart from the GPT-6.1 Sol post.",
+    reading:
+      "Scientific workflows from OpenAI's GPT-6.1 Sol chart. The row above is an earlier comparison, and Astra's best score there is not this one.",
+    unit: "percent",
+    url: GPT61,
+    protocol:
+      "OpenAI's GPT-6.1 Sol chart, read on 2 October 2026. Each point is one effort and its mean cost per task. Opus 5.5 with fallbacks is on OpenAI's chart and is not a row here. Not the comparison in the row above.",
+  },
+  {
     id: "automation-bench",
     name: "AutomationBench",
     task: "Workflow agent",
@@ -137,6 +175,18 @@ export const benches: Bench[] = [
     unit: "percent",
     url: ANTHROPIC,
     protocol: "Anthropic's comparison, unless the cell names another run.",
+  },
+  {
+    id: "automation-bench-openai",
+    name: "AutomationBench, OpenAI",
+    task: "Workflow agent",
+    summary: "OpenAI's AutomationBench chart from the GPT-6.1 Sol post.",
+    reading:
+      "Multi-step business workflows from OpenAI's GPT-6.1 Sol chart. Each point is one thinking level and its mean cost per task.",
+    unit: "percent",
+    url: GPT61,
+    protocol:
+      "OpenAI's GPT-6.1 Sol chart of AutomationBench 1.0.6, read on 2 October 2026. Each point is one effort and its mean cost per task. Fable 5.1 with an Opus 5 fallback, and Opus 5.5 with fallbacks, are on OpenAI's chart and are not rows here.",
   },
   {
     id: "gdpval",
@@ -172,6 +222,18 @@ export const benches: Bench[] = [
     url: SONNET,
     protocol:
       "Anthropic's comparison of Artificial Analysis AA-Briefcase v1.1, read on 28 September 2026. Sonnet 5.5 was a pre-release run that may understate the score. GPT-6 Sol may predate an image-understanding fix.",
+  },
+  {
+    id: "gdp-pdf",
+    name: "GDP.pdf",
+    task: "Knowledge work",
+    summary: "Questions about long professional PDFs.",
+    reading:
+      "Questions about long professional PDFs, including tables and fine print. Each point is one thinking level and its mean cost per task.",
+    unit: "percent",
+    url: GPT61,
+    protocol:
+      "OpenAI's GPT-6.1 Sol chart of Surge GDP.pdf, read on 2 October 2026. Each point is one effort and its mean cost per task. Opus 5.5 with fallbacks to Opus 5 and Opus 4.8 is on OpenAI's chart and is not a row here.",
   },
   {
     id: "hle",
@@ -229,6 +291,7 @@ function levels(...rows: [string, number, number][]): NonNullable<BenchScore["le
 const A = ANTHROPIC;
 const S = SONNET;
 const O = OPENAI;
+const G = GPT61;
 const W = OSWORLD;
 const T = TERMINAL;
 const D = DEEPSWE;
@@ -339,7 +402,79 @@ export const benchScores: Record<string, BenchScore[]> = {
       ["low", 30.5, 2.19],
     )),
   ],
+  "gpt-6.1-sol": [
+    score("deepswe-openai", 75.2, G, "OpenAI", undefined, levels(
+      ["low", 64.4, 0.17],
+      ["medium", 73.0, 0.42],
+      ["high", 75.2, 0.65],
+      ["xhigh", 71.9, 0.79],
+      ["max", 71.9, 1.57],
+    )),
+    score("osworld-offline-effort", 71.4, G, "OpenAI", undefined, levels(
+      ["low", 59.0, 0.42],
+      ["medium", 66.8, 0.77],
+      ["high", 69.6, 0.96],
+      ["xhigh", 69.4, 1.05],
+      ["max", 71.4, 1.27],
+    )),
+    score("automation-bench-openai", 36.1, G, "OpenAI", undefined, levels(
+      ["low", 24.7, 0.16],
+      ["medium", 31.7, 0.19],
+      ["high", 33.2, 0.23],
+      ["xhigh", 35.5, 0.25],
+      ["max", 36.1, 0.3],
+    )),
+    score("terminal-bench-science-openai", 57.0, G, "OpenAI", undefined, levels(
+      ["low", 43.7, 1.79],
+      ["medium", 47.6, 2.34],
+      ["high", 51.1, 2.76],
+      ["xhigh", 53.7, 2.89],
+      ["max", 57.0, 5.47],
+    )),
+    score("gdp-pdf", 32.0, G, "OpenAI", undefined, levels(
+      ["low", 27.0, 0.33],
+      ["medium", 30.0, 0.34],
+      ["high", 32.0, 0.35],
+      ["xhigh", 31.8, 0.37],
+      ["max", 31.0, 0.42],
+    )),
+  ],
   "gpt-6-sol": [
+    score("deepswe-openai", 68.8, G, "OpenAI", undefined, levels(
+      ["low", 37.2, 0.16],
+      ["medium", 56.6, 0.38],
+      ["high", 65.3, 0.64],
+      ["xhigh", 66.6, 1],
+      ["max", 68.8, 2.74],
+    )),
+    score("osworld-offline-effort", 64.4, G, "OpenAI", undefined, levels(
+      ["low", 43.9, 1.01],
+      ["medium", 54.0, 1.38],
+      ["high", 58.3, 1.71],
+      ["xhigh", 60.5, 2.3],
+      ["max", 64.4, 3.37],
+    )),
+    score("automation-bench-openai", 33.2, G, "OpenAI", undefined, levels(
+      ["low", 21.2, 0.19],
+      ["medium", 26.9, 0.21],
+      ["high", 31.2, 0.24],
+      ["xhigh", 33.2, 0.27],
+      ["max", 32.0, 0.34],
+    )),
+    score("terminal-bench-science-openai", 27.6, G, "OpenAI", undefined, levels(
+      ["low", 9.2, 3],
+      ["medium", 14.5, 4.41],
+      ["high", 14.6, 4.63],
+      ["xhigh", 25.3, 6.77],
+      ["max", 27.6, 12.18],
+    )),
+    score("gdp-pdf", 28.0, G, "OpenAI", undefined, levels(
+      ["low", 21.8, 0.33],
+      ["medium", 25.4, 0.34],
+      ["high", 28.0, 0.35],
+      ["xhigh", 23.8, 0.37],
+      ["max", 24.8, 0.43],
+    )),
     score("frontiercode", 49.3, S, "Anthropic"),
     score("gdpval-v2-1", 1487, S, "Anthropic", "May predate an image-understanding fix."),
     score("aa-briefcase", 1483, S, "Anthropic", "May predate an image-understanding fix."),
@@ -357,6 +492,41 @@ export const benchScores: Record<string, BenchScore[]> = {
     )),
     score("terminal-bench-science", 64.6, O, "OpenAI", "OpenAI's run."),
     score("automation-bench", 41.4, O, "OpenAI", "OpenAI's run."),
+    score("deepswe-openai", 74.1, G, "OpenAI", undefined, levels(
+      ["low", 67.0, 1.6],
+      ["medium", 72.8, 3.08],
+      ["high", 73.2, 3.92],
+      ["xhigh", 74.1, 4.43],
+      ["max", 73.2, 7.5],
+    )),
+    score("osworld-offline-effort", 73.5, G, "OpenAI", undefined, levels(
+      ["low", 62.2, 2.72],
+      ["medium", 69.3, 5.36],
+      ["high", 70.0, 6.91],
+      ["xhigh", 71.3, 7.49],
+      ["max", 73.5, 9.44],
+    )),
+    score("automation-bench-openai", 41.4, G, "OpenAI", undefined, levels(
+      ["low", 30.3, 1.08],
+      ["medium", 34.1, 1.27],
+      ["high", 37.1, 1.44],
+      ["xhigh", 39.0, 1.5],
+      ["max", 41.4, 1.73],
+    )),
+    score("terminal-bench-science-openai", 68.1, G, "OpenAI", undefined, levels(
+      ["low", 55.4, 11.41],
+      ["medium", 57.4, 12.34],
+      ["high", 62.0, 14.95],
+      ["xhigh", 60.9, 15.76],
+      ["max", 68.1, 23.8],
+    )),
+    score("gdp-pdf", 32.2, G, "OpenAI", undefined, levels(
+      ["low", 30.4, 1.7],
+      ["medium", 30.4, 1.72],
+      ["high", 31.0, 1.79],
+      ["xhigh", 32.2, 1.91],
+      ["max", 31.0, 2.08],
+    )),
   ],
   "gpt-5.6-sol": [
     score("osworld-strict", 27.3, W, "XLANG", "v2026.08.08. Partial 62.7%.", [
