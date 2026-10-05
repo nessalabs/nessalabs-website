@@ -156,6 +156,14 @@ export const modelPricing: ModelPricingCatalog = {
           note: "Text and image input. Max output 128k.",
         }),
         contextBands({
+          id: "gpt-6.1-sol",
+          name: "GPT-6.1 Sol",
+          ...openaiLong,
+          short: { input: 2, cached: 0.1, write: 2.5, output: 10 },
+          long: { input: 4, cached: 0.2, write: 5, output: 15 },
+          note: "Cached input is 0.05× input. Fast mode is unavailable with EU data residency. Max output 128k.",
+        }),
+        contextBands({
           id: "gpt-6-sol",
           name: "GPT-6 Sol",
           ...openaiLong,
