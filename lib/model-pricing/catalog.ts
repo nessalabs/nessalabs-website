@@ -28,12 +28,12 @@ const openaiLong = {
 } as const;
 
 /**
- * List prices checked against provider documentation on 2026-09-27.
+ * List prices checked against provider documentation on 2026-09-28.
  * Regional uplifts, taxes and negotiated discounts are described in `billing`
  * rather than folded into the row.
  */
 export const modelPricing: ModelPricingCatalog = {
-  updated: "2026-09-27",
+  updated: "2026-09-28",
   currency: "USD",
   providers: [
     {
