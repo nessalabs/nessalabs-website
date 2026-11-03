@@ -58,13 +58,17 @@ app/
   ui/components/                nessa-ui docs
     page.tsx                    overview + install
     [slug]/page.tsx             generated per registry entry
-  research/, agents/            placeholders for the next surfaces
+  tools/model-pricing/          price and benchmark snapshot browser
+  api/model-pricing/            read-only filtered JSON
+  courses/, research/, agents/  coming-soon pages
 components/
-  nessa-ui/                     the component library (the published source)
   site/                         site-only pieces: nav, brand, hero art, docs shell
 registry/
-  index.ts                      docs metadata: usage, props, examples
+  index.ts                      authored routes, descriptions and examples
   previews.tsx                  live preview node for each slug and example id
+nessa-ui/                       vendored upstream React source
+agent-stream/                   vendored upstream stream source
+lib/model-pricing/              checked-in rates, scores and query helpers
 ```
 
 ## Known issue: FileDiffList escapes its scroller
@@ -91,18 +95,13 @@ CodeBlock page still demos the real component.
 Each component page shows the code that actually renders the preview above it.
 `scripts/extract-preview-source.mjs` reads `registry/previews.tsx`, pulls out
 each preview's JSX plus every helper it references, and writes
-`registry/preview-source.generated.ts`. It runs on `predev` and `prebuild`, so
-the snippet and the running preview can never drift — never hand-write a code
-sample in the registry.
+`registry/preview-source.generated.ts`. It runs on `predev` and `prebuild`, to keep snippets coupled to the authored demos. The extractor is a handwritten scanner; inspect generated output and do not treat it as proof that an arbitrary copied snippet compiles standalone.
 
 ## Adding a component
 
-1. Write it in `components/nessa-ui/<name>.tsx` and export it from
-   `components/nessa-ui/index.ts`.
-2. Add an entry to `registry/index.ts` — slug, group, description, usage code,
-   props, and any extra examples.
-3. Add the live preview node to `registry/previews.tsx`, keyed by the slug (and
-   by each example id). The code tab is generated from it.
+1. Change the component in the upstream nessa-ui checkout's `packages/react/src`, then run `npm run sync:ui -- /absolute/path/to/nessa-ui` here. This replaces the vendored source and regenerates story/catalogue metadata; inspect the resulting diff.
+2. Add or update the authored entry in `registry/index.ts` and its live preview in `registry/previews.tsx`/`registry/demos`.
+3. Run `npm run preview-source` or `npm run build` to regenerate code snippets, then inspect the component page and examples.
 
 The docs page, the sidebar, and the static params all come from the registry, so
 there is nothing else to wire up.
@@ -152,3 +151,7 @@ the copy-the-source distribution model from shadcn/ui, headless API patterns
 from Radix UI, the WAI-ARIA Authoring Practices, and the Inter and JetBrains
 Mono typefaces — are listed on the docs overview at `/ui/components`, and that
 list is the one to update when we take on anything new.
+
+## State and verification atlas
+
+[Read the source-grounded website map](docs/state/README.md) for route ownership, demo boundaries, pricing snapshot semantics and reproducible verification evidence.

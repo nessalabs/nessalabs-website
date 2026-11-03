@@ -1,0 +1,168 @@
+{
+  "ok": true,
+  "checker": "tlc-1.7.4",
+  "date": "2026-11-03T09:47:21.661Z",
+  "models": 3,
+  "baselines": [
+    {
+      "document": "previews",
+      "state": "passed",
+      "states": 11,
+      "modelDigest": "4202cffe4dc5d137be5c5bb79f282ee4f275b02e1ea4066b4c4fb0705fe33a2d",
+      "sourceRevision": "34c39ddd2b31050611e209296ea9b2db7cf91023",
+      "checker": "tlc-1.7.4",
+      "date": "2026-11-03T09:47:12.765Z",
+      "held": ["CodeNeedsSource", "PreviewSelection"]
+    },
+    {
+      "document": "pricing",
+      "state": "passed",
+      "states": 12,
+      "modelDigest": "82215a309402b420ffab349062027753b85988104538c70792efcdd323082608",
+      "sourceRevision": "34c39ddd2b31050611e209296ea9b2db7cf91023",
+      "checker": "tlc-1.7.4",
+      "date": "2026-11-03T09:47:13.373Z",
+      "held": ["LatestTimerOnly", "NoRetiredCallback"]
+    },
+    {
+      "document": "theme",
+      "state": "passed",
+      "states": 4,
+      "modelDigest": "288e824def5cf189cbe27b9111e29498ec79b0609d28db0ae1e4e0c7dfc5038a",
+      "sourceRevision": "34c39ddd2b31050611e209296ea9b2db7cf91023",
+      "checker": "tlc-1.7.4",
+      "date": "2026-11-03T09:47:14.001Z",
+      "held": ["ConsistentSurfaces", "VisibleDespiteStorage"]
+    }
+  ],
+  "probes": 6,
+  "completed": 6,
+  "results": [
+    {
+      "document": "previews",
+      "name": "render-code-without-source",
+      "ok": true,
+      "state": "broke",
+      "expected": ["CodeNeedsSource"],
+      "broke": ["CodeNeedsSource"],
+      "unchecked": [],
+      "counterexamples": [
+        {
+          "rule": "CodeNeedsSource",
+          "path": [
+            "Start with source is TRUE, rendered is preview, hadSource is TRUE, tab is preview, chosenTab is preview.",
+            "SelectCode: source is TRUE, rendered is preview, hadSource is TRUE, tab is code, chosenTab is preview.",
+            "ChangeExample: source is FALSE, rendered is preview, hadSource is TRUE, tab is code, chosenTab is preview.",
+            "Render: source is FALSE, rendered is code, hadSource is FALSE, tab is code, chosenTab is code."
+          ],
+          "states": []
+        }
+      ],
+      "modelDigest": "7bd45d4832d525ce01eb826bab2b791691488464d759cea443023b2511ae97c1"
+    },
+    {
+      "document": "previews",
+      "name": "ignore-preview-selection",
+      "ok": true,
+      "state": "broke",
+      "expected": ["PreviewSelection"],
+      "broke": ["PreviewSelection"],
+      "unchecked": [],
+      "counterexamples": [
+        {
+          "rule": "PreviewSelection",
+          "path": [
+            "Start with source is TRUE, rendered is preview, hadSource is TRUE, tab is preview, chosenTab is preview.",
+            "Render: source is TRUE, rendered is code, hadSource is TRUE, tab is preview, chosenTab is preview."
+          ],
+          "states": []
+        }
+      ],
+      "modelDigest": "366113a1eae69afe1cdebf9080a773c364b8820eeb146083e272b8c641eaae21"
+    },
+    {
+      "document": "theme",
+      "name": "leave-dark-class-stale",
+      "ok": true,
+      "state": "broke",
+      "expected": ["ConsistentSurfaces"],
+      "broke": ["ConsistentSurfaces"],
+      "unchecked": [],
+      "counterexamples": [
+        {
+          "rule": "ConsistentSurfaces",
+          "path": [
+            "Start with applied is FALSE, wanted is dark, colorScheme is dark, darkClass is dark, saved is dark, dataTheme is dark, persists is FALSE.",
+            "Toggle: applied is TRUE, wanted is light, colorScheme is light, darkClass is dark, saved is dark, dataTheme is light, persists is FALSE."
+          ],
+          "states": []
+        }
+      ],
+      "modelDigest": "2306df200c6db2f20788f399c98b9ea465e0a3f5791a91be57808e11613388f8"
+    },
+    {
+      "document": "theme",
+      "name": "gate-visible-change-on-storage",
+      "ok": true,
+      "state": "broke",
+      "expected": ["VisibleDespiteStorage"],
+      "broke": ["VisibleDespiteStorage"],
+      "unchecked": [],
+      "counterexamples": [
+        {
+          "rule": "VisibleDespiteStorage",
+          "path": [
+            "Start with applied is FALSE, wanted is dark, colorScheme is dark, darkClass is dark, saved is dark, dataTheme is dark, persists is FALSE.",
+            "Toggle: applied is TRUE, wanted is light, colorScheme is dark, darkClass is dark, saved is dark, dataTheme is dark, persists is FALSE."
+          ],
+          "states": []
+        }
+      ],
+      "modelDigest": "d8f3236a6f68518d05359a267f754e57b89fd5b39c5fbe7c8e31ae0fd2244ee0"
+    },
+    {
+      "document": "pricing",
+      "name": "retain-old-search-timer",
+      "ok": true,
+      "state": "broke",
+      "expected": ["LatestTimerOnly"],
+      "broke": ["LatestTimerOnly"],
+      "unchecked": [],
+      "counterexamples": [
+        {
+          "rule": "LatestTimerOnly",
+          "path": [
+            "Start with ownerAtFire is 0, timers is {}, firedOwner is 0, published is FALSE, current is 0, mountedAtFire is TRUE, mounted is TRUE.",
+            "Edit: ownerAtFire is 0, timers is {1}, firedOwner is 0, published is FALSE, current is 1, mountedAtFire is TRUE, mounted is TRUE.",
+            "Edit: ownerAtFire is 0, timers is {1, 2}, firedOwner is 0, published is FALSE, current is 2, mountedAtFire is TRUE, mounted is TRUE.",
+            "Fire: ownerAtFire is 2, timers is {2}, firedOwner is 1, published is TRUE, current is 2, mountedAtFire is TRUE, mounted is TRUE."
+          ],
+          "states": []
+        }
+      ],
+      "modelDigest": "60e469e25e3abf49f2a9b16a9fa3f91a86b993d9e08b3c47f820c7a9a1857ba2"
+    },
+    {
+      "document": "pricing",
+      "name": "leave-timer-after-unmount",
+      "ok": true,
+      "state": "broke",
+      "expected": ["NoRetiredCallback"],
+      "broke": ["NoRetiredCallback"],
+      "unchecked": [],
+      "counterexamples": [
+        {
+          "rule": "NoRetiredCallback",
+          "path": [
+            "Start with ownerAtFire is 0, timers is {}, firedOwner is 0, published is FALSE, current is 0, mountedAtFire is TRUE, mounted is TRUE.",
+            "Edit: ownerAtFire is 0, timers is {1}, firedOwner is 0, published is FALSE, current is 1, mountedAtFire is TRUE, mounted is TRUE.",
+            "Retire: ownerAtFire is 0, timers is {1}, firedOwner is 0, published is FALSE, current is 1, mountedAtFire is TRUE, mounted is FALSE.",
+            "Fire: ownerAtFire is 1, timers is {}, firedOwner is 1, published is TRUE, current is 1, mountedAtFire is FALSE, mounted is FALSE."
+          ],
+          "states": []
+        }
+      ],
+      "modelDigest": "5da764ec1d31b5308cf307cbdc67adb990288ce843ccc54d98e39be532713105"
+    }
+  ]
+}

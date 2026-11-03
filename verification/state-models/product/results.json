@@ -1,0 +1,125 @@
+{
+  "api": [
+    {
+      "path": "/api/model-pricing",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "cors": "*"
+    },
+    {
+      "path": "/api/model-pricing?provider=not-a-provider",
+      "method": "GET",
+      "status": 404,
+      "expected": 404,
+      "ok": true,
+      "cors": "*"
+    },
+    {
+      "path": "/api/model-pricing?category=invalid",
+      "method": "GET",
+      "status": 400,
+      "expected": 400,
+      "ok": true,
+      "cors": "*"
+    },
+    {
+      "path": "/api/model-pricing",
+      "method": "OPTIONS",
+      "status": 204,
+      "expected": 204,
+      "ok": true,
+      "cors": "*"
+    },
+    {
+      "path": "/r/button.json",
+      "method": "GET",
+      "status": 404,
+      "expected": 404,
+      "ok": true,
+      "cors": null
+    }
+  ],
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "headings": [
+        "Research for systemsthat think."
+      ]
+    },
+    {
+      "path": "/ui/components",
+      "status": 200,
+      "headings": [
+        "Components",
+        "Installation",
+        "All components",
+        "Attribution"
+      ]
+    },
+    {
+      "path": "/tools/model-pricing",
+      "status": 200,
+      "headings": [
+        "Model API pricing",
+        "Anthropic",
+        "OpenAI",
+        "Google",
+        "xAI",
+        "Moonshot",
+        "DeepSeek",
+        "Alibaba",
+        "Mistral",
+        "MiniMax",
+        "OpenRouter"
+      ]
+    },
+    {
+      "path": "/research",
+      "status": 200,
+      "headings": [
+        "Research"
+      ]
+    },
+    {
+      "path": "/agents",
+      "status": 200,
+      "headings": [
+        "Agents"
+      ]
+    },
+    {
+      "path": "/courses",
+      "status": 200,
+      "headings": [
+        "Courses"
+      ]
+    }
+  ],
+  "errors": [],
+  "pricing": {
+    "inputs": [
+      {
+        "placeholder": "Find a model",
+        "type": "text"
+      }
+    ],
+    "buttons": [
+      "",
+      "Get started"
+    ]
+  },
+  "blockedStorage": {
+    "before": {
+      "dark": false,
+      "colorScheme": ""
+    },
+    "after": {
+      "theme": "dark",
+      "dark": true,
+      "colorScheme": "dark"
+    }
+  }
+}
