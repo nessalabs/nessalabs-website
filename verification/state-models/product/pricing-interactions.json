@@ -1,0 +1,39 @@
+{
+  "search": {
+    "url": "http://127.0.0.1:44329/tools/model-pricing?provider=anthropic&q=claude",
+    "value": "claude"
+  },
+  "links": [
+    {
+      "text": "Prices",
+      "href": "/tools/model-pricing?provider=anthropic&q=claude"
+    },
+    {
+      "text": "Benches",
+      "href": "/tools/model-pricing?provider=anthropic&q=claude&view=benches"
+    }
+  ],
+  "bench": {
+    "url": "http://127.0.0.1:44329/tools/model-pricing?provider=anthropic&q=claude&view=benches",
+    "headings": [
+      "Model API pricing",
+      "By bench",
+      "Scores"
+    ]
+  },
+  "invalidUI": {
+    "headings": [
+      "Anthropic",
+      "OpenAI",
+      "Google",
+      "xAI",
+      "Moonshot",
+      "DeepSeek",
+      "Alibaba",
+      "Mistral",
+      "MiniMax",
+      "OpenRouter"
+    ],
+    "url": "http://127.0.0.1:44329/tools/model-pricing?provider=invalid&category=invalid"
+  }
+}

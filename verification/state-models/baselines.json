@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "documents": 13,
+  "issues": [],
+  "models": [
+    {
+      "document": "previews",
+      "state": "passed",
+      "message": "Every rule held. This checks the design, not the code.",
+      "saved": true,
+      "result": {
+        "sourceRevision": "34c39ddd2b31050611e209296ea9b2db7cf91023",
+        "checker": "tlc-1.7.4",
+        "date": "2026-11-03T09:47:06.967Z",
+        "config": "tla/PreviewAvailability.cfg",
+        "modelDigest": "4202cffe4dc5d137be5c5bb79f282ee4f275b02e1ea4066b4c4fb0705fe33a2d",
+        "states": 11,
+        "held": ["CodeNeedsSource", "PreviewSelection"],
+        "broke": [],
+        "unchecked": []
+      }
+    },
+    {
+      "document": "pricing",
+      "state": "passed",
+      "message": "Every rule held. This checks the design, not the code.",
+      "saved": true,
+      "result": {
+        "sourceRevision": "34c39ddd2b31050611e209296ea9b2db7cf91023",
+        "checker": "tlc-1.7.4",
+        "date": "2026-11-03T09:47:07.577Z",
+        "config": "tla/SearchTimer.cfg",
+        "modelDigest": "82215a309402b420ffab349062027753b85988104538c70792efcdd323082608",
+        "states": 12,
+        "held": ["LatestTimerOnly", "NoRetiredCallback"],
+        "broke": [],
+        "unchecked": []
+      }
+    },
+    {
+      "document": "theme",
+      "state": "passed",
+      "message": "Every rule held. This checks the design, not the code.",
+      "saved": true,
+      "result": {
+        "sourceRevision": "34c39ddd2b31050611e209296ea9b2db7cf91023",
+        "checker": "tlc-1.7.4",
+        "date": "2026-11-03T09:47:08.186Z",
+        "config": "tla/ThemePublication.cfg",
+        "modelDigest": "288e824def5cf189cbe27b9111e29498ec79b0609d28db0ae1e4e0c7dfc5038a",
+        "states": 4,
+        "held": ["ConsistentSurfaces", "VisibleDespiteStorage"],
+        "broke": [],
+        "unchecked": []
+      }
+    }
+  ],
+  "saved": ["previews", "pricing", "theme"]
+}

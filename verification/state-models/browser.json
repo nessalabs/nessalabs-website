@@ -1,0 +1,78 @@
+{
+  "ok": true,
+  "browser": "156.0.8078.80",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "pages": 13,
+  "diagrams": 6,
+  "errors": [],
+  "results": [
+    {
+      "id": "website",
+      "figures": 1,
+      "failed": 0
+    },
+    {
+      "id": "authoring",
+      "figures": 0,
+      "failed": 0
+    },
+    {
+      "id": "build",
+      "figures": 0,
+      "failed": 0
+    },
+    {
+      "id": "components",
+      "figures": 0,
+      "failed": 0
+    },
+    {
+      "id": "harness",
+      "figures": 1,
+      "failed": 0
+    },
+    {
+      "id": "inventory",
+      "figures": 0,
+      "failed": 0
+    },
+    {
+      "id": "library",
+      "figures": 0,
+      "failed": 0
+    },
+    {
+      "id": "navigation",
+      "figures": 1,
+      "failed": 0
+    },
+    {
+      "id": "previews",
+      "figures": 1,
+      "failed": 0
+    },
+    {
+      "id": "pricing-api",
+      "figures": 0,
+      "failed": 0
+    },
+    {
+      "id": "pricing",
+      "figures": 1,
+      "failed": 0
+    },
+    {
+      "id": "theme",
+      "figures": 1,
+      "failed": 0
+    },
+    {
+      "id": "verification",
+      "figures": 0,
+      "failed": 0
+    }
+  ]
+}
